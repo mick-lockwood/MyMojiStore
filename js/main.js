@@ -117,7 +117,7 @@ function create() {
     scene.add.text(512, 40, 'MyMoji Store', { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' }).setOrigin(0.5);
 
     // Header Icons (Added hover tweens)
-    const storeIconBtn = scene.add.text(920, 40, '💳', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const storeIconBtn = scene.add.text(920, 40, '🛒', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     storeIconBtn.on('pointerover', () => scene.tweens.add({ targets: storeIconBtn, scale: 1.2, duration: 100 }));
     storeIconBtn.on('pointerout', () => scene.tweens.add({ targets: storeIconBtn, scale: 1, duration: 100 }));
     storeIconBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
