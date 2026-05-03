@@ -497,10 +497,37 @@ function createBinderOverlay(scene) {
     const closeTxt = scene.add.text(430, -300, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
-    // NEW: Pagination State
     overlay.currentSpread = 0; 
     
-    // NEW: Pagination Buttons
+    // NEW: Sorting State
+    overlay.sortBy = 'Number'; // Options: Number, Name, Rarity, Value
+    overlay.sortAsc = true;    // True = Ascending, False = Descending
+
+    // NEW: Sort Type Button
+    const sortTypes = ['Number', 'Name', 'Rarity', 'Value'];
+    const sortBtnBg = scene.add.rectangle(-320, -300, 160, 40, 0x34495e).setStrokeStyle(2, 0xffffff).setInteractive();
+    const sortBtnTxt = scene.add.text(-320, -300, 'SORT: NUMBER', { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    
+    sortBtnBg.on('pointerdown', () => {
+        let currentIndex = sortTypes.indexOf(overlay.sortBy);
+        overlay.sortBy = sortTypes[(currentIndex + 1) % sortTypes.length];
+        sortBtnTxt.setText('SORT: ' + overlay.sortBy.toUpperCase());
+        overlay.currentSpread = 0; // Reset to page 1 on sort
+        renderBinderGrid(scene, overlay);
+    });
+
+    // NEW: Sort Order Button (ASC/DESC)
+    const orderBtnBg = scene.add.rectangle(-140, -300, 160, 40, 0x34495e).setStrokeStyle(2, 0xffffff).setInteractive();
+    const orderBtnTxt = scene.add.text(-140, -300, 'ORDER: ASC ⬆', { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    
+    orderBtnBg.on('pointerdown', () => {
+        overlay.sortAsc = !overlay.sortAsc;
+        orderBtnTxt.setText(overlay.sortAsc ? 'ORDER: ASC ⬆' : 'ORDER: DESC ⬇');
+        overlay.currentSpread = 0; // Reset to page 1 on sort
+        renderBinderGrid(scene, overlay);
+    });
+    
+    // Pagination Buttons
     overlay.prevBtn = scene.add.text(-430, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     overlay.nextBtn = scene.add.text(430, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     
@@ -519,7 +546,7 @@ function createBinderOverlay(scene) {
         }
     });
 
-    overlay.add([overlay.bg, spine, closeTxt, overlay.prevBtn, overlay.nextBtn]);
+    overlay.add([overlay.bg, spine, closeTxt, sortBtnBg, sortBtnTxt, orderBtnBg, orderBtnTxt, overlay.prevBtn, overlay.nextBtn]);
     overlay.gridContainer = scene.add.container(0, 0); 
     overlay.add(overlay.gridContainer);
 
@@ -529,25 +556,47 @@ function createBinderOverlay(scene) {
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
-    let maxSpread = Math.ceil(myMojiDatabase.length / 18) - 1;
+    // NEW: Create a sorted copy of the database based on the current settings
+    let sortedDb = [...myMojiDatabase];
+    sortedDb.sort((a, b) => {
+        let valA, valB;
+        
+        if (overlay.sortBy === 'Number') {
+            valA = parseInt(a.id.split('_')[1]);
+            valB = parseInt(b.id.split('_')[1]);
+        } else if (overlay.sortBy === 'Name') {
+            valA = a.name.toLowerCase();
+            valB = b.name.toLowerCase();
+        } else if (overlay.sortBy === 'Rarity') {
+            const rarityWeights = { "Common": 1, "Rare": 2, "Epic": 3, "Legendary": 4 };
+            valA = rarityWeights[a.rarity];
+            valB = rarityWeights[b.rarity];
+        } else if (overlay.sortBy === 'Value') {
+            valA = a.baseValue;
+            valB = b.baseValue;
+        }
+
+        if (valA < valB) return overlay.sortAsc ? -1 : 1;
+        if (valA > valB) return overlay.sortAsc ? 1 : -1;
+        return 0;
+    });
+
+    let maxSpread = Math.ceil(sortedDb.length / 18) - 1;
     
-    // Toggle visibility of pagination buttons based on what page we're on
     overlay.prevBtn.setVisible(overlay.currentSpread > 0);
     overlay.nextBtn.setVisible(overlay.currentSpread < maxSpread);
     
-    // Calculate which 18 cards to show based on the current spread
     let startIndex = overlay.currentSpread * 18;
-    let endIndex = Math.min(startIndex + 18, myMojiDatabase.length);
+    let endIndex = Math.min(startIndex + 18, sortedDb.length);
 
     for (let i = startIndex; i < endIndex; i++) {
-        let moji = myMojiDatabase[i];
-        let spreadIndex = i - startIndex; // Normalize index to 0-17 for this spread
-        let page = spreadIndex < 9 ? 0 : 1; // 0 = Left Page, 1 = Right Page
+        let moji = sortedDb[i]; // Use the sorted database here!
+        let spreadIndex = i - startIndex; 
+        let page = spreadIndex < 9 ? 0 : 1; 
         let localIndex = spreadIndex % 9;
         let col = localIndex % 3;
         let row = Math.floor(localIndex / 3);
 
-        // Perfectly centered grid math
         let startX = page === 0 ? -375 : 95;
         let startY = -200;
         let spacingX = 140;
@@ -558,23 +607,19 @@ function renderBinderGrid(scene, overlay) {
 
         let owned = Number(playerInventory[moji.id]);
 
-        // Draw Sleeve Background
         let sleeve = scene.add.rectangle(x, y, 110, 160, 0x000000, 0.4).setStrokeStyle(2, 0x555555);
         overlay.gridContainer.add(sleeve);
 
-        // Create Card Graphic
         let miniCard = scene.add.container(x, y);
         let graphics = createCardGraphic(scene, moji);
         miniCard.add(graphics);
         miniCard.setScale(0.45); 
 
         if (owned === 0) {
-            // Placeholder Styling
             graphics.forEach(g => { if(g.setTint) g.setTint(0x222222); g.setAlpha(0.5); });
             let qMark = scene.add.text(0, 0, '?', { fontSize: '80px', color: '#444444', fontStyle: 'bold' }).setOrigin(0.5);
             miniCard.add(qMark);
         } else {
-            // Real Card (Draggable from binder)
             miniCard.setSize(220, 320); 
             miniCard.setInteractive({ cursor: 'pointer' });
             miniCard.on('pointerdown', () => {
