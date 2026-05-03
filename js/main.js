@@ -49,39 +49,71 @@ const game = new Phaser.Game(config);
 
 function create() {
     const scene = this; 
+    
+    // Optional: Change background to a lighter color to match the template's paper feel
+    scene.cameras.main.setBackgroundColor('#f4f4f4');
 
-    // --- TOP UI ---
-    scene.moneyText = scene.add.text(20, 20, 'Bank: $' + playerMoney.toFixed(2), { fontFamily: 'Arial', fontSize: '28px', color: '#2ecc71', fontStyle: 'bold' });
+    // --- TOP UI HEADER ---
+    // Yellow header bar
+    scene.add.rectangle(512, 40, 1024, 80, 0xfce883); 
 
-    const resetBtn = scene.add.text(880, 20, 'RESET GAME', { fontFamily: 'Arial', fontSize: '16px', color: '#e74c3c', fontStyle: 'bold' }).setInteractive();
+    // Money Text (Top Left)
+    scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { 
+        fontFamily: 'Impact, sans-serif', fontSize: '36px', color: '#222222' 
+    });
+    
+    // Packs Counter (Top Left, under money)
+    let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
+    scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { 
+        fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#222222' 
+    });
+
+    // Title (Center)
+    scene.add.text(512, 40, 'MyMoji Store', { 
+        fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' 
+    }).setOrigin(0.5);
+
+    // Settings / Reset Button (Top Right)
+    const resetBtn = scene.add.text(980, 40, '⚙️', { fontSize: '36px' }).setOrigin(0.5).setInteractive();
     resetBtn.on('pointerdown', () => {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
-
-    // --- DROP ZONES ---
-    scene.binderZone = scene.add.rectangle(150, 680, 240, 100, 0x8e44ad).setStrokeStyle(4, 0x1a1a1a);
-    scene.add.text(150, 680, 'DROP IN BINDER', { fontFamily: 'Arial', fontSize: '20px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-
-    scene.sellZone = scene.add.rectangle(874, 580, 240, 80, 0xc0392b).setStrokeStyle(4, 0x1a1a1a);
-    scene.add.text(874, 580, 'SELL FOR CASH', { fontFamily: 'Arial', fontSize: '20px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
 
     // --- OVERLAYS ---
     const binderOverlay = createBinderOverlay(scene);
     const storeOverlay = createStoreOverlay(scene);
     const inventoryOverlay = createInventoryOverlay(scene);
 
-    // --- MAIN NAVIGATION BUTTONS ---
-    const storeBtn = scene.add.rectangle(400, 680, 180, 60, 0x2980b9).setInteractive().setStrokeStyle(4, 0x1a1a1a);
-    scene.add.text(400, 680, 'STORE', { fontFamily: 'Arial', fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    // --- BOTTOM LEFT BUTTONS ---
+    
+    // 1. TRADING STASH (Opens Store) - Blue
+    const storeBtn = scene.add.rectangle(160, 620, 240, 70, 0x57bcf2).setInteractive().setStrokeStyle(4, 0x000000);
+    scene.add.text(160, 620, 'TRADING STASH', { 
+        fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' 
+    }).setOrigin(0.5);
     storeBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
 
-    const packInvBtn = scene.add.rectangle(624, 680, 180, 60, 0xe67e22).setInteractive().setStrokeStyle(4, 0x1a1a1a);
-    scene.add.text(624, 680, 'PACK INVENTORY', { fontFamily: 'Arial', fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    packInvBtn.on('pointerdown', () => { renderPackInventory(scene, inventoryOverlay); inventoryOverlay.setVisible(true); });
+    // 2. SELL ON MOJIMARKET (Doubles as Sell Drop Zone) - Pink/Red
+    scene.sellZone = scene.add.rectangle(160, 710, 240, 70, 0xff7e8d).setInteractive().setStrokeStyle(4, 0x000000);
+    scene.add.text(160, 710, 'SELL ON\nMOJIMARKET', { 
+        fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' 
+    }).setOrigin(0.5);
 
-    const viewBinderBtn = scene.add.rectangle(874, 680, 240, 60, 0x34495e).setInteractive().setStrokeStyle(4, 0x1a1a1a);
-    scene.add.text(874, 680, 'VIEW BINDER', { fontFamily: 'Arial', fontSize: '20px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    viewBinderBtn.on('pointerdown', () => { renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); });
+    // --- BOTTOM RIGHT BUTTONS ---
+
+    // 3. BINDER (Doubles as Binder Drop Zone & View Menu) - Orange
+    scene.binderZone = scene.add.rectangle(864, 620, 240, 70, 0xffc87c).setInteractive().setStrokeStyle(4, 0x000000);
+    scene.add.text(864, 620, 'BINDER', { 
+        fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' 
+    }).setOrigin(0.5);
+    scene.binderZone.on('pointerdown', () => { renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); });
+
+    // 4. INVENTORY (Opens Pack Inventory) - Purple
+    const packInvBtn = scene.add.rectangle(864, 710, 240, 70, 0xda7aff).setInteractive().setStrokeStyle(4, 0x000000);
+    scene.add.text(864, 710, 'INVENTORY', { 
+        fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' 
+    }).setOrigin(0.5);
+    packInvBtn.on('pointerdown', () => { renderPackInventory(scene, inventoryOverlay); inventoryOverlay.setVisible(true); });
 }
 
 // --- CORE MECHANICS ---
