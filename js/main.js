@@ -162,30 +162,24 @@ function create() {
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
     
-    // WIDENED BACKGROUND: Expanded width from 500 to 600 to fit the color swatches
     const bg = scene.add.rectangle(0, 0, 600, 420, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
     overlay.add(bg); 
     
     const title = scene.add.text(0, -170, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
-    // Adjusted close button X coordinate to account for wider background
-    const closeTxt = scene.add.text(270, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive().setOrigin(0.5);
+    const closeTxt = scene.add.text(270, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    const resetBtn = scene.add.text(0, 160, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '18px', color: '#e74c3c', fontStyle: 'bold' }).setInteractive().setOrigin(0.5);
-    resetBtn.on('pointerdown', () => {
+    // NEW ROUNDED BUTTONS
+    const resetBtn = createButton(scene, 0, 160, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
-    const instrBtn = scene.add.rectangle(0, 100, 200, 40, 0x3498db).setStrokeStyle(2, 0x000).setInteractive();
-    const instrTxt = scene.add.text(0, 100, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-    
-    instrBtn.on('pointerdown', () => {
-        alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 100 MyMojis!");
+    const instrBtn = createButton(scene, 0, 100, 200, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+        alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 108 MyMojis!");
     });
 
-    overlay.add([title, closeTxt, resetBtn, instrBtn, instrTxt]);
+    overlay.add([title, closeTxt, resetBtn, instrBtn]);
 
-    // NEW: Function to create a row of color swatches instead of one cycling button
     const createColorPalette = (y, label, type, colors) => {
         let labelTxt = scene.add.text(-270, y, label, { fontFamily: 'Arial', fontSize: '18px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
         overlay.add(labelTxt);
@@ -194,9 +188,12 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         let spacing = 40;
 
         colors.forEach((color, index) => {
-            // Draw the individual color swatch
-            let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setStrokeStyle(2, 0x000).setInteractive();
+            let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setStrokeStyle(2, 0x000).setInteractive({ useHandCursor: true });
             
+            // Added hover scale to swatches too!
+            swatch.on('pointerover', () => scene.tweens.add({ targets: swatch, scale: 1.2, duration: 100 }));
+            swatch.on('pointerout', () => scene.tweens.add({ targets: swatch, scale: 1, duration: 100 }));
+
             swatch.on('pointerdown', () => {
                 if (type === 'table') { 
                     themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
@@ -216,7 +213,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         });
     };
 
-    // Expanded color arrays!
     const tableColors = [0xf4f4f4, 0xbdc3c7, 0x34495e, 0x27ae60, 0x2980b9, 0x8e44ad, 0xc0392b, 0xf39c12, 0xffa07a];
     const menuColors = [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b, 0x27ae60, 0xd35400, 0x2980b9, 0x16a085, 0x7f8c8d];
 
@@ -226,6 +222,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
     return overlay;
 }
+
 // --- CORE MECHANICS ---
 
 // NEW: Visual feedback for dropping cards
@@ -327,11 +324,9 @@ function createStoreOverlay(scene) {
     const bg = scene.add.rectangle(0, 0, 900, 650, 0x1a1a1a).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     const title = scene.add.text(0, -290, 'MOJI STORE', { fontFamily: 'Impact, sans-serif', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     
-    // Updated Close Button: Just the X text, made interactive
-    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    // Notice that closeBtn is NO LONGER in this array!
     overlay.add([bg, title, closeTxt]);
 
     let packKeys = Object.keys(packDatabase);
@@ -343,15 +338,14 @@ function createStoreOverlay(scene) {
         packCont.add(createPackGraphic(scene, key));
         
         let priceTxt = scene.add.text(0, 130, '$' + def.cost.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
-        let addBtn = scene.add.rectangle(0, 180, 140, 40, 0x3498db).setInteractive();
-        let addTxt = scene.add.text(0, 180, '+ ADD TO CART', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
         
-        addBtn.on('pointerdown', () => {
+        // NEW ROUNDED BUTTON
+        let addBtn = createButton(scene, 0, 180, 140, 40, 0x3498db, null, '+ ADD TO CART', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
             shoppingCart[key] += 1;
             updateStoreCart(scene, overlay);
         });
         
-        packCont.add([priceTxt, addBtn, addTxt]);
+        packCont.add([priceTxt, addBtn]);
         overlay.add(packCont);
     });
 
@@ -359,17 +353,13 @@ function createStoreOverlay(scene) {
     overlay.cartTotalText = scene.add.text(-380, 250, 'TOTAL: $0.00', { fontSize: '24px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
     overlay.cartItemsText = scene.add.text(0, 250, 'Items: 0', { fontSize: '18px', color: '#fff' }).setOrigin(0.5);
     
-    const clearBtn = scene.add.rectangle(200, 250, 100, 40, 0xe74c3c).setInteractive();
-    const clearTxt = scene.add.text(200, 250, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-    clearBtn.on('pointerdown', () => {
+    // NEW ROUNDED BUTTONS
+    const clearBtn = createButton(scene, 200, 250, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
         updateStoreCart(scene, overlay);
     });
 
-    const buyBtn = scene.add.rectangle(320, 250, 120, 50, 0x27ae60).setInteractive();
-    const buyTxt = scene.add.text(320, 250, 'CHECKOUT', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-    
-    buyBtn.on('pointerdown', () => {
+    const buyBtn = createButton(scene, 320, 250, 120, 50, 0x27ae60, null, 'CHECKOUT', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
         let cost = calculateCartTotal();
         if (cost > 0 && playerMoney >= cost) {
             playerMoney -= cost;
@@ -386,7 +376,7 @@ function createStoreOverlay(scene) {
         }
     });
 
-    overlay.add([cartBg, overlay.cartTotalText, overlay.cartItemsText, clearBtn, clearTxt, buyBtn, buyTxt]);
+    overlay.add([cartBg, overlay.cartTotalText, overlay.cartItemsText, clearBtn, buyBtn]);
     return overlay;
 }
 
@@ -448,15 +438,13 @@ function renderInventoryView(scene, overlay) {
                 let badgeBg = scene.add.circle(60, -90, 30, 0xe74c3c);
                 let badgeTxt = scene.add.text(60, -90, 'x' + count, { fontSize: '24px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                 
-                let viewBtn = scene.add.rectangle(0, 130, 140, 40, 0x27ae60).setInteractive();
-                let viewTxt = scene.add.text(0, 130, 'VIEW PACK', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-                
-                viewBtn.on('pointerdown', () => {
+                // NEW ROUNDED BUTTON
+                let viewBtn = createButton(scene, 0, 130, 140, 40, 0x27ae60, null, 'VIEW PACK', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
                     overlay.setVisible(false); 
                     showPackCloseup(scene, key);
                 });
                 
-                packCont.add([badgeBg, badgeTxt, viewBtn, viewTxt]);
+                packCont.add([badgeBg, badgeTxt, viewBtn]);
                 overlay.gridContainer.add(packCont);
                 index++;
             }
@@ -507,20 +495,14 @@ function renderInventoryView(scene, overlay) {
 
 function showPackCloseup(scene, packKey) {
     const closeup = scene.add.container(512, 384).setDepth(200);
-    
-    // Alpha set to 0 (invisible), but still interactive to block clicks on the table
     const bg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0).setInteractive(); 
     
     const packGraphic = scene.add.container(0, -60);
     packGraphic.add(createPackGraphic(scene, packKey));
-    
-    // REDUCED SCALE: Changed from 2.5 to 1.8 for a better fit
     packGraphic.setScale(1.8); 
 
-    const openBtn = scene.add.rectangle(0, 260, 200, 60, 0x2ecc71).setStrokeStyle(4, 0xffffff).setInteractive();
-    const openTxt = scene.add.text(0, 260, 'OPEN!', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }).setOrigin(0.5);
-
-    openBtn.on('pointerdown', () => {
+    // NEW ROUNDED BUTTON
+    const openBtn = createButton(scene, 0, 260, 200, 60, 0x2ecc71, 0xffffff, 'OPEN!', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }, () => {
         playerPacks[packKey] -= 1; 
         saveGame();
         
@@ -531,10 +513,10 @@ function showPackCloseup(scene, packKey) {
         spawnBoosterPack(scene, packKey);
     });
 
-    const closeTxt = scene.add.text(450, -320, '✖', { fontSize: '36px', color: '#000000' }).setInteractive().setOrigin(0.5);
+    const closeTxt = scene.add.text(450, -320, '✖', { fontSize: '36px', color: '#000000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => closeup.destroy());
 
-    closeup.add([bg, packGraphic, openBtn, openTxt, closeTxt]);
+    closeup.add([bg, packGraphic, openBtn, closeTxt]);
 }
 
 // NEW HELPER: Creates a reusable dropdown menu
