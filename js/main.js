@@ -570,10 +570,12 @@ function renderStoreView(scene, overlay) {
                             
                             if (key === 'binder') {
                                 scene.binderZone.destroy();
-                                scene.binderZone = createButton(scene, 864, 620, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+                                // CHANGED: Re-draw the unlocked button at Y: 138 instead of 620
+                                scene.binderZone = createButton(scene, 864, 138, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
                                     renderBinderGrid(scene, scene.binderOverlay); scene.binderOverlay.setVisible(true); 
                                 });
                             }
+                            
                             renderStoreView(scene, overlay); 
                         } else {
                             buyBtn.list[1].setColor('#e74c3c');
