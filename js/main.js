@@ -608,7 +608,8 @@ function createBinderOverlay(scene) {
         { label: 'Category (A-Z)', val: 'cat_asc' }, { label: 'Category (Z-A)', val: 'cat_desc' }
     ];
     
-    createDropdown(scene, overlay.uiContainer, -345, -315, 150, 'SORT: ', sortOptions, 'num_asc', (newVal) => {
+    // ADJUSTED X (-355) and Y (-285) to align with left sleeve column
+    createDropdown(scene, overlay.uiContainer, -355, -285, 150, 'SORT: ', sortOptions, 'num_asc', (newVal) => {
         overlay.sortBy = newVal;
         overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
@@ -635,7 +636,8 @@ function createBinderOverlay(scene) {
         { label: 'Memes', val: 'cat_Memes' }
     ];
 
-    createDropdown(scene, overlay.uiContainer, -185, -315, 150, 'FILTER: ', filterOptions, 'all', (newVal) => {
+    // ADJUSTED X (-195) and Y (-285) to stay beside the Sort button
+    createDropdown(scene, overlay.uiContainer, -195, -285, 150, 'FILTER: ', filterOptions, 'all', (newVal) => {
         overlay.filterBy = newVal;
         overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
@@ -650,7 +652,6 @@ function createBinderOverlay(scene) {
     });
     
     overlay.nextBtn.on('pointerdown', () => {
-        // We will update maxSpread dynamically inside renderBinderGrid
         overlay.currentSpread++; renderBinderGrid(scene, overlay);
     });
 
