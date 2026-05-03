@@ -237,8 +237,8 @@ function createStoreOverlay(scene) {
     const bg = scene.add.rectangle(0, 0, 900, 650, 0x1a1a1a).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     const title = scene.add.text(0, -290, 'MOJI STORE', { fontFamily: 'Arial', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     
-    const closeBtn = scene.add.rectangle(350, -290, 120, 40, 0xe74c3c).setInteractive();
-    const closeTxt = scene.add.text(350, -290, 'CLOSE', { fontFamily: 'Arial', fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    // const closeBtn = scene.add.rectangle(350, -290, 120, 40, 0xe74c3c).setInteractive();
+    const closeTxt = scene.add.text(350, -290, 'X', { fontFamily: 'Arial', fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     closeBtn.on('pointerdown', () => overlay.setVisible(false));
 
     overlay.add([bg, title, closeBtn, closeTxt]);
