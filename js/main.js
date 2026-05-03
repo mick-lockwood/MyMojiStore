@@ -401,20 +401,47 @@ function createInventoryOverlay(scene) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
     overlay.bg = scene.add.rectangle(0, 0, 900, 650, themeColors.inventory).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     
-    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
     overlay.currentTab = 'packs';
+    overlay.currentPage = 0; // NEW: Pagination State
+
     overlay.add([overlay.bg, closeTxt]);
 
     // Tabs
-    const packsTab = scene.add.text(-100, -280, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive().setOrigin(0.5);
-    const doublesTab = scene.add.text(100, -280, 'DOUBLES', { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive().setOrigin(0.5);
+    const packsTab = scene.add.text(-100, -280, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    const doublesTab = scene.add.text(100, -280, 'DOUBLES', { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
 
-    packsTab.on('pointerdown', () => { overlay.currentTab = 'packs'; packsTab.setColor('#fff'); doublesTab.setColor('#7f8c8d'); renderInventoryView(scene, overlay); });
-    doublesTab.on('pointerdown', () => { overlay.currentTab = 'doubles'; doublesTab.setColor('#fff'); packsTab.setColor('#7f8c8d'); renderInventoryView(scene, overlay); });
+    packsTab.on('pointerdown', () => { 
+        overlay.currentTab = 'packs'; 
+        overlay.currentPage = 0; // Reset to page 1 on tab switch
+        packsTab.setColor('#fff'); 
+        doublesTab.setColor('#7f8c8d'); 
+        renderInventoryView(scene, overlay); 
+    });
+    
+    doublesTab.on('pointerdown', () => { 
+        overlay.currentTab = 'doubles'; 
+        overlay.currentPage = 0; // Reset to page 1 on tab switch
+        doublesTab.setColor('#fff'); 
+        packsTab.setColor('#7f8c8d'); 
+        renderInventoryView(scene, overlay); 
+    });
 
-    overlay.add([packsTab, doublesTab]);
+    // NEW: Pagination Buttons
+    overlay.prevBtn = scene.add.text(-400, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    overlay.nextBtn = scene.add.text(400, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    
+    overlay.prevBtn.on('pointerdown', () => {
+        if (overlay.currentPage > 0) { overlay.currentPage--; renderInventoryView(scene, overlay); }
+    });
+    
+    overlay.nextBtn.on('pointerdown', () => {
+        overlay.currentPage++; renderInventoryView(scene, overlay);
+    });
+
+    overlay.add([packsTab, doublesTab, overlay.prevBtn, overlay.nextBtn]);
     overlay.gridContainer = scene.add.container(0, 0); 
     overlay.add(overlay.gridContainer);
     
@@ -425,20 +452,39 @@ function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
     if (overlay.currentTab === 'packs') {
-        let startX = -250;
-        let packKeys = Object.keys(playerPacks);
-        let index = 0;
+        // Find all packs that have at least 1 in inventory
+        let activePacks = Object.keys(playerPacks).filter(key => playerPacks[key] > 0);
+        
+        let itemsPerPage = 6; // 3 columns x 2 rows
+        let maxPage = Math.ceil(activePacks.length / itemsPerPage) - 1;
+        if (maxPage < 0) maxPage = 0;
+        if (overlay.currentPage > maxPage) overlay.currentPage = maxPage;
 
-        packKeys.forEach((key) => {
-            let count = playerPacks[key];
-            if (count > 0) {
-                let packCont = scene.add.container(startX + (index * 250), -30);
+        overlay.prevBtn.setVisible(overlay.currentPage > 0);
+        overlay.nextBtn.setVisible(overlay.currentPage < maxPage);
+
+        let startIndex = overlay.currentPage * itemsPerPage;
+        let displayPacks = activePacks.slice(startIndex, startIndex + itemsPerPage);
+
+        if (displayPacks.length === 0) {
+            let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            overlay.gridContainer.add(emptyTxt);
+        } else {
+            let startX = -250, startY = -30;
+            displayPacks.forEach((key, index) => {
+                let col = index % 3;
+                let row = Math.floor(index / 3);
+                let count = playerPacks[key];
+
+                let x = startX + (col * 250);
+                let y = startY + (row * 260);
+
+                let packCont = scene.add.container(x, y);
                 packCont.add(createPackGraphic(scene, key));
                 
                 let badgeBg = scene.add.circle(60, -90, 30, 0xe74c3c);
                 let badgeTxt = scene.add.text(60, -90, 'x' + count, { fontSize: '24px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                 
-                // NEW ROUNDED BUTTON
                 let viewBtn = createButton(scene, 0, 130, 140, 40, 0x27ae60, null, 'VIEW PACK', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
                     overlay.setVisible(false); 
                     showPackCloseup(scene, key);
@@ -446,24 +492,38 @@ function renderInventoryView(scene, overlay) {
                 
                 packCont.add([badgeBg, badgeTxt, viewBtn]);
                 overlay.gridContainer.add(packCont);
-                index++;
-            }
-        });
-
-        if (index === 0) {
-            let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
-            overlay.gridContainer.add(emptyTxt);
+            });
         }
     } 
     else if (overlay.currentTab === 'doubles') {
-        let startX = -320, startY = -120, col = 0, spacingX = 160, spacingY = 220;
-        let hasDoubles = false;
+        // Filter out cards we have more than 1 of
+        let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > 1);
 
-        myMojiDatabase.forEach(moji => {
-            let owned = Number(playerInventory[moji.id]);
-            if (owned > 1) {
-                hasDoubles = true;
-                let miniCard = scene.add.container(startX + (col * spacingX), startY);
+        let itemsPerPage = 15; // 5 columns x 3 rows
+        let maxPage = Math.ceil(doubles.length / itemsPerPage) - 1;
+        if (maxPage < 0) maxPage = 0;
+        if (overlay.currentPage > maxPage) overlay.currentPage = maxPage;
+
+        overlay.prevBtn.setVisible(overlay.currentPage > 0);
+        overlay.nextBtn.setVisible(overlay.currentPage < maxPage);
+
+        let startIndex = overlay.currentPage * itemsPerPage;
+        let displayDoubles = doubles.slice(startIndex, startIndex + itemsPerPage);
+
+        if (displayDoubles.length === 0) {
+            let emptyTxt = scene.add.text(0, 0, "You don't have any duplicate cards.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            overlay.gridContainer.add(emptyTxt);
+        } else {
+            let startX = -320, startY = -120, spacingX = 160, spacingY = 220;
+            displayDoubles.forEach((moji, index) => {
+                let col = index % 5;
+                let row = Math.floor(index / 5);
+                let owned = Number(playerInventory[moji.id]);
+
+                let x = startX + (col * spacingX);
+                let y = startY + (row * spacingY);
+
+                let miniCard = scene.add.container(x, y);
                 miniCard.add(createCardGraphic(scene, moji));
                 miniCard.setScale(0.45); 
                 
@@ -481,14 +541,7 @@ function renderInventoryView(scene, overlay) {
                 });
 
                 overlay.gridContainer.add(miniCard);
-                col++;
-                if (col > 4) { col = 0; startY += spacingY; }
-            }
-        });
-
-        if (!hasDoubles) {
-            let emptyTxt = scene.add.text(0, 0, "You don't have any duplicate cards.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
-            overlay.gridContainer.add(emptyTxt);
+            });
         }
     }
 }
