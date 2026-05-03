@@ -499,12 +499,11 @@ function createBinderOverlay(scene) {
     
     overlay.currentSpread = 0; 
     
-    // NEW: Sorting State
-    overlay.sortBy = 'Number'; // Options: Number, Name, Rarity, Value
-    overlay.sortAsc = true;    // True = Ascending, False = Descending
+    overlay.sortBy = 'Number'; 
+    overlay.sortAsc = true;    
 
-    // NEW: Sort Type Button
-    const sortTypes = ['Number', 'Name', 'Rarity', 'Value'];
+    // ADDED: 'Category' is now in the array of sortable options
+    const sortTypes = ['Number', 'Name', 'Category', 'Rarity', 'Value'];
     const sortBtnBg = scene.add.rectangle(-320, -300, 160, 40, 0x34495e).setStrokeStyle(2, 0xffffff).setInteractive();
     const sortBtnTxt = scene.add.text(-320, -300, 'SORT: NUMBER', { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     
@@ -512,22 +511,20 @@ function createBinderOverlay(scene) {
         let currentIndex = sortTypes.indexOf(overlay.sortBy);
         overlay.sortBy = sortTypes[(currentIndex + 1) % sortTypes.length];
         sortBtnTxt.setText('SORT: ' + overlay.sortBy.toUpperCase());
-        overlay.currentSpread = 0; // Reset to page 1 on sort
+        overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
     });
 
-    // NEW: Sort Order Button (ASC/DESC)
     const orderBtnBg = scene.add.rectangle(-140, -300, 160, 40, 0x34495e).setStrokeStyle(2, 0xffffff).setInteractive();
     const orderBtnTxt = scene.add.text(-140, -300, 'ORDER: ASC ⬆', { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     
     orderBtnBg.on('pointerdown', () => {
         overlay.sortAsc = !overlay.sortAsc;
         orderBtnTxt.setText(overlay.sortAsc ? 'ORDER: ASC ⬆' : 'ORDER: DESC ⬇');
-        overlay.currentSpread = 0; // Reset to page 1 on sort
+        overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
     });
     
-    // Pagination Buttons
     overlay.prevBtn = scene.add.text(-430, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     overlay.nextBtn = scene.add.text(430, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     
@@ -556,7 +553,6 @@ function createBinderOverlay(scene) {
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
-    // NEW: Create a sorted copy of the database based on the current settings
     let sortedDb = [...myMojiDatabase];
     sortedDb.sort((a, b) => {
         let valA, valB;
@@ -567,6 +563,10 @@ function renderBinderGrid(scene, overlay) {
         } else if (overlay.sortBy === 'Name') {
             valA = a.name.toLowerCase();
             valB = b.name.toLowerCase();
+        } else if (overlay.sortBy === 'Category') {
+            // ADDED: Logic to handle sorting by the new Category strings
+            valA = a.category.toLowerCase();
+            valB = b.category.toLowerCase();
         } else if (overlay.sortBy === 'Rarity') {
             const rarityWeights = { "Common": 1, "Rare": 2, "Epic": 3, "Legendary": 4 };
             valA = rarityWeights[a.rarity];
@@ -590,7 +590,7 @@ function renderBinderGrid(scene, overlay) {
     let endIndex = Math.min(startIndex + 18, sortedDb.length);
 
     for (let i = startIndex; i < endIndex; i++) {
-        let moji = sortedDb[i]; // Use the sorted database here!
+        let moji = sortedDb[i]; 
         let spreadIndex = i - startIndex; 
         let page = spreadIndex < 9 ? 0 : 1; 
         let localIndex = spreadIndex % 9;
