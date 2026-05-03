@@ -40,18 +40,20 @@ function loadGame() {
             if (playerInventory[id] !== undefined) playerInventory[id] = Number(parsedData.inventory[id]);
         }
         
+        // Load Unlocks (Store Upgrades & Individual Colors)
         if (parsedData.unlocks) {
             if (parsedData.unlocks.binder !== undefined) playerUnlocks.binder = parsedData.unlocks.binder;
-            
-            // FIXED: Explicitly load the colorThemes store upgrade state
             if (parsedData.unlocks.colorThemes !== undefined) playerUnlocks.colorThemes = parsedData.unlocks.colorThemes; 
-            
             if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
         }
 
-        // FIXED: Load the active equipped colors so they don't reset on refresh
+        // Load Equipped Themes
         if (parsedData.themes) {
             themeColors = parsedData.themes;
+            // Self-healing: if an old save doesn't have the 'active' tracker, build it
+            if (!themeColors.active) {
+                themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a };
+            }
         }
     }
 }
@@ -61,8 +63,8 @@ function saveGame() {
         money: playerMoney,
         packs: playerPacks,
         inventory: playerInventory,
-        unlocks: playerUnlocks,
-        themes: themeColors // FIXED: Write the active themes to the save file
+        unlocks: playerUnlocks, // Saves the store upgrades and purchased color arrays
+        themes: themeColors     // Saves the active checkmarks and applied UI colors
     }));
 }
 
@@ -223,6 +225,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     overlay.paletteContainer = scene.add.container(0, 0);
     overlay.add([title, closeTxt, resetBtn, instrBtn, overlay.paletteContainer]);
 
+    // Standard colors (first 3 are free/unlocked by default)
     const stdColors = [0x1a1a1a, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad, 0xd35400];
     const vipColors = [0xf1c40f, 0xbdc3c7, 0xcd7f32, 0xff00ff];
     const allColors = [...stdColors, ...vipColors];
@@ -230,7 +233,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     overlay.renderPalettes = () => {
         overlay.paletteContainer.removeAll(true);
         
-        // MASTER LOCK: Hide palettes if not purchased from the store yet!
+        // MASTER LOCK: Hide palettes if not purchased from the store!
         if (!playerUnlocks.colorThemes) {
             let lockBg = scene.add.rectangle(0, -30, 400, 80, 0xf4f4f4).setStrokeStyle(2, 0x000);
             let lockTxt = scene.add.text(0, -30, "🎨 COLOR THEMES LOCKED\nPurchase in the Store's UNLOCKS tab!", { fontSize: '18px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
@@ -250,11 +253,9 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             allColors.forEach((color, index) => {
                 let isVip = index >= stdColors.length;
                 let isUnlocked = playerUnlocks.colors.includes(color);
-                let isActive = themeColors.active[type] === color; // Check if this is the selected color
+                let isActive = themeColors.active && themeColors.active[type] === color; 
                 
                 let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setInteractive({ useHandCursor: true });
-                
-                // Highlight active colors with a thicker border
                 swatch.setStrokeStyle(isActive ? 4 : 2, isActive ? 0x2ecc71 : 0x000000);
 
                 if (!isUnlocked) {
@@ -262,29 +263,26 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                     overlay.paletteContainer.add([swatch, lockTxt]);
 
                     swatch.on('pointerdown', () => {
-                        themeColors.active[type] = color; // Save active state
-                        
-                        if (type === 'table') { 
-                            themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
-                            scene.cameras.main.setBackgroundColor(themeColors.table); 
-                        }
-                        if (type === 'binder') { 
-                            themeColors.binder = color; 
-                            binderOverlay.bg.setFillStyle(color); 
-                        }
-                        if (type === 'inv') { 
-                            themeColors.inventory = color; 
-                            inventoryOverlay.bg.setFillStyle(color); 
+                        if (isVip && !allStdUnlocked) {
+                            alert("You must unlock all standard colors before buying VIP palettes!");
+                            return;
                         }
                         
-                        // FIXED: Actually save the game so the active color persists!
-                        saveGame(); 
-                        
-                        overlay.renderPalettes(); // Redraw immediately to move the checkmark
+                        let cost = isVip ? 75 : 50;
+                        if (confirm(`This color costs $${cost}. Would you like to purchase it?`)) {
+                            if (playerMoney >= cost) {
+                                playerMoney -= cost;
+                                scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                                playerUnlocks.colors.push(color);
+                                saveGame(); // Save immediately after purchasing
+                                overlay.renderPalettes(); 
+                            } else {
+                                alert("Not enough money!");
+                            }
+                        }
                     });
 
                 } else {
-                    // Draw checkmark if active (Black check for light colors, White check for dark colors)
                     if (isActive) {
                         let checkColor = (color === 0xf4f4f4 || color === 0xbdc3c7 || color === 0xf1c40f) ? '#000000' : '#ffffff';
                         let checkTxt = scene.add.text(startX + (index * spacing), y, '✔', { fontSize: '18px', color: checkColor, fontStyle: 'bold' }).setOrigin(0.5);
@@ -295,8 +293,10 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                     
                     swatch.on('pointerover', () => scene.tweens.add({ targets: swatch, scale: 1.2, duration: 100 }));
                     swatch.on('pointerout', () => scene.tweens.add({ targets: swatch, scale: 1, duration: 100 }));
+                    
                     swatch.on('pointerdown', () => {
-                        themeColors.active[type] = color; // Save active state
+                        if (!themeColors.active) themeColors.active = {};
+                        themeColors.active[type] = color; 
                         
                         if (type === 'table') { 
                             themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
@@ -310,7 +310,8 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                             themeColors.inventory = color; 
                             inventoryOverlay.bg.setFillStyle(color); 
                         }
-                        overlay.renderPalettes(); // Redraw immediately to move the checkmark
+                        saveGame(); // Save immediately when equipping a color
+                        overlay.renderPalettes(); 
                     });
                 }
             });
