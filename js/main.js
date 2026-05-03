@@ -179,24 +179,25 @@ function create() {
         settingsOverlay.setVisible(true); 
     });
 
-    /// --- BOTTOM BUTTONS / DROP ZONES ---
+    // --- MAIN HUD BUTTONS & DROP ZONES ---
     
-    // 1. TRADING STASH (Deactivated)
-    addShadow(160, 620, 240, 70, 12);
-    createButton(scene, 160, 620, 240, 70, 0x57bcf2, 0x000000, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, null);
+    // 1. TRADING STASH (MOVED TO TOP)
+    addShadow(160, 138, 240, 70, 12);
+    createButton(scene, 160, 138, 240, 70, 0x57bcf2, 0x000000, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, null);
 
-    // 2. SELL ON MOJIMARKET
+    // 2. SELL ON MOJIMARKET (Remains at bottom)
     addShadow(160, 710, 240, 70, 12);
     scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }, () => {});
 
-    // 3. BINDER (Locked vs Unlocked state)
-    addShadow(864, 620, 240, 70, 12);
+    // 3. BINDER (MOVED TO TOP)
+    addShadow(864, 138, 240, 70, 12);
     let binderColor = playerUnlocks.binder ? 0xffc87c : 0x7f8c8d; // Grey if locked
-    scene.binderZone = createButton(scene, 864, 620, 240, 70, binderColor, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+    scene.binderZone = createButton(scene, 864, 138, 240, 70, binderColor, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
         if (playerUnlocks.binder) {
             renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
         } else {
-            showFloatingText(scene, 864, 620, 'LOCKED! BUY IN STORE', '#e74c3c');
+            // Also update the floating text Y coordinate to 138!
+            showFloatingText(scene, 864, 138, 'LOCKED! BUY IN STORE', '#e74c3c');
         }
     });
 
