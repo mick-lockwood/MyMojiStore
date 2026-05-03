@@ -452,7 +452,9 @@ function showPackCloseup(scene, packKey) {
     
     const packGraphic = scene.add.container(0, -60);
     packGraphic.add(createPackGraphic(scene, packKey));
-    packGraphic.setScale(2.5); 
+    
+    // REDUCED SCALE: Changed from 2.5 to 1.8 for a better fit
+    packGraphic.setScale(1.8); 
 
     const openBtn = scene.add.rectangle(0, 260, 200, 60, 0x2ecc71).setStrokeStyle(4, 0xffffff).setInteractive();
     const openTxt = scene.add.text(0, 260, 'OPEN!', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }).setOrigin(0.5);
@@ -468,7 +470,6 @@ function showPackCloseup(scene, packKey) {
         spawnBoosterPack(scene, packKey);
     });
 
-    // Changed to black so you can see it against the invisible background
     const closeTxt = scene.add.text(450, -320, '✖', { fontSize: '36px', color: '#000000' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => closeup.destroy());
 
