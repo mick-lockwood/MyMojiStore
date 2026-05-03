@@ -56,8 +56,10 @@ function create() {
     const addShadow = (x, y, w, h, radius = 0) => scene.add.rectangle(x+6, y+6, w, h, 0x000000, 0.4);
 
     // --- TOP UI HEADER ---
-    addShadow(512, 40, 1024, 80); // Banner Shadow
-    scene.add.rectangle(512, 40, 1024, 80, 0xfce883); // Yellow Banner
+    const addShadow = (x, y, w, h, radius = 0) => scene.add.rectangle(x+6, y+6, w, h, 0x000000, 0.4);
+    
+    addShadow(512, 40, 1024, 80); 
+    scene.add.rectangle(512, 40, 1024, 80, 0xfce883); 
 
     scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: '#222222' });
     let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
@@ -65,12 +67,12 @@ function create() {
 
     scene.add.text(512, 40, 'MyMoji Store', { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' }).setOrigin(0.5);
 
+    // NEW: Store Button (Shopping Cart icon next to settings)
+    const storeIconBtn = scene.add.text(920, 40, '🛒', { fontSize: '44px' }).setOrigin(0.5).setInteractive();
+    storeIconBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
+
     // Settings Button (Simple Black Cog)
-    const settingsBtn = scene.add.text(980, 40, '⚙', { 
-        fontFamily: 'Arial, sans-serif', 
-        fontSize: '44px', 
-        color: '#000000' 
-    }).setOrigin(0.5).setInteractive();
+    const settingsBtn = scene.add.text(980, 40, '⚙', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive();
 
     // --- OVERLAYS ---
     const binderOverlay = createBinderOverlay(scene);
@@ -81,11 +83,12 @@ function create() {
     settingsBtn.on('pointerdown', () => settingsOverlay.setVisible(true));
 
     // --- BOTTOM BUTTONS / DROP ZONES ---
-    // 1. TRADING STASH
+    
+    // 1. TRADING STASH (Deactivated - No longer interactive!)
     addShadow(160, 620, 240, 70);
-    const storeBtn = scene.add.rectangle(160, 620, 240, 70, 0x57bcf2).setInteractive().setStrokeStyle(4, 0x000000);
+    // Removed .setInteractive() so it just acts as decoration now
+    const storeBtn = scene.add.rectangle(160, 620, 240, 70, 0x57bcf2).setStrokeStyle(4, 0x000000);
     scene.add.text(160, 620, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }).setOrigin(0.5);
-    storeBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
 
     // 2. SELL ON MOJIMARKET
     addShadow(160, 710, 240, 70);
@@ -107,22 +110,20 @@ function create() {
 
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
-    // Increased height slightly to fit the new button
     const bg = scene.add.rectangle(0, 0, 500, 420, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
     
     const title = scene.add.text(0, -170, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
     const closeTxt = scene.add.text(220, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    // Reset Save Button
     const resetBtn = scene.add.text(0, 160, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '18px', color: '#e74c3c', fontStyle: 'bold' }).setInteractive().setOrigin(0.5);
     resetBtn.on('pointerdown', () => {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
-    // Helper function to create color cycler buttons
+    // FIXED: Properly attach the created text and buttons to the overlay
     const createColorBtn = (y, label, type, colors) => {
-        scene.add.text(-180, y, label, { fontFamily: 'Arial', fontSize: '20px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
+        let labelTxt = scene.add.text(-180, y, label, { fontFamily: 'Arial', fontSize: '20px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
         let btn = scene.add.rectangle(120, y, 140, 40, colors[0]).setStrokeStyle(2, 0x000).setInteractive();
         btn.colorIndex = 0;
         btn.on('pointerdown', () => {
@@ -130,7 +131,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             let newColor = colors[btn.colorIndex];
             btn.setFillStyle(newColor);
             
-            // Apply the colors to the specific menus
             if (type === 'table') { 
                 themeColors.table = '#' + newColor.toString(16).padStart(6, '0'); 
                 scene.cameras.main.setBackgroundColor(themeColors.table); 
@@ -144,20 +144,18 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                 inventoryOverlay.bg.setFillStyle(newColor); 
             }
         });
-        overlay.add(btn);
+        overlay.add([labelTxt, btn]); // <--- This line was missing!
     };
 
-    // Color Cycler Buttons
     createColorBtn(-90, "Table Color", 'table', [0xf4f4f4, 0x34495e, 0x27ae60, 0xbdc3c7]);
     createColorBtn(-30, "Binder Color", 'binder', [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b]);
     createColorBtn(30, "Inventory Color", 'inv', [0x1a1a1a, 0x2980b9, 0xd35400, 0x16a085]);
 
-    // Instructions Button
     const instrBtn = scene.add.rectangle(0, 100, 200, 40, 0x3498db).setStrokeStyle(2, 0x000).setInteractive();
     const instrTxt = scene.add.text(0, 100, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
     
     instrBtn.on('pointerdown', () => {
-        alert("HOW TO PLAY:\n\n1. Buy packs from the Trading Stash.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 100 MyMojis!");
+        alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 100 MyMojis!");
     });
 
     overlay.add([bg, title, closeTxt, resetBtn, instrBtn, instrTxt]);
@@ -443,14 +441,15 @@ function renderInventoryView(scene, overlay) {
     }
 }
 
-// NEW: Pack Close-up cinematic flow
 function showPackCloseup(scene, packKey) {
     const closeup = scene.add.container(512, 384).setDepth(200);
-    const bg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.85).setInteractive(); // Blocks clicks
+    
+    // Alpha set to 0 (invisible), but still interactive to block clicks on the table
+    const bg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0).setInteractive(); 
     
     const packGraphic = scene.add.container(0, -60);
     packGraphic.add(createPackGraphic(scene, packKey));
-    packGraphic.setScale(2.5); // Cinematic zoom
+    packGraphic.setScale(2.5); 
 
     const openBtn = scene.add.rectangle(0, 260, 200, 60, 0x2ecc71).setStrokeStyle(4, 0xffffff).setInteractive();
     const openTxt = scene.add.text(0, 260, 'OPEN!', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }).setOrigin(0.5);
@@ -459,7 +458,6 @@ function showPackCloseup(scene, packKey) {
         playerPacks[packKey] -= 1; 
         saveGame();
         
-        // Update home screen UI
         let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
         scene.packsText.setText('PACKS: ' + totalPacks);
 
@@ -467,8 +465,8 @@ function showPackCloseup(scene, packKey) {
         spawnBoosterPack(scene, packKey);
     });
 
-    // Optional close button in case they change their mind
-    const closeTxt = scene.add.text(450, -320, '✖', { fontSize: '36px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    // Changed to black so you can see it against the invisible background
+    const closeTxt = scene.add.text(450, -320, '✖', { fontSize: '36px', color: '#000000' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => closeup.destroy());
 
     closeup.add([bg, packGraphic, openBtn, openTxt, closeTxt]);
