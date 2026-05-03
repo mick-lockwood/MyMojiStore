@@ -48,19 +48,65 @@ const config = {
 
 const game = new Phaser.Game(config);
 
+// NEW HELPER: Reusable Rounded Button with Hover & Click Animations
+function createButton(scene, x, y, width, height, fillColor, strokeColor, textStr, textStyle, onClick) {
+    const container = scene.add.container(x, y);
+    container.setSize(width, height);
+    
+    // Draw rounded background
+    const bg = scene.add.graphics();
+    bg.fillStyle(fillColor, 1);
+    bg.fillRoundedRect(-width/2, -height/2, width, height, 12); // 12px radius
+    
+    if (strokeColor !== null) {
+        bg.lineStyle(4, strokeColor, 1);
+        bg.strokeRoundedRect(-width/2, -height/2, width, height, 12);
+    }
+    
+    const txt = scene.add.text(0, 0, textStr, textStyle).setOrigin(0.5);
+    container.add([bg, txt]);
+    
+    if (onClick) {
+        container.setInteractive({ useHandCursor: true });
+        
+        // Hover Scale Up
+        container.on('pointerover', () => scene.tweens.add({ targets: container, scaleX: 1.05, scaleY: 1.05, duration: 100 }));
+        
+        // Hover Scale Down
+        container.on('pointerout', () => scene.tweens.add({ targets: container, scaleX: 1, scaleY: 1, duration: 100 }));
+        
+        // Click Bounce
+        container.on('pointerdown', () => {
+            scene.tweens.add({ targets: container, scaleX: 0.95, scaleY: 0.95, duration: 50, yoyo: true });
+            onClick();
+        });
+    }
+    return container;
+}
+
 function create() {
     const scene = this; 
     scene.cameras.main.setBackgroundColor(themeColors.table);
 
+    // UPDATED: Shadow helper now supports rounded corners for our new buttons
+    const addShadow = (x, y, w, h, radius = 0) => {
+        if (radius === 0) {
+            scene.add.rectangle(x + 6, y + 6, w + 8, h + 8, 0x000000, 0.05); 
+            scene.add.rectangle(x + 5, y + 5, w + 4, h + 4, 0x000000, 0.10); 
+            scene.add.rectangle(x + 4, y + 4, w, h, 0x000000, 0.15);         
+        } else {
+            const sg = scene.add.graphics();
+            const drawS = (ox, oy, dw, dh, alpha) => {
+                sg.fillStyle(0x000000, alpha);
+                sg.fillRoundedRect(x + ox - dw/2, y + oy - dh/2, dw, dh, radius);
+            };
+            drawS(6, 6, w + 8, h + 8, 0.05);
+            drawS(5, 5, w + 4, h + 4, 0.10);
+            drawS(4, 4, w, h, 0.15);
+        }
+    };
 
     // --- TOP UI HEADER ---
-
-    const addShadow = (x, y, w, h) => {
-        scene.add.rectangle(x + 6, y + 6, w + 8, h + 8, 0x000000, 0.05); // Widest, most transparent
-        scene.add.rectangle(x + 5, y + 5, w + 4, h + 4, 0x000000, 0.10); // Middle layer
-        scene.add.rectangle(x + 4, y + 4, w, h, 0x000000, 0.15);         // Core shadow
-    };
-    
     addShadow(512, 40, 1024, 80); 
     scene.add.rectangle(512, 40, 1024, 80, 0xfce883); 
 
@@ -70,12 +116,15 @@ function create() {
 
     scene.add.text(512, 40, 'MyMoji Store', { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' }).setOrigin(0.5);
 
-    // NEW: Store Button (Shopping Cart icon next to settings)
-    const storeIconBtn = scene.add.text(920, 40, '🛒', { fontSize: '44px' }).setOrigin(0.5).setInteractive();
+    // Header Icons (Added hover tweens)
+    const storeIconBtn = scene.add.text(920, 40, '🛒', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    storeIconBtn.on('pointerover', () => scene.tweens.add({ targets: storeIconBtn, scale: 1.2, duration: 100 }));
+    storeIconBtn.on('pointerout', () => scene.tweens.add({ targets: storeIconBtn, scale: 1, duration: 100 }));
     storeIconBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
 
-    // Settings Button (Simple Black Cog)
-    const settingsBtn = scene.add.text(980, 40, '⚙️', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive();
+    const settingsBtn = scene.add.text(980, 40, '⚙', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    settingsBtn.on('pointerover', () => scene.tweens.add({ targets: settingsBtn, angle: 45, duration: 200 }));
+    settingsBtn.on('pointerout', () => scene.tweens.add({ targets: settingsBtn, angle: 0, duration: 200 }));
 
     // --- OVERLAYS ---
     const binderOverlay = createBinderOverlay(scene);
@@ -87,28 +136,27 @@ function create() {
 
     // --- BOTTOM BUTTONS / DROP ZONES ---
     
-    // 1. TRADING STASH (Deactivated - No longer interactive!)
-    addShadow(160, 620, 240, 70);
-    // Removed .setInteractive() so it just acts as decoration now
-    const storeBtn = scene.add.rectangle(160, 620, 240, 70, 0x57bcf2).setStrokeStyle(4, 0x000000);
-    scene.add.text(160, 620, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }).setOrigin(0.5);
+    // 1. TRADING STASH (Deactivated - No onClick passed)
+    addShadow(160, 620, 240, 70, 12);
+    createButton(scene, 160, 620, 240, 70, 0x57bcf2, 0x000000, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, null);
 
-    // 2. SELL ON MOJIMARKET
-    addShadow(160, 710, 240, 70);
-    scene.sellZone = scene.add.rectangle(160, 710, 240, 70, 0xff7e8d).setInteractive().setStrokeStyle(4, 0x000000);
-    scene.add.text(160, 710, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }).setOrigin(0.5);
+    // 2. SELL ON MOJIMARKET (Drop zone, but gets the hover effects!)
+    addShadow(160, 710, 240, 70, 12);
+    scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }, () => {
+        // Drop zone, empty click func just to enable the bounce animation
+    });
 
-    // 3. BINDER
-    addShadow(864, 620, 240, 70);
-    scene.binderZone = scene.add.rectangle(864, 620, 240, 70, 0xffc87c).setInteractive().setStrokeStyle(4, 0x000000);
-    scene.add.text(864, 620, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }).setOrigin(0.5);
-    scene.binderZone.on('pointerdown', () => { renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); });
+    // 3. BINDER (Drop zone AND clickable button)
+    addShadow(864, 620, 240, 70, 12);
+    scene.binderZone = createButton(scene, 864, 620, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+        renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
+    });
 
     // 4. INVENTORY
-    addShadow(864, 710, 240, 70);
-    const packInvBtn = scene.add.rectangle(864, 710, 240, 70, 0xda7aff).setInteractive().setStrokeStyle(4, 0x000000);
-    scene.add.text(864, 710, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }).setOrigin(0.5);
-    packInvBtn.on('pointerdown', () => { renderInventoryView(scene, inventoryOverlay); inventoryOverlay.setVisible(true); });
+    addShadow(864, 710, 240, 70, 12);
+    createButton(scene, 864, 710, 240, 70, 0xda7aff, 0x000000, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+        renderInventoryView(scene, inventoryOverlay); inventoryOverlay.setVisible(true); 
+    });
 }
 
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
