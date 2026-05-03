@@ -10,18 +10,21 @@ let playerMoney = 50.00;
 let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
-let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a, active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }
+let themeColors = { 
+    table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a,
+    active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }
 };
 
+// The first 3 colors (Black, White, Grey) are unlocked by default
 let playerUnlocks = { 
     binder: false, 
-    colorThemes: false, // Re-added the main color menu unlock
+    colorThemes: false, 
     colors: [0x1a1a1a, 0xf4f4f4, 0x7f8c8d] 
 };  
 
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
 
-// UPDATED: Added Color Palettes back to the store upgrades
+// Database for Store Upgrades
 const upgradeDatabase = {
     "binder": { name: "Pro Binder", cost: 150.00 },
     "colorThemes": { name: "Color Palettes", cost: 75.00 }
