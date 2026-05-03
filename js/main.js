@@ -205,6 +205,14 @@ function create() {
     scene.invZone = createButton(scene, 864, 710, 240, 70, 0xda7aff, 0x000000, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
         renderInventoryView(scene, inventoryOverlay); inventoryOverlay.setVisible(true); 
     });
+    // Respawn any cards that were left on the table!
+    cardsOnTable.forEach(savedCard => {
+        let mojiData = myMojiDatabase.find(m => m.id === savedCard.mojiId);
+        if (mojiData) {
+            // We pass the existing instance ID so it doesn't duplicate itself in the save file
+            createDraggableCard(scene, savedCard.x, savedCard.y, mojiData, savedCard.instanceId);
+        }
+    });
 }
 
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
@@ -390,7 +398,8 @@ function createPackGraphic(scene, packId) {
     return [bg, strip, nameTxt];
 }
 
-function createDraggableCard(scene, x, y, mojiData) {
+// UPDATED: Accepts an optional existingInstanceId for cards re-spawning on refresh
+function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null) {
     const card = scene.add.container(x, y);
     card.add(createCardGraphic(scene, mojiData));
     card.setSize(220, 320);
@@ -398,7 +407,15 @@ function createDraggableCard(scene, x, y, mojiData) {
     scene.input.setDraggable(card);
     card.setDepth(10); 
 
-    // Store starting position for the bounce-back animation
+    // NEW: Assign a unique ID to this physical card graphic
+    card.instanceId = existingInstanceId || ('card_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
+    
+    // If it's a brand new card (pulled from a pack/inventory), add it to the table array and save
+    if (!existingInstanceId) {
+        cardsOnTable.push({ instanceId: card.instanceId, mojiId: mojiData.id, x: x, y: y });
+        saveGame();
+    }
+
     card.startX = x;
     card.startY = y;
 
@@ -415,34 +432,49 @@ function createDraggableCard(scene, x, y, mojiData) {
         this.setScale(1); 
         this.setDepth(10); 
         let bounds = this.getBounds();
+        let dropped = false;
+        let isBouncing = false;
         
         // 1. BINDER DROP ZONE
         if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.binderZone.getBounds())) {
             if (playerUnlocks.binder) {
                 playerInventory[mojiData.id] = Number(playerInventory[mojiData.id]) + 1; 
-                saveGame(); 
                 showFloatingText(scene, this.x, this.y, 'SAVED!', '#9b59b6');
-                this.destroy(); 
+                dropped = true;
             } else {
-                // Reject drop and bounce back
                 showFloatingText(scene, this.x, this.y, 'BINDER LOCKED!', '#e74c3c');
                 scene.tweens.add({ targets: this, x: this.startX, y: this.startY, duration: 200, ease: 'Back.easeOut' });
+                isBouncing = true;
             }
         } 
         // 2. INVENTORY DROP ZONE
         else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.invZone.getBounds())) {
             playerInventory[mojiData.id] = Number(playerInventory[mojiData.id]) + 1; 
-            saveGame(); 
             showFloatingText(scene, this.x, this.y, 'STASHED!', '#9b59b6');
-            this.destroy(); 
+            dropped = true;
         }
         // 3. SELL DROP ZONE
         else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.sellZone.getBounds())) {
             playerMoney += Number(mojiData.baseValue); 
             scene.moneyText.setText('$' + playerMoney.toFixed(2));
-            saveGame(); 
             showFloatingText(scene, this.x, this.y, 'SOLD!', '#e74c3c');
+            dropped = true;
+        }
+
+        // NEW: Update table state based on what just happened
+        if (dropped) {
+            // Remove it from the table tracking array
+            cardsOnTable = cardsOnTable.filter(c => c.instanceId !== this.instanceId);
+            saveGame(); 
             this.destroy(); 
+        } else {
+            // It's still on the table, just update its X and Y coordinates
+            let tableRecord = cardsOnTable.find(c => c.instanceId === this.instanceId);
+            if (tableRecord) {
+                tableRecord.x = isBouncing ? this.startX : this.x;
+                tableRecord.y = isBouncing ? this.startY : this.y;
+            }
+            saveGame();
         }
     });
 }
