@@ -148,12 +148,16 @@ function create() {
 
     // --- OVERLAYS ---
     const binderOverlay = createBinderOverlay(scene);
+    
+    // NEW: Attach the binder to the scene so the Store can access it!
+    scene.binderOverlay = binderOverlay; 
+    
     const storeOverlay = createStoreOverlay(scene);
     const inventoryOverlay = createInventoryOverlay(scene);
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
 
     settingsBtn.on('pointerdown', () => { 
-        settingsOverlay.renderPalettes();
+        settingsOverlay.renderPalettes(); 
         settingsOverlay.setVisible(true); 
     });
 
