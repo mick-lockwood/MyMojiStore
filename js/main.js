@@ -120,7 +120,8 @@ function create() {
     const storeIconBtn = scene.add.text(920, 40, '🛒', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     storeIconBtn.on('pointerover', () => scene.tweens.add({ targets: storeIconBtn, scale: 1.2, duration: 100 }));
     storeIconBtn.on('pointerout', () => scene.tweens.add({ targets: storeIconBtn, scale: 1, duration: 100 }));
-    storeIconBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
+    storeIconBtn.on('pointerdown', () => { storeOverlay.currentView = 'shop'; renderStoreView(scene, storeOverlay); storeOverlay.setVisible(true); 
+    });
 
     const settingsBtn = scene.add.text(980, 40, '⚙️', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     settingsBtn.on('pointerover', () => scene.tweens.add({ targets: settingsBtn, angle: 45, duration: 200 }));
@@ -329,55 +330,132 @@ function createStoreOverlay(scene) {
 
     overlay.add([bg, title, closeTxt]);
 
-    let packKeys = Object.keys(packDatabase);
-    let startX = -250;
-    
-    packKeys.forEach((key, index) => {
-        let def = packDatabase[key];
-        let packCont = scene.add.container(startX + (index * 250), -50);
-        packCont.add(createPackGraphic(scene, key));
-        
-        let priceTxt = scene.add.text(0, 130, '$' + def.cost.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
-        
-        // NEW ROUNDED BUTTON
-        let addBtn = createButton(scene, 0, 180, 140, 40, 0x3498db, null, '+ ADD TO CART', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
-            shoppingCart[key] += 1;
-            updateStoreCart(scene, overlay);
-        });
-        
-        packCont.add([priceTxt, addBtn]);
-        overlay.add(packCont);
-    });
+    // Track whether we are looking at the Shop or the Cart
+    overlay.currentView = 'shop'; 
+    overlay.contentContainer = scene.add.container(0, 0);
+    overlay.add(overlay.contentContainer);
 
-    const cartBg = scene.add.rectangle(0, 250, 800, 80, 0x2c3e50).setStrokeStyle(2, 0xffffff);
-    overlay.cartTotalText = scene.add.text(-380, 250, 'TOTAL: $0.00', { fontSize: '24px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
-    overlay.cartItemsText = scene.add.text(0, 250, 'Items: 0', { fontSize: '18px', color: '#fff' }).setOrigin(0.5);
-    
-    // NEW ROUNDED BUTTONS
-    const clearBtn = createButton(scene, 200, 250, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-        shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
-        updateStoreCart(scene, overlay);
-    });
-
-    const buyBtn = createButton(scene, 320, 250, 120, 50, 0x27ae60, null, 'CHECKOUT', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
-        let cost = calculateCartTotal();
-        if (cost > 0 && playerMoney >= cost) {
-            playerMoney -= cost;
-            scene.moneyText.setText('$' + playerMoney.toFixed(2));
-            for (let key in shoppingCart) playerPacks[key] += shoppingCart[key];
-            shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
-            updateStoreCart(scene, overlay);
-            saveGame();
-            scene.moneyText.setColor('#f1c40f'); 
-            scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222')); 
-        } else if (cost > playerMoney) {
-            overlay.cartTotalText.setColor('#e74c3c'); 
-            scene.time.delayedCall(300, () => overlay.cartTotalText.setColor('#f1c40f'));
-        }
-    });
-
-    overlay.add([cartBg, overlay.cartTotalText, overlay.cartItemsText, clearBtn, buyBtn]);
     return overlay;
+}
+
+function renderStoreView(scene, overlay) {
+    overlay.contentContainer.removeAll(true);
+
+    let totalItems = 0;
+    for (let k in shoppingCart) totalItems += shoppingCart[k];
+
+    // --- SHOP VIEW ---
+    if (overlay.currentView === 'shop') {
+        // Shopping Cart Toggle Button
+        let viewCartBtn = createButton(scene, 320, -290, 140, 40, 0xf39c12, 0xffffff, `🛒 CART (${totalItems})`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+            overlay.currentView = 'cart';
+            renderStoreView(scene, overlay);
+        });
+        overlay.contentContainer.add(viewCartBtn);
+
+        let packKeys = Object.keys(packDatabase);
+        let startX = -250;
+
+        packKeys.forEach((key, index) => {
+            let def = packDatabase[key];
+            let packCont = scene.add.container(startX + (index * 250), -50);
+            packCont.add(createPackGraphic(scene, key));
+
+            let priceTxt = scene.add.text(0, 130, '$' + def.cost.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
+
+            let addBtn = createButton(scene, 0, 180, 140, 40, 0x3498db, null, '+ ADD TO CART', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
+                shoppingCart[key] += 1;
+                renderStoreView(scene, overlay); // Re-render to update the top cart count
+            });
+
+            packCont.add([priceTxt, addBtn]);
+            overlay.contentContainer.add(packCont);
+        });
+    } 
+    // --- CART VIEW ---
+    else if (overlay.currentView === 'cart') {
+        let backBtn = createButton(scene, -320, -290, 140, 40, 0x7f8c8d, 0xffffff, '◀ BACK TO SHOP', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
+            overlay.currentView = 'shop';
+            renderStoreView(scene, overlay);
+        });
+        overlay.contentContainer.add(backBtn);
+
+        // Cart List Background
+        let cartListBg = scene.add.rectangle(0, -30, 700, 350, 0x2c3e50).setStrokeStyle(2, 0xffffff);
+        overlay.contentContainer.add(cartListBg);
+
+        let startY = -150;
+        let hasItems = false;
+
+        for (let key in shoppingCart) {
+            if (shoppingCart[key] > 0) {
+                hasItems = true;
+                let def = packDatabase[key];
+                let itemCont = scene.add.container(0, startY);
+
+                let nameTxt = scene.add.text(-300, 0, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0, 0.5);
+                let costTxt = scene.add.text(-50, 0, '$' + (def.cost * shoppingCart[key]).toFixed(2), { fontSize: '22px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0.5);
+
+                let minusBtn = createButton(scene, 80, 0, 40, 40, 0xe74c3c, null, '-', { fontSize: '24px', color: '#fff', fontStyle: 'bold' }, () => {
+                    shoppingCart[key] -= 1;
+                    renderStoreView(scene, overlay);
+                });
+
+                let countTxt = scene.add.text(140, 0, shoppingCart[key].toString(), { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+
+                let plusBtn = createButton(scene, 200, 0, 40, 40, 0x3498db, null, '+', { fontSize: '24px', color: '#fff', fontStyle: 'bold' }, () => {
+                    shoppingCart[key] += 1;
+                    renderStoreView(scene, overlay);
+                });
+
+                itemCont.add([nameTxt, costTxt, minusBtn, countTxt, plusBtn]);
+                overlay.contentContainer.add(itemCont);
+                startY += 60; // Space out the rows
+            }
+        }
+
+        if (!hasItems) {
+            let emptyTxt = scene.add.text(0, -30, "Your cart is empty.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            overlay.contentContainer.add(emptyTxt);
+        }
+
+        // Bottom Checkout Bar
+        const cartBg = scene.add.rectangle(0, 250, 800, 80, 0x1a1a1a).setStrokeStyle(2, 0xffffff);
+        
+        let totalCost = calculateCartTotal();
+        let cartTotalText = scene.add.text(-380, 250, 'TOTAL: $' + totalCost.toFixed(2), { fontSize: '28px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
+
+        const clearBtn = createButton(scene, 200, 250, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+            shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
+            renderStoreView(scene, overlay);
+        });
+
+        const buyBtn = createButton(scene, 320, 250, 120, 50, 0x27ae60, null, 'CHECKOUT', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            if (totalCost > 0 && playerMoney >= totalCost) {
+                playerMoney -= totalCost;
+                scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                for (let k in shoppingCart) playerPacks[k] += shoppingCart[k];
+                shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
+                
+                saveGame();
+                scene.moneyText.setColor('#f1c40f'); 
+                scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222'));
+
+                let newTotalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
+                scene.packsText.setText('PACKS: ' + newTotalPacks);
+
+                // Success! Send them back to the shop front
+                overlay.currentView = 'shop';
+                renderStoreView(scene, overlay);
+
+            } else if (totalCost > playerMoney) {
+                cartTotalText.setColor('#e74c3c'); 
+                scene.time.delayedCall(300, () => cartTotalText.setColor('#f1c40f'));
+            }
+        });
+
+        overlay.contentContainer.add([cartBg, cartTotalText, clearBtn, buyBtn]);
+    }
 }
 
 function calculateCartTotal() {
@@ -452,10 +530,8 @@ function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
     if (overlay.currentTab === 'packs') {
-        // Find all packs that have at least 1 in inventory
         let activePacks = Object.keys(playerPacks).filter(key => playerPacks[key] > 0);
-        
-        let itemsPerPage = 6; // 3 columns x 2 rows
+        let itemsPerPage = 6; 
         let maxPage = Math.ceil(activePacks.length / itemsPerPage) - 1;
         if (maxPage < 0) maxPage = 0;
         if (overlay.currentPage > maxPage) overlay.currentPage = maxPage;
@@ -496,10 +572,10 @@ function renderInventoryView(scene, overlay) {
         }
     } 
     else if (overlay.currentTab === 'doubles') {
-        // Filter out cards we have more than 1 of
         let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > 1);
 
-        let itemsPerPage = 15; // 5 columns x 3 rows
+        // CHANGED: 10 items per page (5 columns x 2 rows)
+        let itemsPerPage = 10; 
         let maxPage = Math.ceil(doubles.length / itemsPerPage) - 1;
         if (maxPage < 0) maxPage = 0;
         if (overlay.currentPage > maxPage) overlay.currentPage = maxPage;
@@ -514,7 +590,8 @@ function renderInventoryView(scene, overlay) {
             let emptyTxt = scene.add.text(0, 0, "You don't have any duplicate cards.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
-            let startX = -320, startY = -120, spacingX = 160, spacingY = 220;
+            // CHANGED: Adjusted startY and spacingY to center the 2 rows vertically
+            let startX = -320, startY = -90, spacingX = 160, spacingY = 240;
             displayDoubles.forEach((moji, index) => {
                 let col = index % 5;
                 let row = Math.floor(index / 5);
