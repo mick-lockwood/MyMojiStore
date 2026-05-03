@@ -395,23 +395,45 @@ function createDraggableCard(scene, x, y, mojiData) {
     scene.input.setDraggable(card);
     card.setDepth(10); 
 
+    // Store starting position for the bounce-back animation
+    card.startX = x;
+    card.startY = y;
+
     card.on('drag', function (p, dragX, dragY) { this.x = dragX; this.y = dragY; });
-    card.on('dragstart', function () { this.setScale(1.05); this.setDepth(50); });
+    
+    card.on('dragstart', function () { 
+        this.setScale(1.05); 
+        this.setDepth(50); 
+        this.startX = this.x; 
+        this.startY = this.y; 
+    });
     
     card.on('dragend', function () {
         this.setScale(1); 
         this.setDepth(10); 
         let bounds = this.getBounds();
         
-        // NEW: Checks if dropped on Binder OR Inventory!
-        if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.binderZone.getBounds()) || 
-            Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.invZone.getBounds())) {
-            
+        // 1. BINDER DROP ZONE
+        if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.binderZone.getBounds())) {
+            if (playerUnlocks.binder) {
+                playerInventory[mojiData.id] = Number(playerInventory[mojiData.id]) + 1; 
+                saveGame(); 
+                showFloatingText(scene, this.x, this.y, 'SAVED!', '#9b59b6');
+                this.destroy(); 
+            } else {
+                // Reject drop and bounce back
+                showFloatingText(scene, this.x, this.y, 'BINDER LOCKED!', '#e74c3c');
+                scene.tweens.add({ targets: this, x: this.startX, y: this.startY, duration: 200, ease: 'Back.easeOut' });
+            }
+        } 
+        // 2. INVENTORY DROP ZONE
+        else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.invZone.getBounds())) {
             playerInventory[mojiData.id] = Number(playerInventory[mojiData.id]) + 1; 
             saveGame(); 
-            showFloatingText(scene, this.x, this.y, 'SAVED!', '#9b59b6');
+            showFloatingText(scene, this.x, this.y, 'STASHED!', '#9b59b6');
             this.destroy(); 
-        } 
+        }
+        // 3. SELL DROP ZONE
         else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.sellZone.getBounds())) {
             playerMoney += Number(mojiData.baseValue); 
             scene.moneyText.setText('$' + playerMoney.toFixed(2));
@@ -692,8 +714,8 @@ function createInventoryOverlay(scene) {
 
 function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
-
-    // Keep tab text updated
+    
+    // Keep tab text updated dynamically
     overlay.doublesTab.setText(playerUnlocks.binder ? 'DOUBLES' : 'CARDS');
     
     if (overlay.currentTab === 'packs') {
@@ -739,8 +761,10 @@ function renderInventoryView(scene, overlay) {
         }
     } 
     else if (overlay.currentTab === 'doubles') {
-        // CHANGED: Show if owned > 0 (instead of > 1)
-        let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > 0);
+        
+        // DYNAMIC LOGIC: If binder is unlocked, only show > 1. If locked, show > 0.
+        let minOwned = playerUnlocks.binder ? 1 : 0;
+        let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > minOwned);
 
         let itemsPerPage = 10; 
         let maxPage = Math.ceil(doubles.length / itemsPerPage) - 1;
@@ -754,7 +778,8 @@ function renderInventoryView(scene, overlay) {
         let displayDoubles = doubles.slice(startIndex, startIndex + itemsPerPage);
 
         if (displayDoubles.length === 0) {
-            let emptyTxt = scene.add.text(0, 0, "You don't have any cards yet.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            let emptyMsg = playerUnlocks.binder ? "You don't have any duplicate cards." : "You don't have any cards yet.";
+            let emptyTxt = scene.add.text(0, 0, emptyMsg, { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
             let startX = -320, startY = -90, spacingX = 160, spacingY = 240;
@@ -770,9 +795,11 @@ function renderInventoryView(scene, overlay) {
                 miniCard.add(createCardGraphic(scene, moji));
                 miniCard.setScale(0.45); 
                 
+                // DYNAMIC LOGIC: Subtract the binder's copy from the badge if unlocked
+                let displayCount = playerUnlocks.binder ? (owned - 1) : owned;
+                
                 let badgeBg = scene.add.circle(80, -130, 40, 0xe74c3c);
-                // CHANGED: Display total owned, not owned - 1
-                let badgeTxt = scene.add.text(80, -130, 'x' + owned, { fontSize: '40px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                let badgeTxt = scene.add.text(80, -130, 'x' + displayCount, { fontSize: '40px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                 miniCard.add([badgeBg, badgeTxt]);
 
                 miniCard.setSize(220, 320); 
