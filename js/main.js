@@ -11,14 +11,18 @@ let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
 let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a };
-let playerUnlocks = { binder: false, colorThemes: false };  
+
+// NEW: Track unlocked features and colors (Black, White, Grey are default)
+let playerUnlocks = { 
+    binder: false, 
+    colors: [0x1a1a1a, 0xf4f4f4, 0x7f8c8d] 
+};  
 
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
 
-// Database for Store Upgrades
+// Database for Store Upgrades (Removed colors, as they are bought in settings)
 const upgradeDatabase = {
-    "binder": { name: "Pro Binder", cost: 150.00 },
-    "colorThemes": { name: "Color Palettes", cost: 75.00 }
+    "binder": { name: "Pro Binder", cost: 150.00 }
 };
 
 function loadGame() {
@@ -30,8 +34,11 @@ function loadGame() {
         for (let id in parsedData.inventory) {
             if (playerInventory[id] !== undefined) playerInventory[id] = Number(parsedData.inventory[id]);
         }
-        // NEW: Load unlocks
-        if (parsedData.unlocks) playerUnlocks = { ...playerUnlocks, ...parsedData.unlocks };
+        // Safely load unlocks and color array
+        if (parsedData.unlocks) {
+            playerUnlocks.binder = parsedData.unlocks.binder;
+            if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
+        }
     }
 }
 
@@ -40,9 +47,10 @@ function saveGame() {
         money: playerMoney,
         packs: playerPacks,
         inventory: playerInventory,
-        unlocks: playerUnlocks // NEW: Save unlocks
+        unlocks: playerUnlocks
     }));
 }
+
 loadGame();
 
 // --- PHASER ENGINE SETUP ---
@@ -182,7 +190,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const closeTxt = scene.add.text(270, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    // NEW ROUNDED BUTTONS
     const resetBtn = createButton(scene, 0, 160, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
@@ -191,53 +198,92 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 108 MyMojis!");
     });
 
-    overlay.add([title, closeTxt, resetBtn, instrBtn]);
+    overlay.paletteContainer = scene.add.container(0, 0);
+    overlay.add([title, closeTxt, resetBtn, instrBtn, overlay.paletteContainer]);
 
-    const createColorPalette = (y, label, type, colors) => {
-        let labelTxt = scene.add.text(-270, y, label, { fontFamily: 'Arial', fontSize: '18px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
-        overlay.add(labelTxt);
+    // Master Palette Data
+    const stdColors = [0x1a1a1a, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad, 0xd35400];
+    const vipColors = [0xf1c40f, 0xbdc3c7, 0xcd7f32, 0xff00ff]; // Gold, Silver, Bronze, Magenta
+    const allColors = [...stdColors, ...vipColors];
 
-        let startX = -120;
-        let spacing = 40;
+    // Helper to redraw the swatches when something is purchased
+    overlay.renderPalettes = () => {
+        overlay.paletteContainer.removeAll(true);
+        let allStdUnlocked = stdColors.every(c => playerUnlocks.colors.includes(c));
 
-        colors.forEach((color, index) => {
-            let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setStrokeStyle(2, 0x000).setInteractive({ useHandCursor: true });
-            
-            // Added hover scale to swatches too!
-            swatch.on('pointerover', () => scene.tweens.add({ targets: swatch, scale: 1.2, duration: 100 }));
-            swatch.on('pointerout', () => scene.tweens.add({ targets: swatch, scale: 1, duration: 100 }));
+        const drawRow = (y, label, type) => {
+            let labelTxt = scene.add.text(-270, y, label, { fontFamily: 'Arial', fontSize: '18px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
+            overlay.paletteContainer.add(labelTxt);
 
-            swatch.on('pointerdown', () => {
-                if (type === 'table') { 
-                    themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
-                    scene.cameras.main.setBackgroundColor(themeColors.table); 
-                }
-                if (type === 'binder') { 
-                    themeColors.binder = color; 
-                    binderOverlay.bg.setFillStyle(color); 
-                }
-                if (type === 'inv') { 
-                    themeColors.inventory = color; 
-                    inventoryOverlay.bg.setFillStyle(color); 
+            let startX = -110;
+            let spacing = 35;
+
+            allColors.forEach((color, index) => {
+                let isVip = index >= stdColors.length;
+                let isUnlocked = playerUnlocks.colors.includes(color);
+                
+                let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setStrokeStyle(2, 0x000).setInteractive({ useHandCursor: true });
+
+                if (!isUnlocked) {
+                    let lockTxt;
+                    if (isVip) {
+                        lockTxt = scene.add.text(startX + (index * spacing), y, 'VIP', { fontSize: '11px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0.5);
+                    } else {
+                        lockTxt = scene.add.text(startX + (index * spacing), y, '🔒', { fontSize: '14px' }).setOrigin(0.5);
+                    }
+                    
+                    overlay.paletteContainer.add([swatch, lockTxt]);
+
+                    // Purchase Logic
+                    swatch.on('pointerdown', () => {
+                        if (isVip && !allStdUnlocked) {
+                            alert("You must unlock all standard colors before buying VIP palettes!");
+                            return;
+                        }
+                        
+                        let cost = isVip ? 75 : 50;
+                        if (confirm(`This color costs $${cost}. Would you like to purchase it?`)) {
+                            if (playerMoney >= cost) {
+                                playerMoney -= cost;
+                                scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                                playerUnlocks.colors.push(color);
+                                saveGame();
+                                overlay.renderPalettes(); // Refresh locks immediately!
+                            } else {
+                                alert("Not enough money!");
+                            }
+                        }
+                    });
+
+                } else {
+                    overlay.paletteContainer.add(swatch);
+                    
+                    swatch.on('pointerover', () => scene.tweens.add({ targets: swatch, scale: 1.2, duration: 100 }));
+                    swatch.on('pointerout', () => scene.tweens.add({ targets: swatch, scale: 1, duration: 100 }));
+                    swatch.on('pointerdown', () => {
+                        if (type === 'table') { 
+                            themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
+                            scene.cameras.main.setBackgroundColor(themeColors.table); 
+                        }
+                        if (type === 'binder') { 
+                            themeColors.binder = color; 
+                            binderOverlay.bg.setFillStyle(color); 
+                        }
+                        if (type === 'inv') { 
+                            themeColors.inventory = color; 
+                            inventoryOverlay.bg.setFillStyle(color); 
+                        }
+                    });
                 }
             });
-            
-            overlay.add(swatch);
-        });
+        };
+
+        drawRow(-90, "Table Color", 'table');
+        drawRow(-30, "Binder Color", 'binder');
+        drawRow(30, "Inventory Color", 'inv');
     };
 
-    const tableColors = [0xf4f4f4, 0xbdc3c7, 0x34495e, 0x27ae60, 0x2980b9, 0x8e44ad, 0xc0392b, 0xf39c12, 0xffa07a];
-    const menuColors = [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b, 0x27ae60, 0xd35400, 0x2980b9, 0x16a085, 0x7f8c8d];
-
-    if (playerUnlocks.colorThemes) {
-        createColorPalette(-90, "Table Color", 'table', tableColors);
-        createColorPalette(-30, "Binder Color", 'binder', menuColors);
-        createColorPalette(30, "Inventory Color", 'inv', menuColors);
-    } else {
-        let lockTxt = scene.add.text(0, -30, "🎨 COLOR THEMES LOCKED\nPurchase in the Store to customize!", { fontSize: '20px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
-        overlay.add(lockTxt);
-    }
-
+    overlay.renderPalettes(); // Initial draw
     return overlay;
 }
 
@@ -349,8 +395,8 @@ function createStoreOverlay(scene) {
 
     overlay.add([bg, title, closeTxt]);
 
-    // Track whether we are looking at the Shop or the Cart
     overlay.currentView = 'shop'; 
+    overlay.currentStoreTab = 'packs'; // NEW: Track shop tabs
     overlay.contentContainer = scene.add.container(0, 0);
     overlay.add(overlay.contentContainer);
 
@@ -360,7 +406,6 @@ function createStoreOverlay(scene) {
 function renderStoreView(scene, overlay) {
     overlay.contentContainer.removeAll(true);
 
-    // Calculate BOTH total items and total cost upfront
     let totalItems = 0;
     let totalCost = 0;
     for (let k in shoppingCart) {
@@ -368,74 +413,90 @@ function renderStoreView(scene, overlay) {
         totalCost += shoppingCart[k] * packDatabase[k].cost;
     }
 
-    // --- SHOP VIEW ---
     if (overlay.currentView === 'shop') {
-        // CHANGED: Moved X to -300 (Left), Width to 200 (wider for price text), Color to 0x7f8c8d (Grey)
         let viewCartBtn = createButton(scene, -300, -290, 200, 40, 0x7f8c8d, 0xffffff, `🛒 CART (${totalItems}) - $${totalCost.toFixed(2)}`, { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
             overlay.currentView = 'cart';
             renderStoreView(scene, overlay);
         });
         overlay.contentContainer.add(viewCartBtn);
 
-        let packKeys = Object.keys(packDatabase);
-        let startX = -250;
+        // NEW: Store Tabs
+        let packsColor = overlay.currentStoreTab === 'packs' ? '#ffffff' : '#7f8c8d';
+        let unlocksColor = overlay.currentStoreTab === 'unlocks' ? '#ffffff' : '#7f8c8d';
 
-        packKeys.forEach((key, index) => {
-            let def = packDatabase[key];
-            let packCont = scene.add.container(startX + (index * 250), -50);
-            packCont.add(createPackGraphic(scene, key));
+        let packsTab = scene.add.text(-100, -230, 'PACKS', { fontSize: '24px', fontStyle: 'bold', color: packsColor }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+        packsTab.on('pointerdown', () => { overlay.currentStoreTab = 'packs'; renderStoreView(scene, overlay); });
 
-            let priceTxt = scene.add.text(0, 130, '$' + def.cost.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
+        let unlocksTab = scene.add.text(100, -230, 'UNLOCKS', { fontSize: '24px', fontStyle: 'bold', color: unlocksColor }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+        unlocksTab.on('pointerdown', () => { overlay.currentStoreTab = 'unlocks'; renderStoreView(scene, overlay); });
 
-            let addBtn = createButton(scene, 0, 180, 140, 40, 0x3498db, null, '+ ADD TO CART', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
-                shoppingCart[key] += 1;
-                renderStoreView(scene, overlay); 
-            });
+        overlay.contentContainer.add([packsTab, unlocksTab]);
 
-            packCont.add([priceTxt, addBtn]);
-            overlay.contentContainer.add(packCont);
-        });
-        
-        // --- ADD STORE UPGRADES UNDER THE PACKS ---
-        let upgTitle = scene.add.text(0, 90, '--- ACCOUNT UPGRADES ---', { fontSize: '20px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0.5);
-        overlay.contentContainer.add(upgTitle);
+        if (overlay.currentStoreTab === 'packs') {
+            let packKeys = Object.keys(packDatabase);
+            let startX = -250;
+            packKeys.forEach((key, index) => {
+                let def = packDatabase[key];
+                let packCont = scene.add.container(startX + (index * 250), -50);
+                packCont.add(createPackGraphic(scene, key));
 
-        let upgStartX = -150;
-        let upgIndex = 0;
-        
-        for (let key in upgradeDatabase) {
-            if (!playerUnlocks[key]) {
-                let def = upgradeDatabase[key];
-                let upgCont = scene.add.container(upgStartX + (upgIndex * 300), 180);
-                
-                let bg = scene.add.rectangle(0, 0, 250, 100, 0x34495e).setStrokeStyle(4, 0x1a1a1a);
-                let nameTxt = scene.add.text(0, -20, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-                
-                let buyBtn = createButton(scene, 0, 25, 180, 36, 0xf39c12, 0xffffff, `BUY FOR $${def.cost.toFixed(2)}`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-                    if (playerMoney >= def.cost) {
-                        playerMoney -= def.cost;
-                        scene.moneyText.setText('$' + playerMoney.toFixed(2));
-                        playerUnlocks[key] = true;
-                        saveGame();
-                        
-                        // If they buy the binder, instantly update the button on the home screen!
-                        if (key === 'binder') {
-                            scene.binderZone.destroy();
-                            scene.binderZone = createButton(scene, 864, 620, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
-                                renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
-                            });
-                        }
-                        renderStoreView(scene, overlay); // Refresh store to remove the purchased item
-                    } else {
-                        // Flash price text red if they can't afford it
-                        buyBtn.list[1].setColor('#e74c3c');
-                        scene.time.delayedCall(300, () => buyBtn.list[1].setColor('#ffffff'));
-                    }
+                let priceTxt = scene.add.text(0, 130, '$' + def.cost.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
+                let addBtn = createButton(scene, 0, 180, 140, 40, 0x3498db, null, '+ ADD TO CART', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
+                    shoppingCart[key] += 1;
+                    renderStoreView(scene, overlay); 
                 });
-                
-                upgCont.add([bg, nameTxt, buyBtn]);
-                overlay.contentContainer.add(upgCont);
-                upgIndex++;
+
+                packCont.add([priceTxt, addBtn]);
+                overlay.contentContainer.add(packCont);
+            });
+        } 
+        else if (overlay.currentStoreTab === 'unlocks') {
+            let upgStartX = -150;
+            let upgIndex = 0;
+            let hasUnlocks = false;
+            
+            for (let key in upgradeDatabase) {
+                if (!playerUnlocks[key]) {
+                    hasUnlocks = true;
+                    let def = upgradeDatabase[key];
+                    let upgCont = scene.add.container(upgStartX + (upgIndex * 300), 20);
+                    
+                    let bg = scene.add.rectangle(0, 0, 250, 100, 0x34495e).setStrokeStyle(4, 0x1a1a1a);
+                    let nameTxt = scene.add.text(0, -20, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                    
+                    let buyBtn = createButton(scene, 0, 25, 180, 36, 0xf39c12, 0xffffff, `BUY FOR $${def.cost.toFixed(2)}`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+                        if (playerMoney >= def.cost) {
+                            playerMoney -= def.cost;
+                            scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                            playerUnlocks[key] = true;
+                            saveGame();
+                            
+                            if (key === 'binder') {
+                                scene.binderZone.destroy();
+                                scene.binderZone = createButton(scene, 864, 620, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+                                    renderBinderGrid(scene, scene.binderOverlay); scene.binderOverlay.setVisible(true); 
+                                });
+                            }
+                            renderStoreView(scene, overlay); 
+                        } else {
+                            buyBtn.list[1].setColor('#e74c3c');
+                            scene.time.delayedCall(300, () => buyBtn.list[1].setColor('#ffffff'));
+                        }
+                    });
+                    
+                    upgCont.add([bg, nameTxt, buyBtn]);
+                    overlay.contentContainer.add(upgCont);
+                    upgIndex++;
+                }
+            }
+
+            // Direct players to the Settings Menu for Colors
+            let colorInfoTxt = scene.add.text(0, 160, "Looking for Color Themes?\nOpen the Settings Menu (⚙) to unlock palettes!", { fontSize: '20px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
+            overlay.contentContainer.add(colorInfoTxt);
+
+            if (!hasUnlocks) {
+                let emptyTxt = scene.add.text(0, 20, "All store upgrades purchased!", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+                overlay.contentContainer.add(emptyTxt);
             }
         }
     } 
@@ -459,7 +520,6 @@ function renderStoreView(scene, overlay) {
                 let def = packDatabase[key];
                 let itemCont = scene.add.container(0, startY);
 
-                // CHANGED: Shifted nameTxt to -330 and costTxt to -30 to prevent overlapping!
                 let nameTxt = scene.add.text(-330, 0, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0, 0.5);
                 let costTxt = scene.add.text(-30, 0, '$' + (def.cost * shoppingCart[key]).toFixed(2), { fontSize: '22px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0.5);
 
@@ -552,8 +612,10 @@ function createInventoryOverlay(scene) {
 
     // Tabs
     const packsTab = scene.add.text(-100, -280, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
-    const doublesTab = scene.add.text(100, -280, 'DOUBLES', { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
-
+    let dblLabel = playerUnlocks.binder ? 'DOUBLES' : 'CARDS';
+    const doublesTab = scene.add.text(100, -280, dblLabel, { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    overlay.doublesTab = doublesTab; // Save reference so we can update i
+    
     packsTab.on('pointerdown', () => { 
         overlay.currentTab = 'packs'; 
         overlay.currentPage = 0; // Reset to page 1 on tab switch
@@ -591,6 +653,9 @@ function createInventoryOverlay(scene) {
 
 function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
+
+    // Keep tab text updated
+    overlay.doublesTab.setText(playerUnlocks.binder ? 'DOUBLES' : 'CARDS');
     
     if (overlay.currentTab === 'packs') {
         let activePacks = Object.keys(playerPacks).filter(key => playerPacks[key] > 0);
