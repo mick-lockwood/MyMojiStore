@@ -36,10 +36,19 @@ function loadGame() {
         for (let id in parsedData.inventory) {
             if (playerInventory[id] !== undefined) playerInventory[id] = Number(parsedData.inventory[id]);
         }
-        // Safely load unlocks and color array
+        
         if (parsedData.unlocks) {
-            playerUnlocks.binder = parsedData.unlocks.binder;
+            if (parsedData.unlocks.binder !== undefined) playerUnlocks.binder = parsedData.unlocks.binder;
+            
+            // FIXED: Explicitly load the colorThemes store upgrade state
+            if (parsedData.unlocks.colorThemes !== undefined) playerUnlocks.colorThemes = parsedData.unlocks.colorThemes; 
+            
             if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
+        }
+
+        // FIXED: Load the active equipped colors so they don't reset on refresh
+        if (parsedData.themes) {
+            themeColors = parsedData.themes;
         }
     }
 }
@@ -49,7 +58,8 @@ function saveGame() {
         money: playerMoney,
         packs: playerPacks,
         inventory: playerInventory,
-        unlocks: playerUnlocks
+        unlocks: playerUnlocks,
+        themes: themeColors // FIXED: Write the active themes to the save file
     }));
 }
 
@@ -249,23 +259,25 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                     overlay.paletteContainer.add([swatch, lockTxt]);
 
                     swatch.on('pointerdown', () => {
-                        if (isVip && !allStdUnlocked) {
-                            alert("You must unlock all standard colors before buying VIP palettes!");
-                            return;
+                        themeColors.active[type] = color; // Save active state
+                        
+                        if (type === 'table') { 
+                            themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
+                            scene.cameras.main.setBackgroundColor(themeColors.table); 
+                        }
+                        if (type === 'binder') { 
+                            themeColors.binder = color; 
+                            binderOverlay.bg.setFillStyle(color); 
+                        }
+                        if (type === 'inv') { 
+                            themeColors.inventory = color; 
+                            inventoryOverlay.bg.setFillStyle(color); 
                         }
                         
-                        let cost = isVip ? 75 : 50;
-                        if (confirm(`This color costs $${cost}. Would you like to purchase it?`)) {
-                            if (playerMoney >= cost) {
-                                playerMoney -= cost;
-                                scene.moneyText.setText('$' + playerMoney.toFixed(2));
-                                playerUnlocks.colors.push(color);
-                                saveGame();
-                                overlay.renderPalettes(); 
-                            } else {
-                                alert("Not enough money!");
-                            }
-                        }
+                        // FIXED: Actually save the game so the active color persists!
+                        saveGame(); 
+                        
+                        overlay.renderPalettes(); // Redraw immediately to move the checkmark
                     });
 
                 } else {
