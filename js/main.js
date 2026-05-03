@@ -48,8 +48,6 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-};
-
 function create() {
     const scene = this; 
     scene.cameras.main.setBackgroundColor(themeColors.table);
