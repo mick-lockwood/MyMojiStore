@@ -427,7 +427,7 @@ function createDraggableCard(scene, x, y, mojiData) {
 function createStoreOverlay(scene) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
     const bg = scene.add.rectangle(0, 0, 900, 650, 0x1a1a1a).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
-    const title = scene.add.text(0, -290, 'MOJI STORE', { fontFamily: 'Impact, sans-serif', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    const title = scene.add.text(0, -290, 'MOJIMART', { fontFamily: 'Impact, sans-serif', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     
     const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
