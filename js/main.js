@@ -10,19 +10,21 @@ let playerMoney = 50.00;
 let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
-let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a };
+let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a, active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }
+};
 
-// NEW: Track unlocked features and colors (Black, White, Grey are default)
 let playerUnlocks = { 
     binder: false, 
+    colorThemes: false, // Re-added the main color menu unlock
     colors: [0x1a1a1a, 0xf4f4f4, 0x7f8c8d] 
 };  
 
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
 
-// Database for Store Upgrades (Removed colors, as they are bought in settings)
+// UPDATED: Added Color Palettes back to the store upgrades
 const upgradeDatabase = {
-    "binder": { name: "Pro Binder", cost: 150.00 }
+    "binder": { name: "Pro Binder", cost: 150.00 },
+    "colorThemes": { name: "Color Palettes", cost: 75.00 }
 };
 
 function loadGame() {
@@ -150,7 +152,10 @@ function create() {
     const inventoryOverlay = createInventoryOverlay(scene);
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
 
-    settingsBtn.on('pointerdown', () => settingsOverlay.setVisible(true));
+    settingsBtn.on('pointerdown', () => { 
+        settingsOverlay.renderPalettes();
+        settingsOverlay.setVisible(true); 
+    });
 
     /// --- BOTTOM BUTTONS / DROP ZONES ---
     
@@ -201,14 +206,21 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     overlay.paletteContainer = scene.add.container(0, 0);
     overlay.add([title, closeTxt, resetBtn, instrBtn, overlay.paletteContainer]);
 
-    // Master Palette Data
     const stdColors = [0x1a1a1a, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad, 0xd35400];
-    const vipColors = [0xf1c40f, 0xbdc3c7, 0xcd7f32, 0xff00ff]; // Gold, Silver, Bronze, Magenta
+    const vipColors = [0xf1c40f, 0xbdc3c7, 0xcd7f32, 0xff00ff];
     const allColors = [...stdColors, ...vipColors];
 
-    // Helper to redraw the swatches when something is purchased
     overlay.renderPalettes = () => {
         overlay.paletteContainer.removeAll(true);
+        
+        // MASTER LOCK: Hide palettes if not purchased from the store yet!
+        if (!playerUnlocks.colorThemes) {
+            let lockBg = scene.add.rectangle(0, -30, 400, 80, 0xf4f4f4).setStrokeStyle(2, 0x000);
+            let lockTxt = scene.add.text(0, -30, "🎨 COLOR THEMES LOCKED\nPurchase in the Store's UNLOCKS tab!", { fontSize: '18px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
+            overlay.paletteContainer.add([lockBg, lockTxt]);
+            return; 
+        }
+
         let allStdUnlocked = stdColors.every(c => playerUnlocks.colors.includes(c));
 
         const drawRow = (y, label, type) => {
@@ -221,20 +233,17 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             allColors.forEach((color, index) => {
                 let isVip = index >= stdColors.length;
                 let isUnlocked = playerUnlocks.colors.includes(color);
+                let isActive = themeColors.active[type] === color; // Check if this is the selected color
                 
-                let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setStrokeStyle(2, 0x000).setInteractive({ useHandCursor: true });
+                let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setInteractive({ useHandCursor: true });
+                
+                // Highlight active colors with a thicker border
+                swatch.setStrokeStyle(isActive ? 4 : 2, isActive ? 0x2ecc71 : 0x000000);
 
                 if (!isUnlocked) {
-                    let lockTxt;
-                    if (isVip) {
-                        lockTxt = scene.add.text(startX + (index * spacing), y, 'VIP', { fontSize: '11px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0.5);
-                    } else {
-                        lockTxt = scene.add.text(startX + (index * spacing), y, '🔒', { fontSize: '14px' }).setOrigin(0.5);
-                    }
-                    
+                    let lockTxt = scene.add.text(startX + (index * spacing), y, isVip ? 'VIP' : '🔒', { fontSize: isVip ? '11px' : '14px', color: isVip ? '#f1c40f' : '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
                     overlay.paletteContainer.add([swatch, lockTxt]);
 
-                    // Purchase Logic
                     swatch.on('pointerdown', () => {
                         if (isVip && !allStdUnlocked) {
                             alert("You must unlock all standard colors before buying VIP palettes!");
@@ -248,7 +257,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
                                 playerUnlocks.colors.push(color);
                                 saveGame();
-                                overlay.renderPalettes(); // Refresh locks immediately!
+                                overlay.renderPalettes(); 
                             } else {
                                 alert("Not enough money!");
                             }
@@ -256,11 +265,20 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                     });
 
                 } else {
-                    overlay.paletteContainer.add(swatch);
+                    // Draw checkmark if active (Black check for light colors, White check for dark colors)
+                    if (isActive) {
+                        let checkColor = (color === 0xf4f4f4 || color === 0xbdc3c7 || color === 0xf1c40f) ? '#000000' : '#ffffff';
+                        let checkTxt = scene.add.text(startX + (index * spacing), y, '✔', { fontSize: '18px', color: checkColor, fontStyle: 'bold' }).setOrigin(0.5);
+                        overlay.paletteContainer.add([swatch, checkTxt]);
+                    } else {
+                        overlay.paletteContainer.add(swatch);
+                    }
                     
                     swatch.on('pointerover', () => scene.tweens.add({ targets: swatch, scale: 1.2, duration: 100 }));
                     swatch.on('pointerout', () => scene.tweens.add({ targets: swatch, scale: 1, duration: 100 }));
                     swatch.on('pointerdown', () => {
+                        themeColors.active[type] = color; // Save active state
+                        
                         if (type === 'table') { 
                             themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
                             scene.cameras.main.setBackgroundColor(themeColors.table); 
@@ -273,6 +291,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                             themeColors.inventory = color; 
                             inventoryOverlay.bg.setFillStyle(color); 
                         }
+                        overlay.renderPalettes(); // Redraw immediately to move the checkmark
                     });
                 }
             });
@@ -283,7 +302,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         drawRow(30, "Inventory Color", 'inv');
     };
 
-    overlay.renderPalettes(); // Initial draw
+    overlay.renderPalettes(); 
     return overlay;
 }
 
