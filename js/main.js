@@ -10,12 +10,15 @@ let playerMoney = 50.00;
 let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
+
+// NEW: Track cards that are currently sitting on the table
+let cardsOnTable = []; 
+
 let themeColors = { 
     table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a,
     active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }
 };
 
-// The first 3 colors (Black, White, Grey) are unlocked by default
 let playerUnlocks = { 
     binder: false, 
     colorThemes: false, 
@@ -24,7 +27,6 @@ let playerUnlocks = {
 
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
 
-// Database for Store Upgrades
 const upgradeDatabase = {
     "binder": { name: "Pro Binder", cost: 150.00 },
     "colorThemes": { name: "Color Palettes", cost: 75.00 }
@@ -40,20 +42,20 @@ function loadGame() {
             if (playerInventory[id] !== undefined) playerInventory[id] = Number(parsedData.inventory[id]);
         }
         
-        // Load Unlocks (Store Upgrades & Individual Colors)
         if (parsedData.unlocks) {
             if (parsedData.unlocks.binder !== undefined) playerUnlocks.binder = parsedData.unlocks.binder;
             if (parsedData.unlocks.colorThemes !== undefined) playerUnlocks.colorThemes = parsedData.unlocks.colorThemes; 
             if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
         }
 
-        // Load Equipped Themes
         if (parsedData.themes) {
             themeColors = parsedData.themes;
-            // Self-healing: if an old save doesn't have the 'active' tracker, build it
-            if (!themeColors.active) {
-                themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a };
-            }
+            if (!themeColors.active) themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a };
+        }
+        
+        // NEW: Load the array of table cards
+        if (parsedData.tableCards) {
+            cardsOnTable = parsedData.tableCards;
         }
     }
 }
@@ -63,11 +65,12 @@ function saveGame() {
         money: playerMoney,
         packs: playerPacks,
         inventory: playerInventory,
-        unlocks: playerUnlocks, // Saves the store upgrades and purchased color arrays
-        themes: themeColors     // Saves the active checkmarks and applied UI colors
+        unlocks: playerUnlocks,
+        themes: themeColors,
+        tableCards: cardsOnTable // NEW: Save the table state!
     }));
 }
-
+loadGame();
 loadGame();
 
 // --- PHASER ENGINE SETUP ---
