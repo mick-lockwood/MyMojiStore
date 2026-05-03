@@ -75,7 +75,7 @@ function create() {
     storeIconBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
 
     // Settings Button (Simple Black Cog)
-    const settingsBtn = scene.add.text(980, 40, '⚙', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive();
+    const settingsBtn = scene.add.text(980, 40, '⚙️', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive();
 
     // --- OVERLAYS ---
     const binderOverlay = createBinderOverlay(scene);
