@@ -239,7 +239,7 @@ function createStoreOverlay(scene) {
     const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    // Removed closeBtn from the array here
+    // Notice that closeBtn is NO LONGER in this array!
     overlay.add([bg, title, closeTxt]);
 
     let packKeys = Object.keys(packDatabase);
@@ -287,7 +287,7 @@ function createStoreOverlay(scene) {
             updateStoreCart(scene, overlay);
             saveGame();
             scene.moneyText.setColor('#f1c40f'); 
-            scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222')); // Updated to match the new dark text color
+            scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222')); 
         } else if (cost > playerMoney) {
             overlay.cartTotalText.setColor('#e74c3c'); 
             scene.time.delayedCall(300, () => overlay.cartTotalText.setColor('#f1c40f'));
