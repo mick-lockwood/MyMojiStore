@@ -54,7 +54,12 @@ function create() {
 
 
     // --- TOP UI HEADER ---
-    const addShadow = (x, y, w, h, radius = 0) => scene.add.rectangle(x+6, y+6, w, h, 0x000000, 0.4);
+
+    const addShadow = (x, y, w, h) => {
+        scene.add.rectangle(x + 6, y + 6, w + 8, h + 8, 0x000000, 0.05); // Widest, most transparent
+        scene.add.rectangle(x + 5, y + 5, w + 4, h + 4, 0x000000, 0.10); // Middle layer
+        scene.add.rectangle(x + 4, y + 4, w, h, 0x000000, 0.15);         // Core shadow
+    };
     
     addShadow(512, 40, 1024, 80); 
     scene.add.rectangle(512, 40, 1024, 80, 0xfce883); 
