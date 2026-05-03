@@ -10,7 +10,8 @@ let playerMoney = 50.00;
 let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
-
+let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a };
+        
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
 
 function loadGame() {
@@ -47,73 +48,97 @@ const config = {
 
 const game = new Phaser.Game(config);
 
+};
+
 function create() {
     const scene = this; 
-    
-    // Optional: Change background to a lighter color to match the template's paper feel
-    scene.cameras.main.setBackgroundColor('#f4f4f4');
+    scene.cameras.main.setBackgroundColor(themeColors.table);
+
+    // HELPER: Simple Drop Shadow
+    const addShadow = (x, y, w, h, radius = 0) => scene.add.rectangle(x+6, y+6, w, h, 0x000000, 0.4);
 
     // --- TOP UI HEADER ---
-    // Yellow header bar
-    scene.add.rectangle(512, 40, 1024, 80, 0xfce883); 
+    addShadow(512, 40, 1024, 80); // Banner Shadow
+    scene.add.rectangle(512, 40, 1024, 80, 0xfce883); // Yellow Banner
 
-    // Money Text (Top Left)
-    scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { 
-        fontFamily: 'Impact, sans-serif', fontSize: '36px', color: '#222222' 
-    });
-    
-    // Packs Counter (Top Left, under money)
+    scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: '#222222' });
     let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
-    scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { 
-        fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#222222' 
-    });
+    scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#222222' });
 
-    // Title (Center)
-    scene.add.text(512, 40, 'MyMoji Store', { 
-        fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' 
-    }).setOrigin(0.5);
+    scene.add.text(512, 40, 'MyMoji Store', { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' }).setOrigin(0.5);
 
-    // Settings / Reset Button (Top Right)
-    const resetBtn = scene.add.text(980, 40, '⚙️', { fontSize: '36px' }).setOrigin(0.5).setInteractive();
-    resetBtn.on('pointerdown', () => {
-        if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
-    });
+    // Settings Button
+    const settingsBtn = scene.add.text(980, 40, '⚙️', { fontSize: '36px' }).setOrigin(0.5).setInteractive();
 
     // --- OVERLAYS ---
     const binderOverlay = createBinderOverlay(scene);
     const storeOverlay = createStoreOverlay(scene);
     const inventoryOverlay = createInventoryOverlay(scene);
+    const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
 
-    // --- BOTTOM LEFT BUTTONS ---
-    
-    // 1. TRADING STASH (Opens Store) - Blue
+    settingsBtn.on('pointerdown', () => settingsOverlay.setVisible(true));
+
+    // --- BOTTOM BUTTONS / DROP ZONES ---
+    // 1. TRADING STASH
+    addShadow(160, 620, 240, 70);
     const storeBtn = scene.add.rectangle(160, 620, 240, 70, 0x57bcf2).setInteractive().setStrokeStyle(4, 0x000000);
-    scene.add.text(160, 620, 'TRADING STASH', { 
-        fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' 
-    }).setOrigin(0.5);
+    scene.add.text(160, 620, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }).setOrigin(0.5);
     storeBtn.on('pointerdown', () => { updateStoreCart(scene, storeOverlay); storeOverlay.setVisible(true); });
 
-    // 2. SELL ON MOJIMARKET (Doubles as Sell Drop Zone) - Pink/Red
+    // 2. SELL ON MOJIMARKET
+    addShadow(160, 710, 240, 70);
     scene.sellZone = scene.add.rectangle(160, 710, 240, 70, 0xff7e8d).setInteractive().setStrokeStyle(4, 0x000000);
-    scene.add.text(160, 710, 'SELL ON\nMOJIMARKET', { 
-        fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' 
-    }).setOrigin(0.5);
+    scene.add.text(160, 710, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }).setOrigin(0.5);
 
-    // --- BOTTOM RIGHT BUTTONS ---
-
-    // 3. BINDER (Doubles as Binder Drop Zone & View Menu) - Orange
+    // 3. BINDER
+    addShadow(864, 620, 240, 70);
     scene.binderZone = scene.add.rectangle(864, 620, 240, 70, 0xffc87c).setInteractive().setStrokeStyle(4, 0x000000);
-    scene.add.text(864, 620, 'BINDER', { 
-        fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' 
-    }).setOrigin(0.5);
+    scene.add.text(864, 620, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }).setOrigin(0.5);
     scene.binderZone.on('pointerdown', () => { renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); });
 
-    // 4. INVENTORY (Opens Pack Inventory) - Purple
+    // 4. INVENTORY
+    addShadow(864, 710, 240, 70);
     const packInvBtn = scene.add.rectangle(864, 710, 240, 70, 0xda7aff).setInteractive().setStrokeStyle(4, 0x000000);
-    scene.add.text(864, 710, 'INVENTORY', { 
-        fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' 
-    }).setOrigin(0.5);
-    packInvBtn.on('pointerdown', () => { renderPackInventory(scene, inventoryOverlay); inventoryOverlay.setVisible(true); });
+    scene.add.text(864, 710, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }).setOrigin(0.5);
+    packInvBtn.on('pointerdown', () => { renderInventoryView(scene, inventoryOverlay); inventoryOverlay.setVisible(true); });
+}
+
+function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
+    const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
+    const bg = scene.add.rectangle(0, 0, 500, 350, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
+    
+    const title = scene.add.text(0, -130, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
+    const closeTxt = scene.add.text(220, -140, '✖', { fontSize: '28px', color: '#000' }).setInteractive().setOrigin(0.5);
+    closeTxt.on('pointerdown', () => overlay.setVisible(false));
+
+    // Reset Button
+    const resetBtn = scene.add.text(0, 130, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '18px', color: '#e74c3c', fontStyle: 'bold' }).setInteractive().setOrigin(0.5);
+    resetBtn.on('pointerdown', () => {
+        if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
+    });
+
+    const createColorBtn = (y, label, type, colors) => {
+        scene.add.text(-180, y, label, { fontFamily: 'Arial', fontSize: '20px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
+        let btn = scene.add.rectangle(120, y, 140, 40, colors[0]).setStrokeStyle(2, 0x000).setInteractive();
+        btn.colorIndex = 0;
+        btn.on('pointerdown', () => {
+            btn.colorIndex = (btn.colorIndex + 1) % colors.length;
+            let newColor = colors[btn.colorIndex];
+            btn.setFillStyle(newColor);
+            
+            if (type === 'table') { themeColors.table = '#' + newColor.toString(16).padStart(6, '0'); scene.cameras.main.setBackgroundColor(themeColors.table); }
+            if (type === 'binder') { themeColors.binder = newColor; binderOverlay.bg.setFillStyle(newColor); }
+            if (type === 'inv') { themeColors.inventory = newColor; inventoryOverlay.bg.setFillStyle(newColor); }
+        });
+        overlay.add(btn);
+    };
+
+    createColorBtn(-50, "Table Color", 'table', [0xf4f4f4, 0x34495e, 0x27ae60, 0xbdc3c7]);
+    createColorBtn(10, "Binder Color", 'binder', [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b]);
+    createColorBtn(70, "Inventory Color", 'inv', [0x1a1a1a, 0x2980b9, 0xd35400, 0x16a085]);
+
+    overlay.add([bg, title, closeTxt, resetBtn]);
+    return overlay;
 }
 
 // --- CORE MECHANICS ---
@@ -293,137 +318,188 @@ function updateStoreCart(scene, overlay) {
 
 function createInventoryOverlay(scene) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
-    const bg = scene.add.rectangle(0, 0, 900, 650, 0x1a1a1a).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
-    const title = scene.add.text(0, -290, 'MY PACKS', { fontFamily: 'Arial', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    overlay.bg = scene.add.rectangle(0, 0, 900, 650, themeColors.inventory).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     
-    const closeBtn = scene.add.rectangle(350, -290, 120, 40, 0xe74c3c).setInteractive();
-    const closeTxt = scene.add.text(350, -290, 'CLOSE', { fontFamily: 'Arial', fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    closeBtn.on('pointerdown', () => overlay.setVisible(false));
+    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    overlay.add([bg, title, closeBtn, closeTxt]);
+    overlay.currentTab = 'packs';
+    overlay.add([overlay.bg, closeTxt]);
+
+    // Tabs
+    const packsTab = scene.add.text(-100, -280, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive().setOrigin(0.5);
+    const doublesTab = scene.add.text(100, -280, 'DOUBLES', { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive().setOrigin(0.5);
+
+    packsTab.on('pointerdown', () => { overlay.currentTab = 'packs'; packsTab.setColor('#fff'); doublesTab.setColor('#7f8c8d'); renderInventoryView(scene, overlay); });
+    doublesTab.on('pointerdown', () => { overlay.currentTab = 'doubles'; doublesTab.setColor('#fff'); packsTab.setColor('#7f8c8d'); renderInventoryView(scene, overlay); });
+
+    overlay.add([packsTab, doublesTab]);
     overlay.gridContainer = scene.add.container(0, 0); 
     overlay.add(overlay.gridContainer);
     
     return overlay;
 }
 
-function renderPackInventory(scene, overlay) {
+function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
-    let startX = -250;
-    let packKeys = Object.keys(playerPacks);
-    let index = 0;
+    
+    if (overlay.currentTab === 'packs') {
+        let startX = -250;
+        let packKeys = Object.keys(playerPacks);
+        let index = 0;
 
-    packKeys.forEach((key) => {
-        let count = playerPacks[key];
-        if (count > 0) {
-            let packCont = scene.add.container(startX + (index * 250), -50);
-            packCont.add(createPackGraphic(scene, key));
-            
-            let badgeBg = scene.add.circle(60, -90, 30, 0xe74c3c);
-            let badgeTxt = scene.add.text(60, -90, 'x' + count, { fontSize: '24px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-            
-            let openBtn = scene.add.rectangle(0, 130, 140, 40, 0x27ae60).setInteractive();
-            let openTxt = scene.add.text(0, 130, 'TEAR OPEN', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-            
-            openBtn.on('pointerdown', () => {
-                playerPacks[key] -= 1; 
-                saveGame();
-                overlay.setVisible(false); 
-                spawnBoosterPack(scene, key); 
-            });
-            
-            packCont.add([badgeBg, badgeTxt, openBtn, openTxt]);
-            overlay.gridContainer.add(packCont);
-            index++;
+        packKeys.forEach((key) => {
+            let count = playerPacks[key];
+            if (count > 0) {
+                let packCont = scene.add.container(startX + (index * 250), -30);
+                packCont.add(createPackGraphic(scene, key));
+                
+                let badgeBg = scene.add.circle(60, -90, 30, 0xe74c3c);
+                let badgeTxt = scene.add.text(60, -90, 'x' + count, { fontSize: '24px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                
+                let viewBtn = scene.add.rectangle(0, 130, 140, 40, 0x27ae60).setInteractive();
+                let viewTxt = scene.add.text(0, 130, 'VIEW PACK', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                
+                viewBtn.on('pointerdown', () => {
+                    overlay.setVisible(false); 
+                    showPackCloseup(scene, key);
+                });
+                
+                packCont.add([badgeBg, badgeTxt, viewBtn, viewTxt]);
+                overlay.gridContainer.add(packCont);
+                index++;
+            }
+        });
+
+        if (index === 0) {
+            let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            overlay.gridContainer.add(emptyTxt);
         }
-    });
+    } 
+    else if (overlay.currentTab === 'doubles') {
+        let startX = -320, startY = -120, col = 0, spacingX = 160, spacingY = 220;
+        let hasDoubles = false;
 
-    if (index === 0) {
-        let emptyTxt = scene.add.text(0, 0, "You don't have any packs.\nVisit the Store to buy some!", { fontSize: '24px', color: '#7f8c8d', align: 'center' }).setOrigin(0.5);
-        overlay.gridContainer.add(emptyTxt);
+        myMojiDatabase.forEach(moji => {
+            let owned = Number(playerInventory[moji.id]);
+            if (owned > 1) {
+                hasDoubles = true;
+                let miniCard = scene.add.container(startX + (col * spacingX), startY);
+                miniCard.add(createCardGraphic(scene, moji));
+                miniCard.setScale(0.45); 
+                
+                let badgeBg = scene.add.circle(80, -130, 40, 0xe74c3c);
+                let badgeTxt = scene.add.text(80, -130, 'x' + (owned - 1), { fontSize: '40px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                miniCard.add([badgeBg, badgeTxt]);
+
+                miniCard.setSize(220, 320); 
+                miniCard.setInteractive({ cursor: 'pointer' });
+                miniCard.on('pointerdown', () => {
+                    playerInventory[moji.id] = Number(playerInventory[moji.id]) - 1; 
+                    saveGame();
+                    createDraggableCard(scene, 512, 384, moji); 
+                    renderInventoryView(scene, overlay); 
+                });
+
+                overlay.gridContainer.add(miniCard);
+                col++;
+                if (col > 4) { col = 0; startY += spacingY; }
+            }
+        });
+
+        if (!hasDoubles) {
+            let emptyTxt = scene.add.text(0, 0, "You don't have any duplicate cards.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            overlay.gridContainer.add(emptyTxt);
+        }
     }
 }
 
-// --- UPDATED BINDER VISUALS & LOGIC ---
+// NEW: Pack Close-up cinematic flow
+function showPackCloseup(scene, packKey) {
+    const closeup = scene.add.container(512, 384).setDepth(200);
+    const bg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.85).setInteractive(); // Blocks clicks
+    
+    const packGraphic = scene.add.container(0, -60);
+    packGraphic.add(createPackGraphic(scene, packKey));
+    packGraphic.setScale(2.5); // Cinematic zoom
+
+    const openBtn = scene.add.rectangle(0, 260, 200, 60, 0x2ecc71).setStrokeStyle(4, 0xffffff).setInteractive();
+    const openTxt = scene.add.text(0, 260, 'OPEN!', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }).setOrigin(0.5);
+
+    openBtn.on('pointerdown', () => {
+        playerPacks[packKey] -= 1; 
+        saveGame();
+        
+        // Update home screen UI
+        let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
+        scene.packsText.setText('PACKS: ' + totalPacks);
+
+        closeup.destroy();
+        spawnBoosterPack(scene, packKey);
+    });
+
+    // Optional close button in case they change their mind
+    const closeTxt = scene.add.text(450, -320, '✖', { fontSize: '36px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    closeTxt.on('pointerdown', () => closeup.destroy());
+
+    closeup.add([bg, packGraphic, openBtn, openTxt, closeTxt]);
+}
+
 function createBinderOverlay(scene) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
-    const bg = scene.add.rectangle(0, 0, 900, 650, 0x1a1a1a).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
-    const title = scene.add.text(0, -290, 'MY COLLECTION', { fontFamily: 'Arial', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    // We attach bg to the overlay object so Settings can change its color
+    overlay.bg = scene.add.rectangle(0, 0, 940, 680, themeColors.binder).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     
-    const closeBtn = scene.add.rectangle(0, 300, 200, 40, 0xe74c3c).setInteractive();
-    const closeTxt = scene.add.text(0, 300, 'CLOSE', { fontFamily: 'Arial', fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    closeBtn.on('pointerdown', () => overlay.setVisible(false));
+    // 2-Page Visual Divider
+    const spine = scene.add.rectangle(0, 0, 40, 680, 0x000000, 0.3);
+    const closeTxt = scene.add.text(430, -300, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
-    overlay.add([bg, title, closeBtn, closeTxt]);
-    
-    overlay.currentCategory = 'Common';
-    overlay.viewMode = 'Collection'; 
+    overlay.add([overlay.bg, spine, closeTxt]);
     overlay.gridContainer = scene.add.container(0, 0); 
     overlay.add(overlay.gridContainer);
 
-    // FIX: Store tab objects so we can update their text/colors dynamically
-    overlay.tabs = [];
-    const categories = ['Common', 'Rare', 'Epic', 'Legendary'];
-    let tabX = -300;
-    
-    categories.forEach(cat => {
-        let tab = scene.add.text(tabX, -240, cat.toUpperCase(), { fontSize: '18px', color: '#7f8c8d', fontStyle: 'bold' }).setInteractive().setOrigin(0.5);
-        tab.on('pointerdown', () => { 
-            overlay.currentCategory = cat; 
-            renderBinderGrid(scene, overlay); 
-        });
-        overlay.tabs.push({ textObj: tab, category: cat });
-        overlay.add(tab); 
-        tabX += 200;
-    });
-
-    const modeBtn = scene.add.rectangle(0, 240, 300, 40, 0xf39c12).setInteractive();
-    const modeText = scene.add.text(0, 240, 'VIEWING: MAIN COLLECTION', { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    
-    modeBtn.on('pointerdown', () => {
-        overlay.viewMode = (overlay.viewMode === 'Collection') ? 'Doubles' : 'Collection';
-        modeText.setText(overlay.viewMode === 'Collection' ? 'VIEWING: MAIN COLLECTION (CLICK TO WITHDRAW)' : 'VIEWING: DOUBLES (CLICK TO WITHDRAW)');
-        modeBtn.setFillStyle(overlay.viewMode === 'Collection' ? 0xf39c12 : 0x8e44ad);
-        renderBinderGrid(scene, overlay);
-    });
-
-    overlay.add([modeBtn, modeText]);
     return overlay;
 }
 
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
-    // FIX: Update Tab Counters and Colors so the player knows where their cards are!
-    overlay.tabs.forEach(tab => {
-        let countInTab = myMojiDatabase.filter(m => m.rarity === tab.category).reduce((sum, m) => sum + Number(playerInventory[m.id]), 0);
-        tab.textObj.setText(`${tab.category.toUpperCase()} (${countInTab})`);
-        tab.textObj.setColor(tab.category === overlay.currentCategory ? '#ffffff' : '#7f8c8d');
-    });
+    // We have 12 cards in myMojiDatabase. A 2-page spread holds 18 (9 per side).
+    myMojiDatabase.forEach((moji, index) => {
+        let page = index < 9 ? 0 : 1; // 0 = Left Page, 1 = Right Page
+        let localIndex = index % 9;
+        let col = localIndex % 3;
+        let row = Math.floor(localIndex / 3);
 
-    let filteredCards = myMojiDatabase.filter(m => m.rarity === overlay.currentCategory);
-    let startX = -320, startY = -120, col = 0, spacingX = 160, spacingY = 220;
+        // Calculate positions for 2 pages
+        let startX = page === 0 ? -320 : 130;
+        let startY = -220;
+        let spacingX = 140;
+        let spacingY = 200;
 
-    filteredCards.forEach(moji => {
+        let x = startX + (col * spacingX);
+        let y = startY + (row * spacingY);
+
         let owned = Number(playerInventory[moji.id]);
-        
-        if (owned >= 1) {
-            let isDoublesMode = (overlay.viewMode === 'Doubles');
 
-            // Skip drawing if we are in doubles mode but only own 1 copy
-            if (isDoublesMode && owned === 1) return;
+        // Draw Sleeve Background
+        let sleeve = scene.add.rectangle(x, y, 110, 160, 0x000000, 0.4).setStrokeStyle(2, 0x555555);
+        overlay.gridContainer.add(sleeve);
 
-            let miniCard = scene.add.container(startX + (col * spacingX), startY);
-            miniCard.add(createCardGraphic(scene, moji));
-            miniCard.setScale(0.45); 
-            
-            // Add Badge ONLY in Doubles mode
-            if (isDoublesMode) {
-                let badgeBg = scene.add.circle(80, -130, 40, 0xe74c3c);
-                let badgeTxt = scene.add.text(80, -130, 'x' + (owned - 1), { fontSize: '40px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-                miniCard.add([badgeBg, badgeTxt]);
-            }
+        // Create Card Graphic
+        let miniCard = scene.add.container(x, y);
+        let graphics = createCardGraphic(scene, moji);
+        miniCard.add(graphics);
+        miniCard.setScale(0.45); 
 
+        if (owned === 0) {
+            // Placeholder Styling
+            graphics.forEach(g => { if(g.setTint) g.setTint(0x222222); g.setAlpha(0.5); });
+            let qMark = scene.add.text(0, 0, '?', { fontSize: '80px', color: '#444444', fontStyle: 'bold' }).setOrigin(0.5);
+            miniCard.add(qMark);
+        } else {
+            // Real Card (Draggable from binder)
             miniCard.setSize(220, 320); 
             miniCard.setInteractive({ cursor: 'pointer' });
             miniCard.on('pointerdown', () => {
@@ -432,10 +508,7 @@ function renderBinderGrid(scene, overlay) {
                 createDraggableCard(scene, 512, 384, moji); 
                 renderBinderGrid(scene, overlay); 
             });
-
-            overlay.gridContainer.add(miniCard);
-            col++;
-            if (col > 4) { col = 0; startY += spacingY; }
         }
+        overlay.gridContainer.add(miniCard);
     });
 }
