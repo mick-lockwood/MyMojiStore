@@ -609,7 +609,7 @@ function createBinderOverlay(scene) {
     ];
     
     // ADJUSTED X (-355) and Y (-285) to align with left sleeve column
-    createDropdown(scene, overlay.uiContainer, -355, -285, 150, 'SORT: ', sortOptions, 'num_asc', (newVal) => {
+    createDropdown(scene, overlay.uiContainer, -355, -275, 150, 'SORT: ', sortOptions, 'num_asc', (newVal) => {
         overlay.sortBy = newVal;
         overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
