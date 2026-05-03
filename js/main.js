@@ -113,7 +113,10 @@ function create() {
 
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
+    
+    // FIXED: Add the background FIRST so it renders underneath everything else
     const bg = scene.add.rectangle(0, 0, 500, 420, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
+    overlay.add(bg); 
     
     const title = scene.add.text(0, -170, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
     const closeTxt = scene.add.text(220, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive().setOrigin(0.5);
@@ -124,7 +127,17 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
-    // FIXED: Properly attach the created text and buttons to the overlay
+    const instrBtn = scene.add.rectangle(0, 100, 200, 40, 0x3498db).setStrokeStyle(2, 0x000).setInteractive();
+    const instrTxt = scene.add.text(0, 100, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+    
+    instrBtn.on('pointerdown', () => {
+        alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 100 MyMojis!");
+    });
+
+    // Add these UI elements to the overlay
+    overlay.add([title, closeTxt, resetBtn, instrBtn, instrTxt]);
+
+    // Helper function for color buttons
     const createColorBtn = (y, label, type, colors) => {
         let labelTxt = scene.add.text(-180, y, label, { fontFamily: 'Arial', fontSize: '20px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
         let btn = scene.add.rectangle(120, y, 140, 40, colors[0]).setStrokeStyle(2, 0x000).setInteractive();
@@ -147,24 +160,18 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                 inventoryOverlay.bg.setFillStyle(newColor); 
             }
         });
-        overlay.add([labelTxt, btn]); // <--- This line was missing!
+        
+        // Add text and button to the overlay (they will now render properly on top of the bg)
+        overlay.add([labelTxt, btn]); 
     };
 
+    // Create the rows
     createColorBtn(-90, "Table Color", 'table', [0xf4f4f4, 0x34495e, 0x27ae60, 0xbdc3c7]);
     createColorBtn(-30, "Binder Color", 'binder', [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b]);
     createColorBtn(30, "Inventory Color", 'inv', [0x1a1a1a, 0x2980b9, 0xd35400, 0x16a085]);
 
-    const instrBtn = scene.add.rectangle(0, 100, 200, 40, 0x3498db).setStrokeStyle(2, 0x000).setInteractive();
-    const instrTxt = scene.add.text(0, 100, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-    
-    instrBtn.on('pointerdown', () => {
-        alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 100 MyMojis!");
-    });
-
-    overlay.add([bg, title, closeTxt, resetBtn, instrBtn, instrTxt]);
     return overlay;
 }
-
 // --- CORE MECHANICS ---
 
 // NEW: Visual feedback for dropping cards
