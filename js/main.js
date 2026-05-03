@@ -13,7 +13,7 @@ let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
 let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a };
         
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
-
+n
 function loadGame() {
     let savedData = localStorage.getItem('myMojiSave');
     if (savedData) {
@@ -341,13 +341,18 @@ function createStoreOverlay(scene) {
 function renderStoreView(scene, overlay) {
     overlay.contentContainer.removeAll(true);
 
+    // Calculate BOTH total items and total cost upfront
     let totalItems = 0;
-    for (let k in shoppingCart) totalItems += shoppingCart[k];
+    let totalCost = 0;
+    for (let k in shoppingCart) {
+        totalItems += shoppingCart[k];
+        totalCost += shoppingCart[k] * packDatabase[k].cost;
+    }
 
     // --- SHOP VIEW ---
     if (overlay.currentView === 'shop') {
-        // Shopping Cart Toggle Button
-        let viewCartBtn = createButton(scene, 320, -290, 140, 40, 0xf39c12, 0xffffff, `🛒 CART (${totalItems})`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        // CHANGED: Moved X to -300 (Left), Width to 200 (wider for price text), Color to 0x7f8c8d (Grey)
+        let viewCartBtn = createButton(scene, -300, -290, 200, 40, 0x7f8c8d, 0xffffff, `🛒 CART (${totalItems}) - $${totalCost.toFixed(2)}`, { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
             overlay.currentView = 'cart';
             renderStoreView(scene, overlay);
         });
@@ -365,7 +370,7 @@ function renderStoreView(scene, overlay) {
 
             let addBtn = createButton(scene, 0, 180, 140, 40, 0x3498db, null, '+ ADD TO CART', { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
                 shoppingCart[key] += 1;
-                renderStoreView(scene, overlay); // Re-render to update the top cart count
+                renderStoreView(scene, overlay); 
             });
 
             packCont.add([priceTxt, addBtn]);
@@ -380,7 +385,6 @@ function renderStoreView(scene, overlay) {
         });
         overlay.contentContainer.add(backBtn);
 
-        // Cart List Background
         let cartListBg = scene.add.rectangle(0, -30, 700, 350, 0x2c3e50).setStrokeStyle(2, 0xffffff);
         overlay.contentContainer.add(cartListBg);
 
@@ -393,8 +397,9 @@ function renderStoreView(scene, overlay) {
                 let def = packDatabase[key];
                 let itemCont = scene.add.container(0, startY);
 
-                let nameTxt = scene.add.text(-300, 0, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0, 0.5);
-                let costTxt = scene.add.text(-50, 0, '$' + (def.cost * shoppingCart[key]).toFixed(2), { fontSize: '22px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0.5);
+                // CHANGED: Shifted nameTxt to -330 and costTxt to -30 to prevent overlapping!
+                let nameTxt = scene.add.text(-330, 0, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0, 0.5);
+                let costTxt = scene.add.text(-30, 0, '$' + (def.cost * shoppingCart[key]).toFixed(2), { fontSize: '22px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0.5);
 
                 let minusBtn = createButton(scene, 80, 0, 40, 40, 0xe74c3c, null, '-', { fontSize: '24px', color: '#fff', fontStyle: 'bold' }, () => {
                     shoppingCart[key] -= 1;
@@ -410,7 +415,7 @@ function renderStoreView(scene, overlay) {
 
                 itemCont.add([nameTxt, costTxt, minusBtn, countTxt, plusBtn]);
                 overlay.contentContainer.add(itemCont);
-                startY += 60; // Space out the rows
+                startY += 60; 
             }
         }
 
@@ -419,10 +424,7 @@ function renderStoreView(scene, overlay) {
             overlay.contentContainer.add(emptyTxt);
         }
 
-        // Bottom Checkout Bar
         const cartBg = scene.add.rectangle(0, 250, 800, 80, 0x1a1a1a).setStrokeStyle(2, 0xffffff);
-        
-        let totalCost = calculateCartTotal();
         let cartTotalText = scene.add.text(-380, 250, 'TOTAL: $' + totalCost.toFixed(2), { fontSize: '28px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
         const clearBtn = createButton(scene, 200, 250, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
@@ -444,7 +446,6 @@ function renderStoreView(scene, overlay) {
                 let newTotalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
                 scene.packsText.setText('PACKS: ' + newTotalPacks);
 
-                // Success! Send them back to the shop front
                 overlay.currentView = 'shop';
                 renderStoreView(scene, overlay);
 
