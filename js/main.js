@@ -233,13 +233,14 @@ function createDraggableCard(scene, x, y, mojiData) {
 function createStoreOverlay(scene) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
     const bg = scene.add.rectangle(0, 0, 900, 650, 0x1a1a1a).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
-    const title = scene.add.text(0, -290, 'MOJI STORE', { fontFamily: 'Arial', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    const title = scene.add.text(0, -290, 'MOJI STORE', { fontFamily: 'Impact, sans-serif', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     
-    // const closeBtn = scene.add.rectangle(350, -290, 120, 40, 0xe74c3c).setInteractive();
-    const closeTxt = scene.add.text(350, -290, 'X', { fontFamily: 'Arial', fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    closeBtn.on('pointerdown', () => overlay.setVisible(false));
+    // Updated Close Button: Just the X text, made interactive
+    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    overlay.add([bg, title, closeBtn, closeTxt]);
+    // Removed closeBtn from the array here
+    overlay.add([bg, title, closeTxt]);
 
     let packKeys = Object.keys(packDatabase);
     let startX = -250;
@@ -280,13 +281,13 @@ function createStoreOverlay(scene) {
         let cost = calculateCartTotal();
         if (cost > 0 && playerMoney >= cost) {
             playerMoney -= cost;
-            scene.moneyText.setText('Bank: $' + playerMoney.toFixed(2));
+            scene.moneyText.setText('$' + playerMoney.toFixed(2));
             for (let key in shoppingCart) playerPacks[key] += shoppingCart[key];
             shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
             updateStoreCart(scene, overlay);
             saveGame();
             scene.moneyText.setColor('#f1c40f'); 
-            scene.time.delayedCall(300, () => scene.moneyText.setColor('#2ecc71'));
+            scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222')); // Updated to match the new dark text color
         } else if (cost > playerMoney) {
             overlay.cartTotalText.setColor('#e74c3c'); 
             scene.time.delayedCall(300, () => overlay.cartTotalText.setColor('#f1c40f'));
