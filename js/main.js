@@ -114,12 +114,13 @@ function create() {
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
     
-    // FIXED: Add the background FIRST so it renders underneath everything else
-    const bg = scene.add.rectangle(0, 0, 500, 420, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
+    // WIDENED BACKGROUND: Expanded width from 500 to 600 to fit the color swatches
+    const bg = scene.add.rectangle(0, 0, 600, 420, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
     overlay.add(bg); 
     
     const title = scene.add.text(0, -170, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
-    const closeTxt = scene.add.text(220, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive().setOrigin(0.5);
+    // Adjusted close button X coordinate to account for wider background
+    const closeTxt = scene.add.text(270, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
     const resetBtn = scene.add.text(0, 160, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '18px', color: '#e74c3c', fontStyle: 'bold' }).setInteractive().setOrigin(0.5);
@@ -134,41 +135,46 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 100 MyMojis!");
     });
 
-    // Add these UI elements to the overlay
     overlay.add([title, closeTxt, resetBtn, instrBtn, instrTxt]);
 
-    // Helper function for color buttons
-    const createColorBtn = (y, label, type, colors) => {
-        let labelTxt = scene.add.text(-180, y, label, { fontFamily: 'Arial', fontSize: '20px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
-        let btn = scene.add.rectangle(120, y, 140, 40, colors[0]).setStrokeStyle(2, 0x000).setInteractive();
-        btn.colorIndex = 0;
-        btn.on('pointerdown', () => {
-            btn.colorIndex = (btn.colorIndex + 1) % colors.length;
-            let newColor = colors[btn.colorIndex];
-            btn.setFillStyle(newColor);
+    // NEW: Function to create a row of color swatches instead of one cycling button
+    const createColorPalette = (y, label, type, colors) => {
+        let labelTxt = scene.add.text(-270, y, label, { fontFamily: 'Arial', fontSize: '18px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
+        overlay.add(labelTxt);
+
+        let startX = -120;
+        let spacing = 40;
+
+        colors.forEach((color, index) => {
+            // Draw the individual color swatch
+            let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setStrokeStyle(2, 0x000).setInteractive();
             
-            if (type === 'table') { 
-                themeColors.table = '#' + newColor.toString(16).padStart(6, '0'); 
-                scene.cameras.main.setBackgroundColor(themeColors.table); 
-            }
-            if (type === 'binder') { 
-                themeColors.binder = newColor; 
-                binderOverlay.bg.setFillStyle(newColor); 
-            }
-            if (type === 'inv') { 
-                themeColors.inventory = newColor; 
-                inventoryOverlay.bg.setFillStyle(newColor); 
-            }
+            swatch.on('pointerdown', () => {
+                if (type === 'table') { 
+                    themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
+                    scene.cameras.main.setBackgroundColor(themeColors.table); 
+                }
+                if (type === 'binder') { 
+                    themeColors.binder = color; 
+                    binderOverlay.bg.setFillStyle(color); 
+                }
+                if (type === 'inv') { 
+                    themeColors.inventory = color; 
+                    inventoryOverlay.bg.setFillStyle(color); 
+                }
+            });
+            
+            overlay.add(swatch);
         });
-        
-        // Add text and button to the overlay (they will now render properly on top of the bg)
-        overlay.add([labelTxt, btn]); 
     };
 
-    // Create the rows
-    createColorBtn(-90, "Table Color", 'table', [0xf4f4f4, 0x34495e, 0x27ae60, 0xbdc3c7]);
-    createColorBtn(-30, "Binder Color", 'binder', [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b]);
-    createColorBtn(30, "Inventory Color", 'inv', [0x1a1a1a, 0x2980b9, 0xd35400, 0x16a085]);
+    // Expanded color arrays!
+    const tableColors = [0xf4f4f4, 0xbdc3c7, 0x34495e, 0x27ae60, 0x2980b9, 0x8e44ad, 0xc0392b, 0xf39c12, 0xffa07a];
+    const menuColors = [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b, 0x27ae60, 0xd35400, 0x2980b9, 0x16a085, 0x7f8c8d];
+
+    createColorPalette(-90, "Table Color", 'table', tableColors);
+    createColorPalette(-30, "Binder Color", 'binder', menuColors);
+    createColorPalette(30, "Inventory Color", 'inv', menuColors);
 
     return overlay;
 }
@@ -218,9 +224,9 @@ function createCardGraphic(scene, mojiData) {
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: '#7f8c8d' }).setOrigin(0.5);
     const valTxt = scene.add.text(0, 110, '$' + mojiData.baseValue.toFixed(2), { fontFamily: 'Arial', fontSize: '24px', color: '#27ae60', fontStyle: 'bold' }).setOrigin(0.5);
     
-    // MOVED: Placed neatly in the bottom right corner to avoid overlapping names
+    // INCREASED SIZE: Bumped from 14px to 22px so it's readable in the binder!
     let numStr = '#' + mojiData.id.split('_')[1];
-    const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '14px', color: '#7f8c8d', fontStyle: 'bold' }).setOrigin(1, 0.5);
+    const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '22px', color: '#7f8c8d', fontStyle: 'bold' }).setOrigin(1, 0.5);
 
     return [bg, imgBox, nameTxt, rarityTxt, valTxt, numTxt];
 }
