@@ -357,12 +357,15 @@ function showFloatingText(scene, x, y, message, colorHex) {
 
 function spawnBoosterPack(scene, packId) {
     const packDef = packDatabase[packId];
-    const spacing = 260; 
-    let startX = 252;    
     
     for (let i = 0; i < 3; i++) {
         let pulledMoji = pullCardWithWeights(packDef.weights);
-        createDraggableCard(scene, startX + (i * spacing), 350, pulledMoji);
+        
+        // Pick a random location within the safe middle band of the table
+        let randX = Phaser.Math.Between(150, 874); 
+        let randY = Phaser.Math.Between(340, 510);
+        
+        createDraggableCard(scene, randX, randY, pulledMoji);
     }
 }
 
@@ -753,7 +756,6 @@ function createInventoryOverlay(scene) {
 function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
-    // Keep tab text updated dynamically
     overlay.doublesTab.setText(playerUnlocks.binder ? 'DOUBLES' : 'CARDS');
     
     if (overlay.currentTab === 'packs') {
@@ -800,7 +802,6 @@ function renderInventoryView(scene, overlay) {
     } 
     else if (overlay.currentTab === 'doubles') {
         
-        // DYNAMIC LOGIC: If binder is unlocked, only show > 1. If locked, show > 0.
         let minOwned = playerUnlocks.binder ? 1 : 0;
         let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > minOwned);
 
@@ -833,7 +834,6 @@ function renderInventoryView(scene, overlay) {
                 miniCard.add(createCardGraphic(scene, moji));
                 miniCard.setScale(0.45); 
                 
-                // DYNAMIC LOGIC: Subtract the binder's copy from the badge if unlocked
                 let displayCount = playerUnlocks.binder ? (owned - 1) : owned;
                 
                 let badgeBg = scene.add.circle(80, -130, 40, 0xe74c3c);
@@ -842,10 +842,16 @@ function renderInventoryView(scene, overlay) {
 
                 miniCard.setSize(220, 320); 
                 miniCard.setInteractive({ cursor: 'pointer' });
+                
                 miniCard.on('pointerdown', () => {
                     playerInventory[moji.id] = Number(playerInventory[moji.id]) - 1; 
                     saveGame();
-                    createDraggableCard(scene, 512, 384, moji); 
+                    
+                    // NEW: Spit out onto the table randomly!
+                    let randX = Phaser.Math.Between(150, 874); 
+                    let randY = Phaser.Math.Between(340, 510);
+                    createDraggableCard(scene, randX, randY, moji); 
+                    
                     renderInventoryView(scene, overlay); 
                 });
 
@@ -1032,7 +1038,7 @@ function renderBinderGrid(scene, overlay) {
         if (overlay.filterBy === 'missing') return owned === 0;
         if (overlay.filterBy.startsWith('rarity_')) return moji.rarity === overlay.filterBy.split('_')[1];
         if (overlay.filterBy.startsWith('cat_')) return moji.category === overlay.filterBy.split('_')[1];
-        return true; // 'all' fallback
+        return true; 
     });
 
     // 2. SORT LOGIC
@@ -1065,9 +1071,8 @@ function renderBinderGrid(scene, overlay) {
     });
 
     let maxSpread = Math.ceil(filteredDb.length / 18) - 1;
-    if (maxSpread < 0) maxSpread = 0; // Prevent errors if filter returns 0 results
+    if (maxSpread < 0) maxSpread = 0; 
     
-    // Safety check if a filter drastically reduces page count
     if (overlay.currentSpread > maxSpread) overlay.currentSpread = maxSpread;
 
     overlay.prevBtn.setVisible(overlay.currentSpread > 0);
@@ -1076,7 +1081,6 @@ function renderBinderGrid(scene, overlay) {
     let startIndex = overlay.currentSpread * 18;
     let endIndex = Math.min(startIndex + 18, filteredDb.length);
 
-    // If filter returns nothing, show a message
     if (filteredDb.length === 0) {
         let emptyTxt = scene.add.text(0, 0, "No cards match this filter.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
         overlay.gridContainer.add(emptyTxt);
@@ -1092,7 +1096,6 @@ function renderBinderGrid(scene, overlay) {
         let row = Math.floor(localIndex / 3);
 
         let startX = page === 0 ? -375 : 95;
-        // ADJUSTED: Shifted from -200 down to -180 to clear the new dropdowns
         let startY = -180; 
         let spacingX = 140;
         let spacingY = 200;
@@ -1117,11 +1120,17 @@ function renderBinderGrid(scene, overlay) {
         } else {
             miniCard.setSize(220, 320); 
             miniCard.setInteractive({ cursor: 'pointer' });
+            
             miniCard.on('pointerdown', () => {
-                scene.events.emit('close_all_dropdowns'); // Clean up menus on grab
+                scene.events.emit('close_all_dropdowns'); 
                 playerInventory[moji.id] = Number(playerInventory[moji.id]) - 1; 
                 saveGame();
-                createDraggableCard(scene, 512, 384, moji); 
+                
+                // NEW: Spit out onto the table randomly!
+                let randX = Phaser.Math.Between(150, 874); 
+                let randY = Phaser.Math.Between(340, 510);
+                createDraggableCard(scene, randX, randY, moji); 
+                
                 renderBinderGrid(scene, overlay); 
             });
         }
