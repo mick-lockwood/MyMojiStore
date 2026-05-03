@@ -52,8 +52,6 @@ function create() {
     const scene = this; 
     scene.cameras.main.setBackgroundColor(themeColors.table);
 
-    // HELPER: Simple Drop Shadow
-    const addShadow = (x, y, w, h, radius = 0) => scene.add.rectangle(x+6, y+6, w, h, 0x000000, 0.4);
 
     // --- TOP UI HEADER ---
     const addShadow = (x, y, w, h, radius = 0) => scene.add.rectangle(x+6, y+6, w, h, 0x000000, 0.4);
