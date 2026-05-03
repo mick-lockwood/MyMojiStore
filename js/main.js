@@ -489,63 +489,142 @@ function showPackCloseup(scene, packKey) {
     closeup.add([bg, packGraphic, openBtn, openTxt, closeTxt]);
 }
 
+// NEW HELPER: Creates a reusable dropdown menu
+function createDropdown(scene, parentContainer, x, y, width, prefix, options, defaultVal, onChange) {
+    const container = scene.add.container(x, y);
+    parentContainer.add(container);
+
+    // Main Button
+    const mainBg = scene.add.rectangle(0, 0, width, 30, 0x34495e).setStrokeStyle(2, 0xffffff).setInteractive();
+    const defaultOpt = options.find(o => o.val === defaultVal);
+    const mainTxt = scene.add.text(0, 0, prefix + (defaultOpt ? defaultOpt.label : ''), { fontFamily: 'Arial', fontSize: '12px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    container.add([mainBg, mainTxt]);
+
+    // Hidden List Container
+    const listContainer = scene.add.container(0, 15);
+    listContainer.setVisible(false);
+    container.add(listContainer);
+
+    const itemHeight = 26;
+    const listHeight = options.length * itemHeight;
+    const listBg = scene.add.rectangle(0, listHeight / 2, width, listHeight, 0x1a1a1a).setStrokeStyle(2, 0xaaaaaa);
+    listContainer.add(listBg);
+
+    // Generate List Items
+    options.forEach((opt, i) => {
+        let itemBg = scene.add.rectangle(0, (itemHeight/2) + (i * itemHeight), width, itemHeight, 0x2c3e50).setInteractive();
+        let itemTxt = scene.add.text(0, (itemHeight/2) + (i * itemHeight), opt.label, { fontFamily: 'Arial', fontSize: '13px', color: '#dddddd' }).setOrigin(0.5);
+
+        itemBg.on('pointerover', () => { itemBg.setFillStyle(0x3498db); itemTxt.setColor('#ffffff'); });
+        itemBg.on('pointerout', () => { itemBg.setFillStyle(0x2c3e50); itemTxt.setColor('#dddddd'); });
+        
+        itemBg.on('pointerdown', (pointer, localX, localY, event) => {
+            mainTxt.setText(prefix + opt.label);
+            listContainer.setVisible(false);
+            onChange(opt.val);
+            event.stopPropagation(); // Prevents click from passing through
+        });
+        listContainer.add([itemBg, itemTxt]);
+    });
+
+    // Toggle Menu Visibility
+    mainBg.on('pointerdown', (pointer, localX, localY, event) => {
+        let isVis = listContainer.visible;
+        scene.events.emit('close_all_dropdowns'); // Close other open menus
+        if (!isVis) {
+            listContainer.setVisible(true);
+            parentContainer.bringToTop(container); // Ensure it renders over other UI
+        }
+        event.stopPropagation(); 
+    });
+
+    // Listen for global close command
+    scene.events.on('close_all_dropdowns', () => listContainer.setVisible(false));
+
+    return container;
+}
+
 function createBinderOverlay(scene) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
     overlay.bg = scene.add.rectangle(0, 0, 940, 680, themeColors.binder).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     
+    // Close dropdowns if the user clicks the background
+    overlay.bg.on('pointerdown', () => scene.events.emit('close_all_dropdowns'));
+
     const spine = scene.add.rectangle(0, 0, 40, 680, 0x000000, 0.3);
-    const closeTxt = scene.add.text(430, -300, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    const closeTxt = scene.add.text(430, -315, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
     overlay.currentSpread = 0; 
-    
-    overlay.sortBy = 'Number'; 
-    overlay.sortAsc = true;    
+    overlay.sortBy = 'num_asc'; 
+    overlay.filterBy = 'all';    
 
-    // ADDED: 'Category' is now in the array of sortable options
-    const sortTypes = ['Number', 'Name', 'Category', 'Rarity', 'Value'];
-    const sortBtnBg = scene.add.rectangle(-320, -300, 160, 40, 0x34495e).setStrokeStyle(2, 0xffffff).setInteractive();
-    const sortBtnTxt = scene.add.text(-320, -300, 'SORT: NUMBER', { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    overlay.add([overlay.bg, spine, closeTxt]);
+
+    // ADD CARDS HERE (So UI renders on top of them)
+    overlay.gridContainer = scene.add.container(0, 0); 
+    overlay.add(overlay.gridContainer);
+
+    // ADD UI HERE
+    overlay.uiContainer = scene.add.container(0, 0);
+    overlay.add(overlay.uiContainer);
+
+    // 1. Sort & Order Dropdown
+    const sortOptions = [
+        { label: 'Number ⬆', val: 'num_asc' }, { label: 'Number ⬇', val: 'num_desc' },
+        { label: 'Name (A-Z)', val: 'name_asc' }, { label: 'Name (Z-A)', val: 'name_desc' },
+        { label: 'Rarity (Low)', val: 'rarity_asc' }, { label: 'Rarity (High)', val: 'rarity_desc' },
+        { label: 'Value (Low)', val: 'val_asc' }, { label: 'Value (High)', val: 'val_desc' },
+        { label: 'Category (A-Z)', val: 'cat_asc' }, { label: 'Category (Z-A)', val: 'cat_desc' }
+    ];
     
-    sortBtnBg.on('pointerdown', () => {
-        let currentIndex = sortTypes.indexOf(overlay.sortBy);
-        overlay.sortBy = sortTypes[(currentIndex + 1) % sortTypes.length];
-        sortBtnTxt.setText('SORT: ' + overlay.sortBy.toUpperCase());
+    createDropdown(scene, overlay.uiContainer, -345, -315, 150, 'SORT: ', sortOptions, 'num_asc', (newVal) => {
+        overlay.sortBy = newVal;
         overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
     });
 
-    const orderBtnBg = scene.add.rectangle(-140, -300, 160, 40, 0x34495e).setStrokeStyle(2, 0xffffff).setInteractive();
-    const orderBtnTxt = scene.add.text(-140, -300, 'ORDER: ASC ⬆', { fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    
-    orderBtnBg.on('pointerdown', () => {
-        overlay.sortAsc = !overlay.sortAsc;
-        orderBtnTxt.setText(overlay.sortAsc ? 'ORDER: ASC ⬆' : 'ORDER: DESC ⬇');
+    // 2. Filter Dropdown
+    const filterOptions = [
+        { label: 'All Cards', val: 'all' },
+        { label: 'Owned Only', val: 'owned' },
+        { label: 'Missing Only', val: 'missing' },
+        { label: 'Rarity: Common', val: 'rarity_Common' },
+        { label: 'Rarity: Rare', val: 'rarity_Rare' },
+        { label: 'Rarity: Epic', val: 'rarity_Epic' },
+        { label: 'Rarity: Legendary', val: 'rarity_Legendary' },
+        { label: 'Faces', val: 'cat_Faces' },
+        { label: 'Animals', val: 'cat_Animals' },
+        { label: 'Food', val: 'cat_Food' },
+        { label: 'Cosmic', val: 'cat_Cosmic' },
+        { label: 'Magic', val: 'cat_Magic' },
+        { label: 'Sports', val: 'cat_Sports' },
+        { label: 'Music', val: 'cat_Music' },
+        { label: 'Objects', val: 'cat_Objects' },
+        { label: 'Spooky', val: 'cat_Spooky' },
+        { label: 'Memes', val: 'cat_Memes' }
+    ];
+
+    createDropdown(scene, overlay.uiContainer, -185, -315, 150, 'FILTER: ', filterOptions, 'all', (newVal) => {
+        overlay.filterBy = newVal;
         overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
     });
     
-    overlay.prevBtn = scene.add.text(-430, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
-    overlay.nextBtn = scene.add.text(430, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    // Pagination Buttons
+    overlay.prevBtn = scene.add.text(-440, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    overlay.nextBtn = scene.add.text(440, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     
     overlay.prevBtn.on('pointerdown', () => {
-        if (overlay.currentSpread > 0) {
-            overlay.currentSpread--;
-            renderBinderGrid(scene, overlay);
-        }
+        if (overlay.currentSpread > 0) { overlay.currentSpread--; renderBinderGrid(scene, overlay); }
     });
     
     overlay.nextBtn.on('pointerdown', () => {
-        let maxSpread = Math.ceil(myMojiDatabase.length / 18) - 1;
-        if (overlay.currentSpread < maxSpread) {
-            overlay.currentSpread++;
-            renderBinderGrid(scene, overlay);
-        }
+        // We will update maxSpread dynamically inside renderBinderGrid
+        overlay.currentSpread++; renderBinderGrid(scene, overlay);
     });
 
-    overlay.add([overlay.bg, spine, closeTxt, sortBtnBg, sortBtnTxt, orderBtnBg, orderBtnTxt, overlay.prevBtn, overlay.nextBtn]);
-    overlay.gridContainer = scene.add.container(0, 0); 
-    overlay.add(overlay.gridContainer);
+    overlay.uiContainer.add([overlay.prevBtn, overlay.nextBtn]);
 
     return overlay;
 }
@@ -553,44 +632,66 @@ function createBinderOverlay(scene) {
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
-    let sortedDb = [...myMojiDatabase];
-    sortedDb.sort((a, b) => {
+    // 1. FILTER LOGIC
+    let filteredDb = myMojiDatabase.filter(moji => {
+        let owned = Number(playerInventory[moji.id]);
+        if (overlay.filterBy === 'owned') return owned > 0;
+        if (overlay.filterBy === 'missing') return owned === 0;
+        if (overlay.filterBy.startsWith('rarity_')) return moji.rarity === overlay.filterBy.split('_')[1];
+        if (overlay.filterBy.startsWith('cat_')) return moji.category === overlay.filterBy.split('_')[1];
+        return true; // 'all' fallback
+    });
+
+    // 2. SORT LOGIC
+    filteredDb.sort((a, b) => {
         let valA, valB;
+        let [sortType, sortDir] = overlay.sortBy.split('_');
+        let isAsc = sortDir === 'asc';
         
-        if (overlay.sortBy === 'Number') {
+        if (sortType === 'num') {
             valA = parseInt(a.id.split('_')[1]);
             valB = parseInt(b.id.split('_')[1]);
-        } else if (overlay.sortBy === 'Name') {
+        } else if (sortType === 'name') {
             valA = a.name.toLowerCase();
             valB = b.name.toLowerCase();
-        } else if (overlay.sortBy === 'Category') {
-            // ADDED: Logic to handle sorting by the new Category strings
+        } else if (sortType === 'cat') {
             valA = a.category.toLowerCase();
             valB = b.category.toLowerCase();
-        } else if (overlay.sortBy === 'Rarity') {
-            const rarityWeights = { "Common": 1, "Rare": 2, "Epic": 3, "Legendary": 4 };
-            valA = rarityWeights[a.rarity];
-            valB = rarityWeights[b.rarity];
-        } else if (overlay.sortBy === 'Value') {
+        } else if (sortType === 'rarity') {
+            const weights = { "Common": 1, "Rare": 2, "Epic": 3, "Legendary": 4 };
+            valA = weights[a.rarity];
+            valB = weights[b.rarity];
+        } else if (sortType === 'val') {
             valA = a.baseValue;
             valB = b.baseValue;
         }
 
-        if (valA < valB) return overlay.sortAsc ? -1 : 1;
-        if (valA > valB) return overlay.sortAsc ? 1 : -1;
+        if (valA < valB) return isAsc ? -1 : 1;
+        if (valA > valB) return isAsc ? 1 : -1;
         return 0;
     });
 
-    let maxSpread = Math.ceil(sortedDb.length / 18) - 1;
+    let maxSpread = Math.ceil(filteredDb.length / 18) - 1;
+    if (maxSpread < 0) maxSpread = 0; // Prevent errors if filter returns 0 results
     
+    // Safety check if a filter drastically reduces page count
+    if (overlay.currentSpread > maxSpread) overlay.currentSpread = maxSpread;
+
     overlay.prevBtn.setVisible(overlay.currentSpread > 0);
     overlay.nextBtn.setVisible(overlay.currentSpread < maxSpread);
     
     let startIndex = overlay.currentSpread * 18;
-    let endIndex = Math.min(startIndex + 18, sortedDb.length);
+    let endIndex = Math.min(startIndex + 18, filteredDb.length);
+
+    // If filter returns nothing, show a message
+    if (filteredDb.length === 0) {
+        let emptyTxt = scene.add.text(0, 0, "No cards match this filter.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+        overlay.gridContainer.add(emptyTxt);
+        return;
+    }
 
     for (let i = startIndex; i < endIndex; i++) {
-        let moji = sortedDb[i]; 
+        let moji = filteredDb[i]; 
         let spreadIndex = i - startIndex; 
         let page = spreadIndex < 9 ? 0 : 1; 
         let localIndex = spreadIndex % 9;
@@ -598,7 +699,8 @@ function renderBinderGrid(scene, overlay) {
         let row = Math.floor(localIndex / 3);
 
         let startX = page === 0 ? -375 : 95;
-        let startY = -200;
+        // ADJUSTED: Shifted from -200 down to -180 to clear the new dropdowns
+        let startY = -180; 
         let spacingX = 140;
         let spacingY = 200;
 
@@ -623,6 +725,7 @@ function renderBinderGrid(scene, overlay) {
             miniCard.setSize(220, 320); 
             miniCard.setInteractive({ cursor: 'pointer' });
             miniCard.on('pointerdown', () => {
+                scene.events.emit('close_all_dropdowns'); // Clean up menus on grab
                 playerInventory[moji.id] = Number(playerInventory[moji.id]) - 1; 
                 saveGame();
                 createDraggableCard(scene, 512, 384, moji); 
