@@ -184,7 +184,12 @@ function createCardGraphic(scene, mojiData) {
     const nameTxt = scene.add.text(0, -140, mojiData.name, { fontFamily: 'Arial', fontSize: '20px', color: '#000000', fontStyle: 'bold' }).setOrigin(0.5);
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: '#7f8c8d' }).setOrigin(0.5);
     const valTxt = scene.add.text(0, 110, '$' + mojiData.baseValue.toFixed(2), { fontFamily: 'Arial', fontSize: '24px', color: '#27ae60', fontStyle: 'bold' }).setOrigin(0.5);
-    return [bg, imgBox, nameTxt, rarityTxt, valTxt];
+    
+    // NEW: Extract the number from the ID (m_001 -> #001)
+    let numStr = '#' + mojiData.id.split('_')[1];
+    const numTxt = scene.add.text(-95, -150, numStr, { fontFamily: 'Arial', fontSize: '14px', color: '#7f8c8d', fontStyle: 'bold' }).setOrigin(0, 0.5);
+
+    return [bg, imgBox, nameTxt, rarityTxt, valTxt, numTxt];
 }
 
 function createPackGraphic(scene, packId) {
@@ -446,15 +451,35 @@ function showPackCloseup(scene, packKey) {
 
 function createBinderOverlay(scene) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
-    // We attach bg to the overlay object so Settings can change its color
     overlay.bg = scene.add.rectangle(0, 0, 940, 680, themeColors.binder).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     
-    // 2-Page Visual Divider
     const spine = scene.add.rectangle(0, 0, 40, 680, 0x000000, 0.3);
     const closeTxt = scene.add.text(430, -300, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
-    overlay.add([overlay.bg, spine, closeTxt]);
+    // NEW: Pagination State
+    overlay.currentSpread = 0; 
+    
+    // NEW: Pagination Buttons
+    overlay.prevBtn = scene.add.text(-430, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    overlay.nextBtn = scene.add.text(430, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    
+    overlay.prevBtn.on('pointerdown', () => {
+        if (overlay.currentSpread > 0) {
+            overlay.currentSpread--;
+            renderBinderGrid(scene, overlay);
+        }
+    });
+    
+    overlay.nextBtn.on('pointerdown', () => {
+        let maxSpread = Math.ceil(myMojiDatabase.length / 18) - 1;
+        if (overlay.currentSpread < maxSpread) {
+            overlay.currentSpread++;
+            renderBinderGrid(scene, overlay);
+        }
+    });
+
+    overlay.add([overlay.bg, spine, closeTxt, overlay.prevBtn, overlay.nextBtn]);
     overlay.gridContainer = scene.add.container(0, 0); 
     overlay.add(overlay.gridContainer);
 
@@ -464,16 +489,27 @@ function createBinderOverlay(scene) {
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
     
-    // We have 12 cards in myMojiDatabase. A 2-page spread holds 18 (9 per side).
-    myMojiDatabase.forEach((moji, index) => {
-        let page = index < 9 ? 0 : 1; // 0 = Left Page, 1 = Right Page
-        let localIndex = index % 9;
+    let maxSpread = Math.ceil(myMojiDatabase.length / 18) - 1;
+    
+    // Toggle visibility of pagination buttons based on what page we're on
+    overlay.prevBtn.setVisible(overlay.currentSpread > 0);
+    overlay.nextBtn.setVisible(overlay.currentSpread < maxSpread);
+    
+    // Calculate which 18 cards to show based on the current spread
+    let startIndex = overlay.currentSpread * 18;
+    let endIndex = Math.min(startIndex + 18, myMojiDatabase.length);
+
+    for (let i = startIndex; i < endIndex; i++) {
+        let moji = myMojiDatabase[i];
+        let spreadIndex = i - startIndex; // Normalize index to 0-17 for this spread
+        let page = spreadIndex < 9 ? 0 : 1; // 0 = Left Page, 1 = Right Page
+        let localIndex = spreadIndex % 9;
         let col = localIndex % 3;
         let row = Math.floor(localIndex / 3);
 
-        // Calculate positions for 2 pages
-        let startX = page === 0 ? -320 : 130;
-        let startY = -220;
+        // Perfectly centered grid math
+        let startX = page === 0 ? -375 : 95;
+        let startY = -200;
         let spacingX = 140;
         let spacingY = 200;
 
@@ -509,5 +545,5 @@ function renderBinderGrid(scene, overlay) {
             });
         }
         overlay.gridContainer.add(miniCard);
-    });
+    }
 }
