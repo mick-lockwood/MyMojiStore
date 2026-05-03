@@ -11,8 +11,15 @@ let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
 let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a };
-        
+let playerUnlocks = { binder: false, colorThemes: false };  
+
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
+
+// Database for Store Upgrades
+const upgradeDatabase = {
+    "binder": { name: "Pro Binder", cost: 150.00 },
+    "colorThemes": { name: "Color Palettes", cost: 75.00 }
+};
 
 function loadGame() {
     let savedData = localStorage.getItem('myMojiSave');
@@ -23,6 +30,8 @@ function loadGame() {
         for (let id in parsedData.inventory) {
             if (playerInventory[id] !== undefined) playerInventory[id] = Number(parsedData.inventory[id]);
         }
+        // NEW: Load unlocks
+        if (parsedData.unlocks) playerUnlocks = { ...playerUnlocks, ...parsedData.unlocks };
     }
 }
 
@@ -30,10 +39,10 @@ function saveGame() {
     localStorage.setItem('myMojiSave', JSON.stringify({
         money: playerMoney,
         packs: playerPacks,
-        inventory: playerInventory
+        inventory: playerInventory,
+        unlocks: playerUnlocks // NEW: Save unlocks
     }));
 }
-
 loadGame();
 
 // --- PHASER ENGINE SETUP ---
@@ -135,27 +144,30 @@ function create() {
 
     settingsBtn.on('pointerdown', () => settingsOverlay.setVisible(true));
 
-    // --- BOTTOM BUTTONS / DROP ZONES ---
+    /// --- BOTTOM BUTTONS / DROP ZONES ---
     
-    // 1. TRADING STASH (Deactivated - No onClick passed)
+    // 1. TRADING STASH (Deactivated)
     addShadow(160, 620, 240, 70, 12);
     createButton(scene, 160, 620, 240, 70, 0x57bcf2, 0x000000, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, null);
 
-    // 2. SELL ON MOJIMARKET (Drop zone, but gets the hover effects!)
+    // 2. SELL ON MOJIMARKET
     addShadow(160, 710, 240, 70, 12);
-    scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }, () => {
-        // Drop zone, empty click func just to enable the bounce animation
-    });
+    scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }, () => {});
 
-    // 3. BINDER (Drop zone AND clickable button)
+    // 3. BINDER (Locked vs Unlocked state)
     addShadow(864, 620, 240, 70, 12);
-    scene.binderZone = createButton(scene, 864, 620, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
-        renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
+    let binderColor = playerUnlocks.binder ? 0xffc87c : 0x7f8c8d; // Grey if locked
+    scene.binderZone = createButton(scene, 864, 620, 240, 70, binderColor, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+        if (playerUnlocks.binder) {
+            renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
+        } else {
+            showFloatingText(scene, 864, 620, 'LOCKED! BUY IN STORE', '#e74c3c');
+        }
     });
 
-    // 4. INVENTORY
+    // 4. INVENTORY (Saved to scene.invZone so cards can be dropped here!)
     addShadow(864, 710, 240, 70, 12);
-    createButton(scene, 864, 710, 240, 70, 0xda7aff, 0x000000, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+    scene.invZone = createButton(scene, 864, 710, 240, 70, 0xda7aff, 0x000000, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
         renderInventoryView(scene, inventoryOverlay); inventoryOverlay.setVisible(true); 
     });
 }
@@ -217,9 +229,14 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const tableColors = [0xf4f4f4, 0xbdc3c7, 0x34495e, 0x27ae60, 0x2980b9, 0x8e44ad, 0xc0392b, 0xf39c12, 0xffa07a];
     const menuColors = [0x1a1a1a, 0x2c3e50, 0x8e44ad, 0xc0392b, 0x27ae60, 0xd35400, 0x2980b9, 0x16a085, 0x7f8c8d];
 
-    createColorPalette(-90, "Table Color", 'table', tableColors);
-    createColorPalette(-30, "Binder Color", 'binder', menuColors);
-    createColorPalette(30, "Inventory Color", 'inv', menuColors);
+    if (playerUnlocks.colorThemes) {
+        createColorPalette(-90, "Table Color", 'table', tableColors);
+        createColorPalette(-30, "Binder Color", 'binder', menuColors);
+        createColorPalette(30, "Inventory Color", 'inv', menuColors);
+    } else {
+        let lockTxt = scene.add.text(0, -30, "🎨 COLOR THEMES LOCKED\nPurchase in the Store to customize!", { fontSize: '20px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
+        overlay.add(lockTxt);
+    }
 
     return overlay;
 }
@@ -301,8 +318,10 @@ function createDraggableCard(scene, x, y, mojiData) {
         this.setDepth(10); 
         let bounds = this.getBounds();
         
-        if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.binderZone.getBounds())) {
-            // FIX: Enforce numbers to prevent local storage string bugs
+        // NEW: Checks if dropped on Binder OR Inventory!
+        if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.binderZone.getBounds()) || 
+            Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.invZone.getBounds())) {
+            
             playerInventory[mojiData.id] = Number(playerInventory[mojiData.id]) + 1; 
             saveGame(); 
             showFloatingText(scene, this.x, this.y, 'SAVED!', '#9b59b6');
@@ -310,7 +329,7 @@ function createDraggableCard(scene, x, y, mojiData) {
         } 
         else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.sellZone.getBounds())) {
             playerMoney += Number(mojiData.baseValue); 
-            scene.moneyText.setText('Bank: $' + playerMoney.toFixed(2));
+            scene.moneyText.setText('$' + playerMoney.toFixed(2));
             saveGame(); 
             showFloatingText(scene, this.x, this.y, 'SOLD!', '#e74c3c');
             this.destroy(); 
@@ -376,6 +395,49 @@ function renderStoreView(scene, overlay) {
             packCont.add([priceTxt, addBtn]);
             overlay.contentContainer.add(packCont);
         });
+        
+        // --- ADD STORE UPGRADES UNDER THE PACKS ---
+        let upgTitle = scene.add.text(0, 90, '--- ACCOUNT UPGRADES ---', { fontSize: '20px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0.5);
+        overlay.contentContainer.add(upgTitle);
+
+        let upgStartX = -150;
+        let upgIndex = 0;
+        
+        for (let key in upgradeDatabase) {
+            if (!playerUnlocks[key]) {
+                let def = upgradeDatabase[key];
+                let upgCont = scene.add.container(upgStartX + (upgIndex * 300), 180);
+                
+                let bg = scene.add.rectangle(0, 0, 250, 100, 0x34495e).setStrokeStyle(4, 0x1a1a1a);
+                let nameTxt = scene.add.text(0, -20, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                
+                let buyBtn = createButton(scene, 0, 25, 180, 36, 0xf39c12, 0xffffff, `BUY FOR $${def.cost.toFixed(2)}`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+                    if (playerMoney >= def.cost) {
+                        playerMoney -= def.cost;
+                        scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                        playerUnlocks[key] = true;
+                        saveGame();
+                        
+                        // If they buy the binder, instantly update the button on the home screen!
+                        if (key === 'binder') {
+                            scene.binderZone.destroy();
+                            scene.binderZone = createButton(scene, 864, 620, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+                                renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
+                            });
+                        }
+                        renderStoreView(scene, overlay); // Refresh store to remove the purchased item
+                    } else {
+                        // Flash price text red if they can't afford it
+                        buyBtn.list[1].setColor('#e74c3c');
+                        scene.time.delayedCall(300, () => buyBtn.list[1].setColor('#ffffff'));
+                    }
+                });
+                
+                upgCont.add([bg, nameTxt, buyBtn]);
+                overlay.contentContainer.add(upgCont);
+                upgIndex++;
+            }
+        }
     } 
     // --- CART VIEW ---
     else if (overlay.currentView === 'cart') {
@@ -573,9 +635,9 @@ function renderInventoryView(scene, overlay) {
         }
     } 
     else if (overlay.currentTab === 'doubles') {
-        let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > 1);
+        // CHANGED: Show if owned > 0 (instead of > 1)
+        let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > 0);
 
-        // CHANGED: 10 items per page (5 columns x 2 rows)
         let itemsPerPage = 10; 
         let maxPage = Math.ceil(doubles.length / itemsPerPage) - 1;
         if (maxPage < 0) maxPage = 0;
@@ -588,10 +650,9 @@ function renderInventoryView(scene, overlay) {
         let displayDoubles = doubles.slice(startIndex, startIndex + itemsPerPage);
 
         if (displayDoubles.length === 0) {
-            let emptyTxt = scene.add.text(0, 0, "You don't have any duplicate cards.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            let emptyTxt = scene.add.text(0, 0, "You don't have any cards yet.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
-            // CHANGED: Adjusted startY and spacingY to center the 2 rows vertically
             let startX = -320, startY = -90, spacingX = 160, spacingY = 240;
             displayDoubles.forEach((moji, index) => {
                 let col = index % 5;
@@ -606,7 +667,8 @@ function renderInventoryView(scene, overlay) {
                 miniCard.setScale(0.45); 
                 
                 let badgeBg = scene.add.circle(80, -130, 40, 0xe74c3c);
-                let badgeTxt = scene.add.text(80, -130, 'x' + (owned - 1), { fontSize: '40px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                // CHANGED: Display total owned, not owned - 1
+                let badgeTxt = scene.add.text(80, -130, 'x' + owned, { fontSize: '40px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                 miniCard.add([badgeBg, badgeTxt]);
 
                 miniCard.setSize(220, 320); 
