@@ -13,7 +13,7 @@ let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
 let themeColors = { table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a };
         
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
-n
+
 function loadGame() {
     let savedData = localStorage.getItem('myMojiSave');
     if (savedData) {
