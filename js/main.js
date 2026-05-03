@@ -211,9 +211,9 @@ function createCardGraphic(scene, mojiData) {
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: '#7f8c8d' }).setOrigin(0.5);
     const valTxt = scene.add.text(0, 110, '$' + mojiData.baseValue.toFixed(2), { fontFamily: 'Arial', fontSize: '24px', color: '#27ae60', fontStyle: 'bold' }).setOrigin(0.5);
     
-    // NEW: Extract the number from the ID (m_001 -> #001)
+    // MOVED: Placed neatly in the bottom right corner to avoid overlapping names
     let numStr = '#' + mojiData.id.split('_')[1];
-    const numTxt = scene.add.text(-95, -150, numStr, { fontFamily: 'Arial', fontSize: '14px', color: '#7f8c8d', fontStyle: 'bold' }).setOrigin(0, 0.5);
+    const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '14px', color: '#7f8c8d', fontStyle: 'bold' }).setOrigin(1, 0.5);
 
     return [bg, imgBox, nameTxt, rarityTxt, valTxt, numTxt];
 }
