@@ -98,21 +98,38 @@ function renderInventoryView(scene, overlay) {
     } 
     else if (overlay.currentTab === 'doubles') {
         
-        let qsTxt = scene.add.text(-400, -220, 'QUICK SELL (50% VAL):', { fontSize: '16px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0, 0.5);
-        let sellC = createButton(scene, -150, -220, 90, 30, 0x7f8c8d, null, 'COMMONS', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'Common'); });
-        let sellR = createButton(scene, -50, -220, 90, 30, 0x3498db, null, 'RARES', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'Rare'); });
-        let sellE = createButton(scene, 50, -220, 90, 30, 0x9b59b6, null, 'EPICS', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'Epic'); });
-        let sellA = createButton(scene, 160, -220, 110, 30, 0xe74c3c, null, 'ALL DOUBLES', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'all'); });
+        // --- NEW: QUICK SELL & BULK SELL UI ---
+        
+        // Create a distinct "Control Panel" background to separate actions from the grid
+        let actionPanel = scene.add.rectangle(0, -220, 840, 60, 0x000000, 0.3).setStrokeStyle(2, 0x555555);
 
+        let qsTxt = scene.add.text(-400, -220, 'LIQUIDATE (50% VAL):', { fontSize: '14px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0, 0.5);
+
+        // Helper function to trigger the browser's native warning prompt
+        const confirmBulkSell = (rarity) => {
+            let label = rarity === 'all' ? "ALL DOUBLES" : rarity.toUpperCase() + "S";
+            if (confirm(`WARNING: Are you sure you want to sell ${label} for 50% of their market value? This cannot be undone.`)) {
+                processBulkSell(scene, overlay, rarity);
+            }
+        };
+
+        // Dark buttons with colored borders to look more like tool actions
+        let sellC = createButton(scene, -180, -220, 85, 36, 0x222222, 0xbdc3c7, 'COMMONS', { fontSize: '12px', color: '#bdc3c7', fontStyle: 'bold' }, () => confirmBulkSell('Common'));
+        let sellR = createButton(scene, -85, -220, 85, 36, 0x222222, 0x3498db, 'RARES', { fontSize: '12px', color: '#3498db', fontStyle: 'bold' }, () => confirmBulkSell('Rare'));
+        let sellE = createButton(scene, 10, -220, 85, 36, 0x222222, 0x9b59b6, 'EPICS', { fontSize: '12px', color: '#9b59b6', fontStyle: 'bold' }, () => confirmBulkSell('Epic'));
+        let sellA = createButton(scene, 120, -220, 110, 36, 0x222222, 0xe74c3c, 'ALL DOUBLES', { fontSize: '12px', color: '#e74c3c', fontStyle: 'bold' }, () => confirmBulkSell('all'));
+
+        // Toggle button with emoji indicators
         overlay.clickMode = overlay.clickMode || 'extract';
         let modeColor = overlay.clickMode === 'extract' ? 0x27ae60 : 0xe74c3c;
-        let modeTxt = overlay.clickMode === 'extract' ? 'CLICK: EXTRACT' : 'CLICK: SELL 1x (50%)';
-        let modeBtn = createButton(scene, 330, -220, 160, 30, modeColor, null, modeTxt, { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => {
+        let modeTxt = overlay.clickMode === 'extract' ? 'CLICK: EXTRACT 🗂️' : 'CLICK: SELL 1x (50%) 💰';
+        let modeBtn = createButton(scene, 320, -220, 170, 36, modeColor, 0xffffff, modeTxt, { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => {
             overlay.clickMode = overlay.clickMode === 'extract' ? 'sell' : 'extract';
             renderInventoryView(scene, overlay);
         });
 
-        overlay.gridContainer.add([qsTxt, sellC, sellR, sellE, sellA, modeBtn]);
+        overlay.gridContainer.add([actionPanel, qsTxt, sellC, sellR, sellE, sellA, modeBtn]);
+        // --------------------------------------
 
         let minOwned = playerUnlocks.binder ? 1 : 0;
         let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > minOwned);
