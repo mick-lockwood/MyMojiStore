@@ -143,11 +143,18 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                                 renderInventoryView(scene, scene.inventoryOverlay);
                             }
                         }
-                        // NEW: Update Store logic (Assuming your storeOverlay has a `.bg` property like binder/inv do)
+                        // Update Store logic (Assuming your storeOverlay has a `.bg` property like binder/inv do)
                         if (type === 'store') {
                             themeColors.store = color;
-                            // If you need it to immediately refresh while open, you can call renderStoreView here
-                            // but usually settings overlays cover the screen, so it applies on next open.
+                            
+                            // NEW: Actually change the background graphic!
+                            if (scene.storeOverlay && scene.storeOverlay.bg) {
+                                scene.storeOverlay.bg.setFillStyle(color);
+                            }
+                            
+                            if (scene.storeOverlay && scene.storeOverlay.visible) {
+                                renderStoreView(scene, scene.storeOverlay);
+                            }
                         }
                         
                         saveGame(); 
