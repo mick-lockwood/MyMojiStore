@@ -36,7 +36,7 @@ function createBinderOverlay(scene) {
 
     const filterOptions = [
         { label: 'All Cards', val: 'all' }, { label: 'Owned Only', val: 'owned' }, { label: 'Missing Only', val: 'missing' },
-        { label: 'Rarity: Common', val: 'rarity_Common' }, { label: 'Rarity: Rare', val: 'rarity_Rare' }, { label: 'Rarity: Epic', val: 'rarity_Epic' }, { label: 'Rarity: Legendary', val: 'rarity_Legendary' },
+        { label: 'Rarity: Common', val: 'rarity_Common' }, { label: 'Rarity: Rare', val: 'rarity_Rare' }, { label: 'Rarity: Epic', val: 'rarity_Epic' }, { label: 'Rarity: Legendary', val: 'rarity_Legendary' }, { label: 'Rarity: Glitch', val: 'rarity_Glitch' },
         { label: 'Faces', val: 'cat_Faces' }, { label: 'Animals', val: 'cat_Animals' }, { label: 'Food', val: 'cat_Food' }, { label: 'Cosmic', val: 'cat_Cosmic' }, { label: 'Magic', val: 'cat_Magic' }, { label: 'Sports', val: 'cat_Sports' }, { label: 'Music', val: 'cat_Music' }, { label: 'Objects', val: 'cat_Objects' }, { label: 'Spooky', val: 'cat_Spooky' }, { label: 'Memes', val: 'cat_Memes' }
     ];
 
@@ -89,7 +89,7 @@ function renderBinderGrid(scene, overlay) {
             valA = a.category.toLowerCase();
             valB = b.category.toLowerCase();
         } else if (sortType === 'rarity') {
-            const weights = { "Common": 1, "Rare": 2, "Epic": 3, "Legendary": 4 };
+            const weights = { "Common": 1, "Rare": 2, "Epic": 3, "Legendary": 4, "Glitch": 5 };
             valA = weights[a.rarity];
             valB = weights[b.rarity];
         } else if (sortType === 'val') {
