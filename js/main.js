@@ -204,7 +204,7 @@ function create() {
     settingsBtn.on('pointerout', () => scene.tweens.add({ targets: settingsBtn, angle: 0, duration: 200 }));
 
     // NEW: The Phone Icon for NPC Messages
-    const phoneBtn = scene.add.text(860, 40, '📱', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const phoneBtn = scene.add.text(860, 40, '📱', { fontSize: '40px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     scene.phoneNotification = scene.add.circle(880, 20, 10, 0xe74c3c).setVisible(unreadMessage);
     scene.tweens.add({ targets: scene.phoneNotification, scale: 1.3, yoyo: true, repeat: -1, duration: 400 }); // Pulsing red dot
     
