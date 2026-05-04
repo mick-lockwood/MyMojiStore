@@ -176,30 +176,50 @@ function create() {
 function spawnBoosterPack(scene, packId) {
     const packDef = packDatabase[packId];
     for (let i = 0; i < 3; i++) {
-        let pulledMoji = pullCardWithWeights(packDef.weights);
+        // Pass the category filter to the pull logic!
+        let pulledMoji = pullCardWithWeights(packDef.weights, packDef.category);
         let randX = Phaser.Math.Between(150, 874); 
         let randY = Phaser.Math.Between(340, 510);
         createDraggableCard(scene, randX, randY, pulledMoji);
     }
 }
 
-function pullCardWithWeights(weights) {
-    let totalWeight = 0;
-    for (let i = 0; i < myMojiDatabase.length; i++) totalWeight += weights[myMojiDatabase[i].rarity];
-    let randomNum = Math.random() * totalWeight;
-    for (let i = 0; i < myMojiDatabase.length; i++) {
-        randomNum -= weights[myMojiDatabase[i].rarity];
-        if (randomNum <= 0) return myMojiDatabase[i];
+function pullCardWithWeights(weights, categoryFilter = "all") {
+    // 1. Filter the database if a specific category is required
+    let pool = myMojiDatabase;
+    if (categoryFilter !== "all") {
+        pool = myMojiDatabase.filter(m => m.category === categoryFilter);
     }
-    return myMojiDatabase[0]; 
+
+    // 2. Sum up the weights of the remaining cards
+    let totalWeight = 0;
+    for (let i = 0; i < pool.length; i++) {
+        totalWeight += (weights[pool[i].rarity] || 0);
+    }
+
+    // 3. Roll the dice
+    let randomNum = Math.random() * totalWeight;
+    for (let i = 0; i < pool.length; i++) {
+        let weight = (weights[pool[i].rarity] || 0);
+        randomNum -= weight;
+        if (randomNum <= 0) return pool[i];
+    }
+    return pool[0]; 
 }
 
 function createCardGraphic(scene, mojiData) {
-    const bg = scene.add.rectangle(0, 0, 220, 320, 0xffffff).setStrokeStyle(6, 0x1a1a1a);
+    // NEW: Special aesthetics for Glitch cards!
+    let isGlitch = mojiData.rarity === "Glitch";
+    let bgColor = isGlitch ? 0x111111 : 0xffffff;
+    let strokeColor = isGlitch ? 0xff00ff : 0x1a1a1a; // Neon Pink border
+    let textColor = isGlitch ? '#00ffff' : '#000000'; // Cyan text
+    let valColor = isGlitch ? '#ff00ff' : '#27ae60';
+
+    const bg = scene.add.rectangle(0, 0, 220, 320, bgColor).setStrokeStyle(6, strokeColor);
     const imgBox = scene.add.rectangle(0, -40, 180, 160, 0xe0e0e0).setStrokeStyle(3, 0xcccccc);
-    const nameTxt = scene.add.text(0, -140, mojiData.name, { fontFamily: 'Arial', fontSize: '20px', color: '#000000', fontStyle: 'bold' }).setOrigin(0.5);
+    const nameTxt = scene.add.text(0, -140, mojiData.name, { fontFamily: 'Arial', fontSize: '20px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: '#7f8c8d' }).setOrigin(0.5);
-    const valTxt = scene.add.text(0, 110, '$' + mojiData.baseValue.toFixed(2), { fontFamily: 'Arial', fontSize: '24px', color: '#27ae60', fontStyle: 'bold' }).setOrigin(0.5);
+    const valTxt = scene.add.text(0, 110, '$' + mojiData.baseValue.toFixed(2), { fontFamily: 'Arial', fontSize: '24px', color: valColor, fontStyle: 'bold' }).setOrigin(0.5);
     
     let numStr = '#' + mojiData.id.split('_')[1];
     const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '22px', color: '#7f8c8d', fontStyle: 'bold' }).setOrigin(1, 0.5);
