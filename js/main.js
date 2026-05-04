@@ -231,8 +231,6 @@ function create() {
 
     // Initial Trade Timer (Queue a text message 15 seconds after opening the game if no trade is active)
     if (!currentTrade) scene.time.delayedCall(15000, () => generateTrade(scene));
-    
-    });
 
     // --- MAIN HUD BUTTONS & DROP ZONES ---
     
