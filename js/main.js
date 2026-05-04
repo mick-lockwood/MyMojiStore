@@ -10,27 +10,21 @@ let playerMoney = 50.00;
 let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
-
-// NEW: Track cards that are currently sitting on the table
 let cardsOnTable = []; 
+
+// NEW: NPC Trade & Phone State
+let currentTrade = null;
+let unreadMessage = false;
 
 let themeColors = { 
     table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a,
     active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }
 };
 
-let playerUnlocks = { 
-    binder: false, 
-    colorThemes: false, 
-    colors: [0x1a1a1a, 0xf4f4f4, 0x7f8c8d] 
-};  
-
+let playerUnlocks = { binder: false, colorThemes: false, colors: [0x1a1a1a, 0xf4f4f4, 0x7f8c8d] };  
 myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
 
-const upgradeDatabase = {
-    "binder": { name: "Pro Binder", cost: 150.00 },
-    "colorThemes": { name: "Color Palettes", cost: 75.00 }
-};
+const upgradeDatabase = { "binder": { name: "Pro Binder", cost: 150.00 }, "colorThemes": { name: "Color Palettes", cost: 75.00 } };
 
 function loadGame() {
     let savedData = localStorage.getItem('myMojiSave');
@@ -38,40 +32,86 @@ function loadGame() {
         let parsedData = JSON.parse(savedData);
         playerMoney = parsedData.money !== undefined ? Number(parsedData.money) : 50;
         if (parsedData.packs) playerPacks = { ...playerPacks, ...parsedData.packs };
-        for (let id in parsedData.inventory) {
-            if (playerInventory[id] !== undefined) playerInventory[id] = Number(parsedData.inventory[id]);
-        }
-        
+        for (let id in parsedData.inventory) if (playerInventory[id] !== undefined) playerInventory[id] = Number(parsedData.inventory[id]);
         if (parsedData.unlocks) {
             if (parsedData.unlocks.binder !== undefined) playerUnlocks.binder = parsedData.unlocks.binder;
             if (parsedData.unlocks.colorThemes !== undefined) playerUnlocks.colorThemes = parsedData.unlocks.colorThemes; 
             if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
         }
-
-        if (parsedData.themes) {
-            themeColors = parsedData.themes;
-            if (!themeColors.active) themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a };
-        }
+        if (parsedData.themes) { themeColors = parsedData.themes; if (!themeColors.active) themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }; }
+        if (parsedData.tableCards) cardsOnTable = parsedData.tableCards;
         
-        // NEW: Load the array of table cards
-        if (parsedData.tableCards) {
-            cardsOnTable = parsedData.tableCards;
-        }
+        // Load Phone state
+        if (parsedData.trade) currentTrade = parsedData.trade;
+        if (parsedData.unread !== undefined) unreadMessage = parsedData.unread;
     }
 }
 
 function saveGame() {
     localStorage.setItem('myMojiSave', JSON.stringify({
-        money: playerMoney,
-        packs: playerPacks,
-        inventory: playerInventory,
-        unlocks: playerUnlocks,
-        themes: themeColors,
-        tableCards: cardsOnTable // NEW: Save the table state!
+        money: playerMoney, packs: playerPacks, inventory: playerInventory, unlocks: playerUnlocks, themes: themeColors, tableCards: cardsOnTable,
+        trade: currentTrade, unread: unreadMessage // Save Phone State
     }));
 }
 loadGame();
-loadGame();
+
+// --- NEW ECONOMY HELPERS ---
+
+function checkBailout(scene) {
+    let totalCards = Object.values(playerInventory).reduce((a, b) => a + b, 0) + cardsOnTable.length;
+    let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
+    
+    // If player has less than the cost of a basic pack and NOTHING to sell
+    if (playerMoney < 5.00 && totalPacks === 0 && totalCards === 0) {
+        playerMoney += 20.00;
+        scene.moneyText.setText('$' + playerMoney.toFixed(2));
+        alert("BAILOUT! The MyMoji Foundation saw you were completely broke and deposited $20.00 into your account!");
+        saveGame();
+    }
+}
+
+function generateTrade(scene) {
+    if (currentTrade) return; // Don't overwrite an unread text
+    
+    let isBuy = Math.random() > 0.5; // 50/50 chance NPC wants to Buy or Sell
+    let randomMoji = myMojiDatabase[Math.floor(Math.random() * myMojiDatabase.length)];
+    
+    let priceMultiplier = isBuy 
+        ? (1.2 + Math.random() * 0.8) // NPC buys at 120% to 200% value
+        : (0.4 + Math.random() * 0.5); // NPC sells at 40% to 90% value
+        
+    currentTrade = { type: isBuy ? 'buy' : 'sell', mojiId: randomMoji.id, price: Number((randomMoji.baseValue * priceMultiplier).toFixed(2)) };
+    
+    unreadMessage = true;
+    if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
+    saveGame();
+}
+
+function processBulkSell(scene, overlay, rarityTarget) {
+    let totalEarned = 0;
+    let minOwned = playerUnlocks.binder ? 1 : 0;
+    
+    myMojiDatabase.forEach(moji => {
+        if (rarityTarget === 'all' || moji.rarity === rarityTarget) {
+            let owned = Number(playerInventory[moji.id]);
+            if (owned > minOwned) {
+                let amountToSell = owned - minOwned;
+                totalEarned += amountToSell * (moji.baseValue * 0.5); // 50% penalty for quick selling
+                playerInventory[moji.id] = minOwned;
+            }
+        }
+    });
+
+    if (totalEarned > 0) {
+        playerMoney += totalEarned;
+        scene.moneyText.setText('$' + playerMoney.toFixed(2));
+        saveGame();
+        alert(`Successfully liquidated cards for $${totalEarned.toFixed(2)}!`);
+        renderInventoryView(scene, overlay);
+    } else {
+        alert("You don't have any matching doubles to quick-sell!");
+    }
+}
 
 // --- PHASER ENGINE SETUP ---
 const config = {
@@ -157,26 +197,41 @@ function create() {
     const storeIconBtn = scene.add.text(920, 40, '🛒', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     storeIconBtn.on('pointerover', () => scene.tweens.add({ targets: storeIconBtn, scale: 1.2, duration: 100 }));
     storeIconBtn.on('pointerout', () => scene.tweens.add({ targets: storeIconBtn, scale: 1, duration: 100 }));
-    storeIconBtn.on('pointerdown', () => { storeOverlay.currentView = 'shop'; renderStoreView(scene, storeOverlay); storeOverlay.setVisible(true); 
-    });
+    storeIconBtn.on('pointerdown', () => { storeOverlay.currentView = 'shop'; renderStoreView(scene, storeOverlay); storeOverlay.setVisible(true); });
 
     const settingsBtn = scene.add.text(980, 40, '⚙️', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     settingsBtn.on('pointerover', () => scene.tweens.add({ targets: settingsBtn, angle: 45, duration: 200 }));
     settingsBtn.on('pointerout', () => scene.tweens.add({ targets: settingsBtn, angle: 0, duration: 200 }));
 
+    // NEW: The Phone Icon for NPC Messages
+    const phoneBtn = scene.add.text(860, 40, '📱', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    scene.phoneNotification = scene.add.circle(880, 20, 10, 0xe74c3c).setVisible(unreadMessage);
+    scene.tweens.add({ targets: scene.phoneNotification, scale: 1.3, yoyo: true, repeat: -1, duration: 400 }); // Pulsing red dot
+    
+    phoneBtn.on('pointerover', () => scene.tweens.add({ targets: phoneBtn, scale: 1.2, duration: 100 }));
+    phoneBtn.on('pointerout', () => scene.tweens.add({ targets: phoneBtn, scale: 1, duration: 100 }));
+    phoneBtn.on('pointerdown', () => { 
+        unreadMessage = false; 
+        scene.phoneNotification.setVisible(false); 
+        renderPhoneView(scene, scene.phoneOverlay); 
+        scene.phoneOverlay.setVisible(true); 
+    });
+
     // --- OVERLAYS ---
     const binderOverlay = createBinderOverlay(scene);
-    
-    // NEW: Attach the binder to the scene so the Store can access it!
     scene.binderOverlay = binderOverlay; 
     
     const storeOverlay = createStoreOverlay(scene);
     const inventoryOverlay = createInventoryOverlay(scene);
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
+    
+    scene.phoneOverlay = createPhoneOverlay(scene); // NEW: Create Phone Menu
 
-    settingsBtn.on('pointerdown', () => { 
-        settingsOverlay.renderPalettes(); 
-        settingsOverlay.setVisible(true); 
+    settingsBtn.on('pointerdown', () => { settingsOverlay.renderPalettes(); settingsOverlay.setVisible(true); });
+
+    // Initial Trade Timer (Queue a text message 15 seconds after opening the game if no trade is active)
+    if (!currentTrade) scene.time.delayedCall(15000, () => generateTrade(scene));
+    
     });
 
     // --- MAIN HUD BUTTONS & DROP ZONES ---
@@ -338,9 +393,94 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     return overlay;
 }
 
+// --- NPC PHONE UI ---
+
+function createPhoneOverlay(scene) {
+    const overlay = scene.add.container(512, 384).setVisible(false).setDepth(400);
+    const bg = scene.add.rectangle(0, 0, 350, 600, 0x1a1a1a).setStrokeStyle(6, 0xecf0f1).setInteractive(); 
+    const notch = scene.add.rectangle(0, -290, 120, 25, 0x000000, 1).setInteractive(); // Fake phone notch
+    
+    const title = scene.add.text(0, -240, 'MESSAGES', { fontFamily: 'Impact', fontSize: '28px', color: '#ffffff' }).setOrigin(0.5);
+    const closeBtn = createButton(scene, 0, 250, 200, 50, 0xe74c3c, null, 'PUT PHONE AWAY', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => overlay.setVisible(false));
+    
+    overlay.msgContainer = scene.add.container(0, 0);
+    overlay.add([bg, notch, title, closeBtn, overlay.msgContainer]);
+    return overlay;
+}
+
+function renderPhoneView(scene, overlay) {
+    overlay.msgContainer.removeAll(true);
+    
+    if (!currentTrade) {
+        let txt = scene.add.text(0, -20, "No new messages...\nCheck back later!", { fontSize: '20px', color: '#7f8c8d', align: 'center' }).setOrigin(0.5);
+        overlay.msgContainer.add(txt);
+        return;
+    }
+
+    let moji = myMojiDatabase.find(m => m.id === currentTrade.mojiId);
+    let isBuy = currentTrade.type === 'buy'; 
+    
+    let bubble = scene.add.rectangle(0, -100, 310, 160, 0x34495e).setStrokeStyle(2, 0xffffff);
+    
+    let msg = isBuy 
+        ? `Hey! I'm desperately looking for\n${moji.name}!\n\nI'll pay you $${currentTrade.price.toFixed(2)} for it.`
+        : `Yo! I pulled an extra\n${moji.name}.\n\nWanna buy it for $${currentTrade.price.toFixed(2)}?`;
+        
+    let msgTxt = scene.add.text(0, -100, msg, { fontSize: '18px', color: '#ecf0f1', align: 'center', wordWrap: { width: 280 } }).setOrigin(0.5);
+    
+    let cardG = scene.add.container(0, 70);
+    cardG.add(createCardGraphic(scene, moji));
+    cardG.setScale(0.4);
+    
+    let acceptBtn, declineBtn;
+    
+    // Resolve Trade Helper
+    const finalizeTrade = (messageText) => {
+        showFloatingText(scene, 512, 384, messageText, '#9b59b6');
+        currentTrade = null;
+        saveGame();
+        renderPhoneView(scene, overlay);
+        // Generate a new text in 30 to 60 seconds!
+        scene.time.delayedCall(Phaser.Math.Between(30000, 60000), () => generateTrade(scene));
+    };
+
+    if (isBuy) {
+        let owned = playerInventory[moji.id];
+        let canFulfill = playerUnlocks.binder ? owned > 1 : owned > 0;
+        
+        if (canFulfill) {
+            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'SELL IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
+                playerInventory[moji.id]--;
+                playerMoney += currentTrade.price;
+                scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                finalizeTrade(`SOLD FOR $${currentTrade.price.toFixed(2)}!`);
+            });
+        } else {
+            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'NO SPARES', { fontSize: '14px', color: '#fff', fontStyle: 'bold'}, () => {});
+        }
+    } else {
+        if (playerMoney >= currentTrade.price) {
+            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'BUY IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
+                playerMoney -= currentTrade.price;
+                playerInventory[moji.id]++;
+                scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                finalizeTrade(`BOUGHT ${moji.name}!`);
+            });
+        } else {
+            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'TOO POOR', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {});
+        }
+    }
+    
+    declineBtn = createButton(scene, 80, 190, 120, 40, 0xe74c3c, null, 'DECLINE', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
+        finalizeTrade("OFFER DECLINED.");
+    });
+    
+    overlay.msgContainer.add([bubble, msgTxt, cardG, acceptBtn, declineBtn]);
+}
+
 // --- CORE MECHANICS ---
 
-// NEW: Visual feedback for dropping cards
+// Visual feedback for dropping cards
 function showFloatingText(scene, x, y, message, colorHex) {
     let txt = scene.add.text(x, y, message, { 
         fontFamily: 'Arial', fontSize: '22px', color: colorHex, fontStyle: 'bold', stroke: '#000000', strokeThickness: 4 
@@ -664,6 +804,7 @@ function renderStoreView(scene, overlay) {
                 shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
                 
                 saveGame();
+                checkBailout(scene);
                 scene.moneyText.setColor('#f1c40f'); 
                 scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222'));
 
@@ -802,6 +943,24 @@ function renderInventoryView(scene, overlay) {
     } 
     else if (overlay.currentTab === 'doubles') {
         
+        // --- NEW: QUICK SELL & BULK SELL UI ---
+        let qsTxt = scene.add.text(-400, -220, 'QUICK SELL (50% VAL):', { fontSize: '16px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0, 0.5);
+        let sellC = createButton(scene, -150, -220, 90, 30, 0x7f8c8d, null, 'COMMONS', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'Common'); });
+        let sellR = createButton(scene, -50, -220, 90, 30, 0x3498db, null, 'RARES', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'Rare'); });
+        let sellE = createButton(scene, 50, -220, 90, 30, 0x9b59b6, null, 'EPICS', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'Epic'); });
+        let sellA = createButton(scene, 160, -220, 110, 30, 0xe74c3c, null, 'ALL DOUBLES', { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => { processBulkSell(scene, overlay, 'all'); });
+
+        overlay.clickMode = overlay.clickMode || 'extract';
+        let modeColor = overlay.clickMode === 'extract' ? 0x27ae60 : 0xe74c3c;
+        let modeTxt = overlay.clickMode === 'extract' ? 'CLICK: EXTRACT' : 'CLICK: SELL 1x (50%)';
+        let modeBtn = createButton(scene, 330, -220, 160, 30, modeColor, null, modeTxt, { fontSize: '12px', color: '#fff', fontStyle: 'bold' }, () => {
+            overlay.clickMode = overlay.clickMode === 'extract' ? 'sell' : 'extract';
+            renderInventoryView(scene, overlay);
+        });
+
+        overlay.gridContainer.add([qsTxt, sellC, sellR, sellE, sellA, modeBtn]);
+        // --------------------------------------
+
         let minOwned = playerUnlocks.binder ? 1 : 0;
         let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > minOwned);
 
@@ -821,7 +980,7 @@ function renderInventoryView(scene, overlay) {
             let emptyTxt = scene.add.text(0, 0, emptyMsg, { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
-            let startX = -320, startY = -90, spacingX = 160, spacingY = 240;
+            let startX = -320, startY = -60, spacingX = 160, spacingY = 240;
             displayDoubles.forEach((moji, index) => {
                 let col = index % 5;
                 let row = Math.floor(index / 5);
@@ -844,14 +1003,24 @@ function renderInventoryView(scene, overlay) {
                 miniCard.setInteractive({ cursor: 'pointer' });
                 
                 miniCard.on('pointerdown', () => {
-                    playerInventory[moji.id] = Number(playerInventory[moji.id]) - 1; 
-                    saveGame();
-                    
-                    // NEW: Spit out onto the table randomly!
-                    let randX = Phaser.Math.Between(150, 874); 
-                    let randY = Phaser.Math.Between(340, 510);
-                    createDraggableCard(scene, randX, randY, moji); 
-                    
+                    // NEW: Split logic based on the Click Mode Toggle
+                    if (overlay.clickMode === 'extract') {
+                        playerInventory[moji.id]--; 
+                        saveGame();
+                        let randX = Phaser.Math.Between(150, 874); 
+                        let randY = Phaser.Math.Between(340, 510);
+                        createDraggableCard(scene, randX, randY, moji); 
+                    } else {
+                        // Quick Sell Mode (50% value)
+                        playerInventory[moji.id]--; 
+                        let earned = moji.baseValue * 0.5;
+                        playerMoney += earned;
+                        scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                        saveGame();
+                        // Flash green money text over the card!
+                        let floatTxt = scene.add.text(x + 512, y + 384, '+$' + earned.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(200);
+                        scene.tweens.add({ targets: floatTxt, y: y + 340, alpha: 0, duration: 1000, onComplete: () => floatTxt.destroy() });
+                    }
                     renderInventoryView(scene, overlay); 
                 });
 
