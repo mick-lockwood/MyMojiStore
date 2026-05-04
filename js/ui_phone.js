@@ -30,7 +30,16 @@ function renderPhoneView(scene, overlay) {
         : `Yo! I pulled an extra\n${moji.name}.\n\nWanna buy it for $${currentTrade.price.toFixed(2)}?`;
         
     let msgTxt = scene.add.text(0, -100, msg, { fontSize: '18px', color: '#ecf0f1', align: 'center', wordWrap: { width: 280 } }).setOrigin(0.5);
+
+    // NEW: Calculate and show the remaining time
+    let secondsLeft = Math.max(0, Math.floor((tradeExpirationTime - Date.now()) / 1000));
+    let timeTxt = scene.add.text(140, -170, `⏳ ${secondsLeft}s`, { fontSize: '14px', color: '#e74c3c', fontStyle: 'bold' }).setOrigin(1, 0.5);
     
+    // Optional: Make it pulse red if under 10 seconds!
+    if (secondsLeft <= 10) {
+        scene.tweens.add({ targets: timeTxt, scale: 1.2, alpha: 0.5, yoyo: true, repeat: -1, duration: 300 });
+    }
+
     let cardG = scene.add.container(0, 70);
     cardG.add(createCardGraphic(scene, moji));
     cardG.setScale(0.4);
@@ -86,5 +95,5 @@ function renderPhoneView(scene, overlay) {
         finalizeTrade("OFFER DECLINED.");
     });
     
-    overlay.msgContainer.add([bubble, msgTxt, cardG, acceptBtn, declineBtn]);
+    overlay.msgContainer.add([bubble, msgTxt, timeTxt, cardG, acceptBtn, declineBtn]);
 }
