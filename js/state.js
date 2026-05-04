@@ -5,18 +5,22 @@ let playerInventory = {};
 let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
 let cardsOnTable = []; 
 
+// NEW: Store Customization State
+let storeName = "MyMoji Store";
+let hasRenamed = false; // Tracks if they've used their free name change
+
 // NPC Trade & Phone State
 let currentTrade = null;
 let unreadMessage = false;
 
+// UPDATED: Added 'banner' to the theme trackers
 let themeColors = { 
-    table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a,
-    active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }
+    table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a, banner: 0xfce883,
+    active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a, banner: 0xfce883 }
 };
 
 let playerUnlocks = { binder: false, colorThemes: false, colors: [0x1a1a1a, 0xf4f4f4, 0x7f8c8d] };  
 
-// Initialize empty inventory for all cards
 if (typeof myMojiDatabase !== 'undefined') {
     myMojiDatabase.forEach(moji => playerInventory[moji.id] = 0);
 }
@@ -33,10 +37,20 @@ function loadGame() {
             if (parsedData.unlocks.colorThemes !== undefined) playerUnlocks.colorThemes = parsedData.unlocks.colorThemes; 
             if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
         }
-        if (parsedData.themes) { themeColors = parsedData.themes; if (!themeColors.active) themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a }; }
-        if (parsedData.tableCards) cardsOnTable = parsedData.tableCards;
         
-        // Load Phone state
+        // NEW: Load the store name and rename status
+        if (parsedData.storeName) storeName = parsedData.storeName;
+        if (parsedData.hasRenamed !== undefined) hasRenamed = parsedData.hasRenamed;
+
+        if (parsedData.themes) { 
+            themeColors = parsedData.themes; 
+            if (!themeColors.active) themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a, banner: 0xfce883 }; 
+            // Self-healing check for older save files that don't have the banner color yet
+            if (!themeColors.banner) themeColors.banner = 0xfce883;
+            if (!themeColors.active.banner) themeColors.active.banner = 0xfce883;
+        }
+        
+        if (parsedData.tableCards) cardsOnTable = parsedData.tableCards;
         if (parsedData.trade) currentTrade = parsedData.trade;
         if (parsedData.unread !== undefined) unreadMessage = parsedData.unread;
     }
@@ -45,11 +59,10 @@ function loadGame() {
 function saveGame() {
     localStorage.setItem('myMojiSave', JSON.stringify({
         money: playerMoney, packs: playerPacks, inventory: playerInventory, unlocks: playerUnlocks, themes: themeColors, tableCards: cardsOnTable,
-        trade: currentTrade, unread: unreadMessage
+        trade: currentTrade, unread: unreadMessage, storeName: storeName, hasRenamed: hasRenamed
     }));
 }
 
-// Automatically load game on script execution
 loadGame();
 
 // --- ECONOMY STATE HELPERS ---
