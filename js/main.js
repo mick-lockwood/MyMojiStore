@@ -42,7 +42,7 @@ function create() {
     scene.headerBg = scene.add.rectangle(512, 40, 1024, 80, themeColors.active.banner); 
 
     scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: '#222222' });
-    let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
+    let totalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
     scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#222222' });
 
     // NEW: Editable Title Logic
