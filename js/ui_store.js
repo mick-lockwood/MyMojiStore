@@ -117,7 +117,7 @@ function renderStoreView(scene, overlay) {
                 }
             }
 
-            let colorInfoTxt = scene.add.text(0, 160, "Looking for Color Themes?\nOpen the Settings Menu (⚙) to unlock palettes!", { fontSize: '20px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
+            let colorInfoTxt = scene.add.text(0, 160, "Looking for Color Themes?\nOpen the Settings Menu (⚙️) to unlock palettes!", { fontSize: '20px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
             overlay.contentContainer.add(colorInfoTxt);
 
             if (!hasUnlocks) {
