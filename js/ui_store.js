@@ -1,9 +1,13 @@
 function createStoreOverlay(scene) {
+    // NEW: Calculate contrast for the Store's base elements
+    let storeBgColor = themeColors.active.store || 0x1a1a1a; 
+    let bgContrast = getContrastColor(storeBgColor);
+
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
-    const bg = scene.add.rectangle(0, 0, 900, 650, 0x1a1a1a).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
-    const title = scene.add.text(0, -290, 'MOJIMART', { fontFamily: 'Impact, sans-serif', fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    const bg = scene.add.rectangle(0, 0, 900, 650, storeBgColor).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
+    const title = scene.add.text(0, -290, 'MOJIMART', { fontFamily: 'Impact, sans-serif', fontSize: '32px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
     
-    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: bgContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
     overlay.add([bg, title, closeTxt]);
@@ -19,6 +23,10 @@ function createStoreOverlay(scene) {
 function renderStoreView(scene, overlay) {
     overlay.contentContainer.removeAll(true);
 
+    // NEW: Calculate contrast for the Store's inner tabs
+    let storeBgColor = themeColors.active.store || 0x1a1a1a; 
+    let bgContrast = getContrastColor(storeBgColor);
+
     let totalItems = 0;
     let totalCost = 0;
     for (let k in shoppingCart) {
@@ -33,8 +41,9 @@ function renderStoreView(scene, overlay) {
         });
         overlay.contentContainer.add(viewCartBtn);
 
-        let packsColor = overlay.currentStoreTab === 'packs' ? '#ffffff' : '#7f8c8d';
-        let unlocksColor = overlay.currentStoreTab === 'unlocks' ? '#ffffff' : '#7f8c8d';
+        // CHANGED: Using bgContrast instead of hardcoded white
+        let packsColor = overlay.currentStoreTab === 'packs' ? bgContrast : '#7f8c8d';
+        let unlocksColor = overlay.currentStoreTab === 'unlocks' ? bgContrast : '#7f8c8d';
 
         let packsTab = scene.add.text(-100, -230, 'PACKS', { fontSize: '24px', fontStyle: 'bold', color: packsColor }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
         packsTab.on('pointerdown', () => { overlay.currentStoreTab = 'packs'; renderStoreView(scene, overlay); });
@@ -47,20 +56,19 @@ function renderStoreView(scene, overlay) {
         if (overlay.currentStoreTab === 'packs') {
             let packKeys = Object.keys(packDatabase);
             
-            // ADJUSTED: 4 Columns, 2 Rows. Tighter spacing and smaller scale!
             let startX = -330; 
             let startY = -120; 
             let spacingX = 220;
             let spacingY = 240; 
 
             packKeys.forEach((key, index) => {
-                let col = index % 4; // 4 columns
-                let row = Math.floor(index / 4); // 2 rows
+                let col = index % 4; 
+                let row = Math.floor(index / 4); 
                 
                 let def = packDatabase[key];
                 
                 let packCont = scene.add.container(startX + (col * spacingX), startY + (row * spacingY));
-                packCont.setScale(0.65); // Shrunk to 65% to fit 4 neatly
+                packCont.setScale(0.65); 
 
                 packCont.add(createPackGraphic(scene, key));
 
@@ -85,12 +93,10 @@ function renderStoreView(scene, overlay) {
                     let def = upgradeDatabase[key];
                     let upgCont = scene.add.container(upgStartX + (upgIndex * 300), 20);
                     
-                    // CHANGED: Removed the .setStrokeStyle(...) completely so the border is gone!
                     let bg = scene.add.rectangle(0, 0, 250, 100);
                     let nameTxt = scene.add.text(0, -20, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                     
                     let buyBtn = createButton(scene, 0, 25, 180, 36, 0xf39c12, 0xffffff, `BUY FOR $${def.cost.toFixed(2)}`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-                        // ... [Keep your existing upgrade buyBtn logic here] ...
                         if (playerMoney >= def.cost) {
                             playerMoney -= def.cost;
                             scene.moneyText.setText('$' + playerMoney.toFixed(2));
@@ -101,7 +107,7 @@ function renderStoreView(scene, overlay) {
                             if (key === 'binder') {
                                 scene.binderZone.destroy();
                                 scene.binderZone = createButton(scene, 864, 138, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
-                                    scene.closeAllOverlays(); // NEW: Make sure unlocking the binder applies the exclusive overlay logic!
+                                    scene.closeAllOverlays(); 
                                     renderBinderGrid(scene, scene.binderOverlay); scene.binderOverlay.setVisible(true); 
                                 });
                             }
@@ -177,7 +183,6 @@ function renderStoreView(scene, overlay) {
         let cartTotalText = scene.add.text(-380, 250, 'TOTAL: $' + totalCost.toFixed(2), { fontSize: '28px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
         const clearBtn = createButton(scene, 200, 250, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-            // NEW: Dynamically clear the cart
             for (let key in shoppingCart) shoppingCart[key] = 0;
             renderStoreView(scene, overlay);
         });
@@ -187,7 +192,6 @@ function renderStoreView(scene, overlay) {
                 playerMoney -= totalCost;
                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
                 
-                // Add to inventory and clear cart dynamically
                 for (let k in shoppingCart) {
                     playerPacks[k] += shoppingCart[k];
                     shoppingCart[k] = 0;
@@ -197,7 +201,6 @@ function renderStoreView(scene, overlay) {
                 scene.moneyText.setColor('#f1c40f'); 
                 scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222'));
 
-                // Calculate total packs dynamically
                 let newTotalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
                 scene.packsText.setText('PACKS: ' + newTotalPacks);
 
