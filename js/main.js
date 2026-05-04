@@ -223,8 +223,10 @@ function create() {
 }
 
 function spawnBoosterPack(scene, packId) {
+    gameStats.packsOpened++;
+    
     const packDef = packDatabase[packId];
-    let pulledThisPack = {}; // Track pulls so duplicates in the same pack don't both get "NEW"
+    let pulledThisPack = {};
     
     for (let i = 0; i < 3; i++) {
         let pulledMoji = pullCardWithWeights(packDef.weights, packDef.category);
