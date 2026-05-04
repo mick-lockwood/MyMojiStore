@@ -281,19 +281,19 @@ function createCardGraphic(scene, mojiData) {
     if (mojiData.rarity === 'Legendary') bgColor = 0xfff0b3; // Pastel Gold
     if (mojiData.rarity === 'Glitch') bgColor = 0x111111;    // Dark Mode
 
-    let isGlitch = mojiData.rarity === "Glitch";
+    let isGlitch = mojiData.rarity === 'Glitch';
     let strokeColor = isGlitch ? 0xff00ff : 0x1a1a1a; 
-    let textColor = isGlitch ? '#00ffff' : '#000000'; 
+    let textColor = isGlitch ? '#2ecc71' : '#1a1a1a'; 
     let valColor = isGlitch ? '#ff00ff' : '#27ae60';
 
     const bg = scene.add.rectangle(0, 0, 220, 320, bgColor).setStrokeStyle(6, strokeColor);
     const imgBox = scene.add.rectangle(0, -40, 180, 160, 0xe0e0e0).setStrokeStyle(3, 0xcccccc);
-    const nameTxt = scene.add.text(0, -140, mojiData.name, { fontFamily: 'Arial', fontSize: '20px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
-    const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: '#7f8c8d' }).setOrigin(0.5);
-    const valTxt = scene.add.text(0, 110, '$' + mojiData.baseValue.toFixed(2), { fontFamily: 'Arial', fontSize: '24px', color: valColor, fontStyle: 'bold' }).setOrigin(0.5);
+    let nameTxt = scene.add.text(0, -130, mojiData.name, { fontSize: '18px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
+    const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: textColor }).setOrigin(0.5);
+    let valTxt = scene.add.text(0, 130, '$' + mojiData.baseValue.toFixed(2), { fontSize: '18px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
     
     let numStr = '#' + mojiData.id.split('_')[1];
-    const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '22px', color: '#7f8c8d', fontStyle: 'bold' }).setOrigin(1, 0.5);
+    const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '22px', color: textColor, fontStyle: 'bold' }).setOrigin(1, 0.5);
 
     return [bg, imgBox, nameTxt, rarityTxt, valTxt, numTxt];
 }
