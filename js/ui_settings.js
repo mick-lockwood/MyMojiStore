@@ -16,7 +16,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             "1. Buy packs from the Store.\n" +
             "2. Open packs in your Inventory.\n" +
             "3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n" +
-            "4. Collect all 108 MyMojis!\n\n" +
+            "4. Collect all 144 MyMojis!\n\n" +
             "💡 PRO TIPS:\n" +
             "- Check your Phone (📱) for special, high-paying NPC trade offers!\n" +
             "- Need cash fast? Use the 'Quick Sell' buttons in your Inventory to liquidate duplicate cards for 50% value.\n" +
