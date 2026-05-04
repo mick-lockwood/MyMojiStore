@@ -161,7 +161,8 @@ function renderStoreView(scene, overlay) {
         let cartTotalText = scene.add.text(-380, 250, 'TOTAL: $' + totalCost.toFixed(2), { fontSize: '28px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
         const clearBtn = createButton(scene, 200, 250, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-            shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
+            // NEW: Dynamically clear the cart
+            for (let key in shoppingCart) shoppingCart[key] = 0;
             renderStoreView(scene, overlay);
         });
 
@@ -169,26 +170,29 @@ function renderStoreView(scene, overlay) {
             if (totalCost > 0 && playerMoney >= totalCost) {
                 playerMoney -= totalCost;
                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
-                for (let k in shoppingCart) playerPacks[k] += shoppingCart[k];
-                shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
+                
+                // Add to inventory and clear cart dynamically
+                for (let k in shoppingCart) {
+                    playerPacks[k] += shoppingCart[k];
+                    shoppingCart[k] = 0;
+                }
                 
                 saveGame();
-                
                 scene.moneyText.setColor('#f1c40f'); 
                 scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222'));
 
-                let newTotalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
+                // Calculate total packs dynamically
+                let newTotalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
                 scene.packsText.setText('PACKS: ' + newTotalPacks);
 
                 overlay.currentView = 'shop';
                 renderStoreView(scene, overlay);
-
             } else if (totalCost > playerMoney) {
                 cartTotalText.setColor('#e74c3c'); 
                 scene.time.delayedCall(300, () => cartTotalText.setColor('#f1c40f'));
             }
         });
-
+        
         overlay.contentContainer.add([cartBg, cartTotalText, clearBtn, buyBtn]);
     }
 }
