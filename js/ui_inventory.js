@@ -3,6 +3,7 @@ function createInventoryOverlay(scene) {
     overlay.bg = scene.add.rectangle(0, 0, 900, 650, themeColors.inventory).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     
     const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    overlay.closeTxt = closeTxt; // NEW: Save reference for dynamic coloring
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
     overlay.currentTab = 'packs';
@@ -10,24 +11,24 @@ function createInventoryOverlay(scene) {
 
     overlay.add([overlay.bg, closeTxt]);
 
-    const packsTab = scene.add.text(-100, -280, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    // FIXED: Pushed tabs down to -240 (Below the title)
+    const packsTab = scene.add.text(-100, -240, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     let dblLabel = playerUnlocks.binder ? 'DOUBLES' : 'CARDS';
-    const doublesTab = scene.add.text(100, -280, dblLabel, { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    const doublesTab = scene.add.text(100, -240, dblLabel, { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    
+    overlay.packsTab = packsTab; 
     overlay.doublesTab = doublesTab; 
     
+    // FIXED: Removed hardcoded colors here. Render function handles it now!
     packsTab.on('pointerdown', () => { 
         overlay.currentTab = 'packs'; 
         overlay.currentPage = 0; 
-        packsTab.setColor('#fff'); 
-        doublesTab.setColor('#7f8c8d'); 
         renderInventoryView(scene, overlay); 
     });
     
     doublesTab.on('pointerdown', () => { 
         overlay.currentTab = 'doubles'; 
         overlay.currentPage = 0; 
-        doublesTab.setColor('#fff'); 
-        packsTab.setColor('#7f8c8d'); 
         renderInventoryView(scene, overlay); 
     });
 
@@ -52,14 +53,23 @@ function createInventoryOverlay(scene) {
 function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
 
-    // NEW: Calculate the dynamic text color for the Inventory!
+    // Calculate the dynamic text color for the Inventory!
     let bgContrast = getContrastColor(themeColors.active.inv);
 
-    // Apply it to the main title
-    let titleTxt = scene.add.text(0, -260, 'INVENTORY', { fontFamily: 'Impact', fontSize: '32px', color: bgContrast }).setOrigin(0.5);
+    // FIXED: Pushed title UP to -290 (Top of the window)
+    let titleTxt = scene.add.text(0, -290, 'INVENTORY', { fontFamily: 'Impact', fontSize: '32px', color: bgContrast }).setOrigin(0.5);
     overlay.gridContainer.add(titleTxt);
     
     overlay.doublesTab.setText(playerUnlocks.binder ? 'DOUBLES' : 'CARDS');
+
+    // FIXED: Apply dynamic contrast color to tabs based on which is active!
+    overlay.packsTab.setColor(overlay.currentTab === 'packs' ? bgContrast : '#7f8c8d');
+    overlay.doublesTab.setColor(overlay.currentTab === 'doubles' ? bgContrast : '#7f8c8d');
+    
+    // Apply dynamic color to UI arrows and close button
+    overlay.closeTxt.setColor(bgContrast);
+    overlay.prevBtn.setColor(bgContrast);
+    overlay.nextBtn.setColor(bgContrast);
     
     if (overlay.currentTab === 'packs') {
         let activePacks = Object.keys(playerPacks).filter(key => playerPacks[key] > 0);
@@ -75,8 +85,9 @@ function renderInventoryView(scene, overlay) {
         let displayPacks = activePacks.slice(startIndex, startIndex + itemsPerPage);
 
         if (displayPacks.length === 0) {
+            // Empty text logic kept safely intact
             let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
-        overlay.gridContainer.add(emptyTxt);
+            overlay.gridContainer.add(emptyTxt);
         } else {
             let startX = -250, startY = -30;
             displayPacks.forEach((key, index) => {
