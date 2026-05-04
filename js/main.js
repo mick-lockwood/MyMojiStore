@@ -13,6 +13,7 @@ function create() {
     const scene = this; 
     scene.cameras.main.setBackgroundColor(themeColors.table);
 
+    // Standard hard angled shadow for buttons
     const addShadow = (x, y, w, h, radius = 0) => {
         if (radius === 0) {
             scene.add.rectangle(x + 6, y + 6, w + 8, h + 8, 0x000000, 0.05); 
@@ -31,14 +32,58 @@ function create() {
     };
 
     // --- TOP UI HEADER ---
-    addShadow(512, 40, 1024, 80); 
-    scene.add.rectangle(512, 40, 1024, 80, 0xfce883); 
+    
+    // NEW: Smooth, straight-down, faded shadow specifically for the banner!
+    for (let i = 1; i <= 8; i++) {
+        scene.add.rectangle(512, 40 + (i * 3), 1024, 80, 0x000000, 0.15 - (i * 0.015));
+    }
+    
+    // Assign the banner background to a variable so the settings menu can change its color
+    scene.headerBg = scene.add.rectangle(512, 40, 1024, 80, themeColors.active.banner); 
 
     scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: '#222222' });
     let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
     scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#222222' });
 
-    scene.add.text(512, 40, 'MyMoji Store', { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' }).setOrigin(0.5);
+    // NEW: Editable Title Logic
+    scene.titleText = scene.add.text(512, 40, storeName, { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: '#222222' }).setOrigin(0.5);
+    
+    // Position the pencil dynamically based on how long the text is
+    let updatePencilPos = () => { scene.pencilIcon.setX(512 + (scene.titleText.width / 2) + 25); };
+    
+    scene.pencilIcon = scene.add.text(0, 40, '✏️', { fontSize: '24px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    updatePencilPos(); // Initial placement
+
+    scene.pencilIcon.on('pointerover', () => scene.tweens.add({ targets: scene.pencilIcon, scale: 1.2, duration: 100 }));
+    scene.pencilIcon.on('pointerout', () => scene.tweens.add({ targets: scene.pencilIcon, scale: 1, duration: 100 }));
+    
+    scene.pencilIcon.on('pointerdown', () => {
+        let cost = hasRenamed ? 50 : 0;
+        let proceed = true;
+        
+        if (hasRenamed) {
+            proceed = confirm("Rebranding your store costs $50.00. Do you want to proceed?");
+        }
+        
+        if (proceed) {
+            if (playerMoney >= cost) {
+                let newName = prompt("Enter your new store name:", storeName);
+                if (newName && newName.trim() !== "") {
+                    if (cost > 0) {
+                        playerMoney -= cost;
+                        scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                    }
+                    storeName = newName.trim();
+                    hasRenamed = true;
+                    scene.titleText.setText(storeName);
+                    updatePencilPos(); // Move the pencil to fit the new text width!
+                    saveGame();
+                }
+            } else {
+                alert("You don't have enough money to rebrand right now!");
+            }
+        }
+    });
 
     // Header Icons
     const storeIconBtn = scene.add.text(920, 40, '🛒', { fontSize: '44px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -46,12 +91,10 @@ function create() {
     storeIconBtn.on('pointerout', () => scene.tweens.add({ targets: storeIconBtn, scale: 1, duration: 100 }));
     storeIconBtn.on('pointerdown', () => { storeOverlay.currentView = 'shop'; renderStoreView(scene, storeOverlay); storeOverlay.setVisible(true); });
 
-    // CHANGED: Back to the emoji gear!
     const settingsBtn = scene.add.text(980, 40, '⚙️', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     settingsBtn.on('pointerover', () => scene.tweens.add({ targets: settingsBtn, angle: 45, duration: 200 }));
     settingsBtn.on('pointerout', () => scene.tweens.add({ targets: settingsBtn, angle: 0, duration: 200 }));
 
-    // CHANGED: Added explicit padding to prevent the top of the emoji from getting cropped!
     const phoneBtn = scene.add.text(860, 40, '📱', { fontSize: '40px', padding: { top: 10, bottom: 10 } }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     scene.phoneNotification = scene.add.circle(880, 20, 10, 0xe74c3c).setVisible(unreadMessage);
     scene.tweens.add({ targets: scene.phoneNotification, scale: 1.3, yoyo: true, repeat: -1, duration: 400 }); 
