@@ -57,18 +57,28 @@ function renderPhoneView(scene, overlay) {
                 finalizeTrade(`SOLD FOR $${currentTrade.price.toFixed(2)}!`);
             });
         } else {
-            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'NO SPARES', { fontSize: '14px', color: '#fff', fontStyle: 'bold'}, () => {});
+            // Passed 'null' at the end so it's a completely dead, unclickable button
+            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'NO SPARES', { fontSize: '14px', color: '#bdc3c7', fontStyle: 'bold'}, null);
         }
     } else {
         if (playerMoney >= currentTrade.price) {
             acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'BUY IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
-                playerMoney -= currentTrade.price;
-                playerInventory[moji.id]++;
-                scene.moneyText.setText('$' + playerMoney.toFixed(2));
-                finalizeTrade(`BOUGHT ${moji.name}!`);
+                
+                // BULLETPROOF CHECK: Verify money at the exact moment of clicking
+                if (playerMoney >= currentTrade.price) {
+                    playerMoney -= currentTrade.price;
+                    playerInventory[moji.id]++;
+                    scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                    finalizeTrade(`BOUGHT ${moji.name}!`);
+                } else {
+                    alert("Wait! You don't have enough money for this right now!");
+                    renderPhoneView(scene, overlay); // Refresh the UI to show the 'TOO POOR' button
+                }
+                
             });
         } else {
-            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'TOO POOR', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {});
+            // Passed 'null' at the end so it's completely unclickable
+            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'TOO POOR', { fontSize: '16px', color: '#bdc3c7', fontStyle: 'bold'}, null);
         }
     }
     
