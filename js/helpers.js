@@ -1,3 +1,20 @@
+function getContrastColor(hexColor) {
+    let r, g, b;
+    // Handle both string ('#ffffff') and number (0xffffff) formats
+    if (typeof hexColor === 'string') {
+        let hex = hexColor.replace('#', '');
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+    } else {
+        r = (hexColor >> 16) & 0xff;
+        g = (hexColor >> 8) & 0xff;
+        b = hexColor & 0xff;
+    }
+    // Calculate relative luminance
+    let yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#111111' : '#ffffff';
+}
 function createButton(scene, x, y, width, height, fillColor, strokeColor, textStr, textStyle, onClick) {
     const container = scene.add.container(x, y);
     container.setSize(width, height);
