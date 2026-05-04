@@ -6,13 +6,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyMoji Store</title>
+    
     <!-- 1. Engine -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
     
-    <!-- 2. Data -->
+    <!-- 2. Data & State -->
     <script src="js/data/myMojiDatabase.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/state.js"></script>
     
-    <!-- 3. Game Logic -->
+    <!-- 3. Core Helpers -->
+    <script src="js/helpers.js"></script>
+    
+    <!-- 4. UI Overlays -->
+    <script src="js/ui_store.js"></script>
+    <script src="js/ui_inventory.js"></script>
+    <script src="js/ui_binder.js"></script>
+    <script src="js/ui_phone.js"></script>
+    <script src="js/ui_settings.js"></script>
+    
+    <!-- 5. Main Game Loop -->
     <script src="js/main.js" defer></script>
     
     <style>
@@ -31,7 +44,6 @@
     </style>
 </head>
 <body>
-    <!-- Phaser will automatically inject the game canvas right here -->
     <div id="game-container"></div>
 </body>
 </html>
