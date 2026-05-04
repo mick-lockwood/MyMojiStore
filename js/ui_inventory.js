@@ -51,6 +51,13 @@ function createInventoryOverlay(scene) {
 
 function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
+
+    // NEW: Calculate the dynamic text color for the Inventory!
+    let bgContrast = getContrastColor(themeColors.active.inv);
+
+    // Apply it to the main title
+    let titleTxt = scene.add.text(0, -260, 'INVENTORY', { fontFamily: 'Impact', fontSize: '32px', color: bgContrast }).setOrigin(0.5);
+    overlay.gridContainer.add(titleTxt);
     
     overlay.doublesTab.setText(playerUnlocks.binder ? 'DOUBLES' : 'CARDS');
     
@@ -68,8 +75,8 @@ function renderInventoryView(scene, overlay) {
         let displayPacks = activePacks.slice(startIndex, startIndex + itemsPerPage);
 
         if (displayPacks.length === 0) {
-            let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
-            overlay.gridContainer.add(emptyTxt);
+            let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
+        overlay.gridContainer.add(emptyTxt);
         } else {
             let startX = -250, startY = -30;
             displayPacks.forEach((key, index) => {
@@ -147,7 +154,7 @@ function renderInventoryView(scene, overlay) {
 
         if (displayDoubles.length === 0) {
             let emptyMsg = playerUnlocks.binder ? "You don't have any duplicate cards." : "You don't have any cards yet.";
-            let emptyTxt = scene.add.text(0, 0, emptyMsg, { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+            let emptyTxt = scene.add.text(0, 0, emptyMsg, { fontSize: '24px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
             let startX = -320, startY = -60, spacingX = 160, spacingY = 240;
