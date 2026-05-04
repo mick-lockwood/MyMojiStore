@@ -2,8 +2,10 @@
 let playerMoney = 50.00;
 let playerInventory = {};
 let cardsOnTable = []; 
+let playerAchievements = []; 
+let gameStats = { packsOpened: 0, npcTrades: 0, bailouts: 0 };
 
-// NEW: Auto-generate pack and cart trackers dynamically!
+// Auto-generate pack and cart trackers dynamically!
 let playerPacks = {};
 let shoppingCart = {};
 if (typeof packDatabase !== 'undefined') {
@@ -46,7 +48,7 @@ function loadGame() {
             if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
         }
         
-        // NEW: Load the store name and rename status
+        // Noad the store name and rename status
         if (parsedData.storeName) storeName = parsedData.storeName;
         if (parsedData.hasRenamed !== undefined) hasRenamed = parsedData.hasRenamed;
 
@@ -61,13 +63,16 @@ function loadGame() {
         if (parsedData.tableCards) cardsOnTable = parsedData.tableCards;
         if (parsedData.trade) currentTrade = parsedData.trade;
         if (parsedData.unread !== undefined) unreadMessage = parsedData.unread;
+        if (parsedData.achievements) playerAchievements = parsedData.achievements;
+        if (parsedData.stats) gameStats = { ...gameStats, ...parsedData.stats };
     }
 }
 
 function saveGame() {
     localStorage.setItem('myMojiSave', JSON.stringify({
         money: playerMoney, packs: playerPacks, inventory: playerInventory, unlocks: playerUnlocks, themes: themeColors, tableCards: cardsOnTable,
-        trade: currentTrade, unread: unreadMessage, storeName: storeName, hasRenamed: hasRenamed
+        trade: currentTrade, unread: unreadMessage, storeName: storeName, hasRenamed: hasRenamed,
+        achievements: playerAchievements, stats: gameStats 
     }));
 }
 
