@@ -173,7 +173,9 @@ function renderStoreView(scene, overlay) {
                 shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 };
                 
                 saveGame();
+                
                 checkBailout(scene);
+                
                 scene.moneyText.setColor('#f1c40f'); 
                 scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222'));
 
