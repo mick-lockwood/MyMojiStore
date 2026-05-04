@@ -20,6 +20,7 @@ let hasRenamed = false;
 // NPC Trade & Phone State
 let currentTrade = null;
 let unreadMessage = false;
+let tradeExpirationTime = 0;
 
 let themeColors = { 
     table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a, banner: 0xfce883,
@@ -107,6 +108,9 @@ function generateTrade(scene) {
         
     currentTrade = { type: isBuy ? 'buy' : 'sell', mojiId: randomMoji.id, price: Number((randomMoji.baseValue * priceMultiplier).toFixed(2)) };
     
+    // NEW: Set the expiration for 2 minutes (120,000 milliseconds) from now
+    tradeExpirationTime = Date.now() + 120000; 
+
     unreadMessage = true;
     if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
     saveGame();
