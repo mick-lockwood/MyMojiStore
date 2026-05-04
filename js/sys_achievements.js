@@ -95,3 +95,83 @@ function checkAchievements(scene) {
         });
     }
 }
+
+// --- ACHIEVEMENT UI OVERLAY ---
+
+function createAchievementsOverlay(scene) {
+    const overlay = scene.add.container(512, 384).setVisible(false).setDepth(400); // High depth to cover everything
+    
+    const bg = scene.add.rectangle(0, 0, 800, 600, 0x1a1a1a).setStrokeStyle(4, 0xf1c40f).setInteractive();
+    const title = scene.add.text(0, -260, 'ACHIEVEMENTS', { fontFamily: 'Impact', fontSize: '32px', color: '#f1c40f' }).setOrigin(0.5);
+    const closeTxt = scene.add.text(360, -260, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+
+    closeTxt.on('pointerdown', () => overlay.setVisible(false));
+
+    overlay.listContainer = scene.add.container(0, 0);
+    overlay.add([bg, title, closeTxt, overlay.listContainer]);
+
+    overlay.currentPage = 0;
+    return overlay;
+}
+
+function renderAchievementsView(scene, overlay) {
+    overlay.listContainer.removeAll(true);
+    const itemsPerPage = 5;
+    const totalPages = Math.ceil(achievementDatabase.length / itemsPerPage);
+
+    // --- Pagination Controls ---
+    let prevColor = overlay.currentPage > 0 ? 0x3498db : 0x7f8c8d;
+    let nextColor = overlay.currentPage < totalPages - 1 ? 0x3498db : 0x7f8c8d;
+
+    let prevBtn = createButton(scene, -150, 240, 100, 40, prevColor, 0x000000, '◀ PREV', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        if (overlay.currentPage > 0) {
+            overlay.currentPage--;
+            renderAchievementsView(scene, overlay);
+        }
+    });
+
+    let pageTxt = scene.add.text(0, 240, `PAGE ${overlay.currentPage + 1} / ${totalPages}`, { fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+
+    let nextBtn = createButton(scene, 150, 240, 100, 40, nextColor, 0x000000, 'NEXT ▶', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        if (overlay.currentPage < totalPages - 1) {
+            overlay.currentPage++;
+            renderAchievementsView(scene, overlay);
+        }
+    });
+
+    overlay.listContainer.add([prevBtn, pageTxt, nextBtn]);
+
+    // --- Draw the Achievement List ---
+    let startY = -180;
+    let startIndex = overlay.currentPage * itemsPerPage;
+    let endIndex = Math.min(startIndex + itemsPerPage, achievementDatabase.length);
+
+    let unlockedCount = playerAchievements.length;
+    let trackerTxt = scene.add.text(0, -210, `UNLOCKED: ${unlockedCount} / ${achievementDatabase.length}`, { fontSize: '18px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
+    overlay.listContainer.add(trackerTxt);
+
+    for (let i = startIndex; i < endIndex; i++) {
+        let ach = achievementDatabase[i];
+        let isUnlocked = playerAchievements.includes(ach.id);
+
+        let itemCont = scene.add.container(0, startY);
+        
+        let itemBgColor = isUnlocked ? 0x27ae60 : 0x2c3e50;
+        let itemBg = scene.add.rectangle(0, 0, 700, 70, itemBgColor).setStrokeStyle(2, 0xffffff);
+        itemBg.setAlpha(isUnlocked ? 0.9 : 0.6);
+
+        let iconTxt = scene.add.text(-310, 0, isUnlocked ? '🏆' : '🔒', { fontSize: '32px' }).setOrigin(0.5);
+        let nameTxt = scene.add.text(-260, -15, ach.name, { fontSize: '20px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0, 0.5);
+        
+        // Hide the description if they haven't unlocked it yet (adds mystery!), or show it to guide them
+        let descText = isUnlocked ? ach.desc : "???"; 
+        // If you want to always show the requirements so they know what to do, change the line above to: let descText = ach.desc;
+        
+        let descObj = scene.add.text(-260, 15, descText, { fontSize: '16px', color: isUnlocked ? '#ecf0f1' : '#bdc3c7' }).setOrigin(0, 0.5);
+        let rewardTxt = scene.add.text(320, 0, `Reward:\n$${ach.reward.toFixed(2)}`, { fontSize: '16px', color: isUnlocked ? '#fce883' : '#7f8c8d', fontStyle: 'bold', align: 'right' }).setOrigin(1, 0.5);
+
+        itemCont.add([itemBg, iconTxt, nameTxt, descObj, rewardTxt]);
+        overlay.listContainer.add(itemCont);
+        startY += 80;
+    }
+}
