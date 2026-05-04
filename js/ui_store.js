@@ -47,21 +47,20 @@ function renderStoreView(scene, overlay) {
         if (overlay.currentStoreTab === 'packs') {
             let packKeys = Object.keys(packDatabase);
             
-            // Grid alignment math
+            // ADJUSTED: Pushed higher, spread further apart, smaller scale
             let startX = -280; 
-            let startY = -120; 
+            let startY = -140; 
             let spacingX = 280;
-            let spacingY = 240;
+            let spacingY = 270; 
 
             packKeys.forEach((key, index) => {
-                let col = index % 3; // 0, 1, 2
-                let row = Math.floor(index / 3); // 0 (top row), 1 (bottom row)
+                let col = index % 3; 
+                let row = Math.floor(index / 3); 
                 
                 let def = packDatabase[key];
                 
-                // Calculate position and shrink slightly to fit 6 packs nicely
                 let packCont = scene.add.container(startX + (col * spacingX), startY + (row * spacingY));
-                packCont.setScale(0.85); 
+                packCont.setScale(0.8); // Shrunk from 0.85 to 0.80
 
                 packCont.add(createPackGraphic(scene, key));
 
@@ -74,8 +73,7 @@ function renderStoreView(scene, overlay) {
                 packCont.add([priceTxt, addBtn]);
                 overlay.contentContainer.add(packCont);
             });
-        }
-            
+        } 
         else if (overlay.currentStoreTab === 'unlocks') {
             let upgStartX = -150;
             let upgIndex = 0;
@@ -87,7 +85,8 @@ function renderStoreView(scene, overlay) {
                     let def = upgradeDatabase[key];
                     let upgCont = scene.add.container(upgStartX + (upgIndex * 300), 20);
                     
-                    let bg = scene.add.rectangle(0, 0, 250, 100, 0x34495e).setStrokeStyle(4, 0x1a1a1a);
+                    // CHANGED: Removed the '0x34495e' background fill entirely, just added a clean grey outline
+                    let bg = scene.add.rectangle(0, 0, 250, 100).setStrokeStyle(2, 0x7f8c8d);
                     let nameTxt = scene.add.text(0, -20, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                     
                     let buyBtn = createButton(scene, 0, 25, 180, 36, 0xf39c12, 0xffffff, `BUY FOR $${def.cost.toFixed(2)}`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
@@ -96,6 +95,7 @@ function renderStoreView(scene, overlay) {
                             scene.moneyText.setText('$' + playerMoney.toFixed(2));
                             playerUnlocks[key] = true;
                             saveGame();
+                            checkBailout(scene);
                             
                             if (key === 'binder') {
                                 scene.binderZone.destroy();
