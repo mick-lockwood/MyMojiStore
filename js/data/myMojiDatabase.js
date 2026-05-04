@@ -149,6 +149,13 @@ const myMojiDatabase = [
     { id: "m_141", name: "The Holy Grail", rarity: "Legendary", category: "Objects", baseValue: 4500.00 },
     { id: "m_142", name: "Time Machine", rarity: "Legendary", category: "Magic", baseValue: 6000.00 },
     { id: "m_143", name: "All-Seeing Eye", rarity: "Legendary", category: "Memes", baseValue: 4200.00 },
-    { id: "m_144", name: "Galactic Emperor", rarity: "Legendary", category: "Cosmic", baseValue: 5500.00 }
+    { id: "m_144", name: "Galactic Emperor", rarity: "Legendary", category: "Cosmic", baseValue: 5500.00 },
+
+    // --- GLITCH RARITY (5 Cards) ---
+    { id: "m_145", name: "Corrupted Smile", rarity: "Glitch", category: "Faces", baseValue: 15000.00 },
+    { id: "m_146", name: "MissingNo Burger", rarity: "Glitch", category: "Food", baseValue: 22500.00 },
+    { id: "m_147", name: "The Void Cat", rarity: "Glitch", category: "Animals", baseValue: 35000.00 },
+    { id: "m_148", name: "Matrix Code", rarity: "Glitch", category: "Cosmic", baseValue: 50000.00 },
+    { id: "m_149", name: "Infinite Cash", rarity: "Glitch", category: "Objects", baseValue: 80000.00 }
      
 ];
