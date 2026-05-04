@@ -64,6 +64,18 @@ function createBinderOverlay(scene) {
 
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
+
+    // Add Title
+    const title = scene.add.text(0, -210, 'MY BINDER', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
+    
+    // Dynamic Collection Tracker!
+    let totalCards = myMojiDatabase.length;
+    let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
+    let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
+    
+    let trackerTxt = scene.add.text(0, -170, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0.5);
+
+    overlay.gridContainer.add([title, trackerTxt]); // Make sure trackerTxt is added to the container!
     
     let filteredDb = myMojiDatabase.filter(moji => {
         let owned = Number(playerInventory[moji.id]);
