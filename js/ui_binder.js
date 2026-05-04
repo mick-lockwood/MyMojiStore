@@ -45,18 +45,7 @@ function createBinderOverlay(scene) {
         overlay.currentSpread = 0; 
         renderBinderGrid(scene, overlay);
     });
-    
-     // Add Title
-    const title = scene.add.text(0, -210, 'BINDER', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
-    
-    // Dynamic Collection Tracker!
-    let totalCards = myMojiDatabase.length;
-    let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
-    let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
-    
-    let trackerTxt = scene.add.text(0, -170, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0.5);
-    overlay.gridContainer.add([title, trackerTxt]); // Make sure trackerTxt is added to the container!
-    
+     
     overlay.prevBtn = scene.add.text(-440, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     overlay.nextBtn = scene.add.text(440, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     
@@ -75,6 +64,21 @@ function createBinderOverlay(scene) {
 
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
+    
+    // --- Dynamic Collection Tracker & Title ---
+    
+    // Placed to the right of the Filter button (assuming Filter ends around x: -20)
+    const title = scene.add.text(20, -220, 'BINDER', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }).setOrigin(0, 0.5);
+    
+    let totalCards = myMojiDatabase.length;
+    let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
+    let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
+    
+    // Placed right next to the BINDER title
+    let trackerTxt = scene.add.text(140, -220, `-  COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0, 0.5);
+    
+    overlay.gridContainer.add([title, trackerTxt]);
+    // -----------------------------------------------
     
     let filteredDb = myMojiDatabase.filter(moji => {
         let owned = Number(playerInventory[moji.id]);
