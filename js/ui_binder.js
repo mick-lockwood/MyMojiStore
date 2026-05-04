@@ -77,8 +77,8 @@ function renderBinderGrid(scene, overlay) {
     let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
     let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
     
-    // Centered right below the title at Y: -290
-    let trackerTxt = scene.add.text(0, -290, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0.5);
+    // Changed X to -440 (far left) and set Origin to (0, 0.5) for left-alignment
+    let trackerTxt = scene.add.text(-440, -320, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0, 0.5);
     
     overlay.gridContainer.add([title, trackerTxt]);
     
