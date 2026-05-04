@@ -119,10 +119,20 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                         if (type === 'binder') { 
                             themeColors.binder = color; 
                             binderOverlay.bg.setFillStyle(color); 
+                            
+                            // NEW: Instantly refresh the binder UI to flip text colors!
+                            if (scene.binderOverlay && scene.binderOverlay.visible) {
+                                renderBinderGrid(scene, scene.binderOverlay);
+                            }
                         }
                         if (type === 'inv') { 
                             themeColors.inventory = color; 
                             inventoryOverlay.bg.setFillStyle(color); 
+
+                            // NEW: Instantly refresh the inventory UI!
+                            if (scene.inventoryOverlay && scene.inventoryOverlay.visible) {
+                                renderInventoryView(scene, scene.inventoryOverlay);
+                            }
                         }
                         saveGame(); 
                         overlay.renderPalettes(); 
