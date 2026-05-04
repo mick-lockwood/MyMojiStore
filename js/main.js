@@ -46,11 +46,13 @@ function create() {
     storeIconBtn.on('pointerout', () => scene.tweens.add({ targets: storeIconBtn, scale: 1, duration: 100 }));
     storeIconBtn.on('pointerdown', () => { storeOverlay.currentView = 'shop'; renderStoreView(scene, storeOverlay); storeOverlay.setVisible(true); });
 
+    // CHANGED: Back to the emoji gear!
     const settingsBtn = scene.add.text(980, 40, '⚙️', { fontFamily: 'Arial, sans-serif', fontSize: '44px', color: '#000000' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     settingsBtn.on('pointerover', () => scene.tweens.add({ targets: settingsBtn, angle: 45, duration: 200 }));
     settingsBtn.on('pointerout', () => scene.tweens.add({ targets: settingsBtn, angle: 0, duration: 200 }));
 
-    const phoneBtn = scene.add.text(860, 40, '📱', { fontSize: '40px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    // CHANGED: Added explicit padding to prevent the top of the emoji from getting cropped!
+    const phoneBtn = scene.add.text(860, 40, '📱', { fontSize: '40px', padding: { top: 10, bottom: 10 } }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     scene.phoneNotification = scene.add.circle(880, 20, 10, 0xe74c3c).setVisible(unreadMessage);
     scene.tweens.add({ targets: scene.phoneNotification, scale: 1.3, yoyo: true, repeat: -1, duration: 400 }); 
     
@@ -105,6 +107,8 @@ function create() {
             createDraggableCard(scene, savedCard.x, savedCard.y, mojiData, savedCard.instanceId);
         }
     });
+    
+    checkBailout(scene);
 }
 
 function spawnBoosterPack(scene, packId) {
