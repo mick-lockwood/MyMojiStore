@@ -115,30 +115,41 @@ function create() {
     const storeOverlay = createStoreOverlay(scene);
     const inventoryOverlay = createInventoryOverlay(scene);
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
-    
     scene.phoneOverlay = createPhoneOverlay(scene); 
 
-    settingsBtn.on('pointerdown', () => { settingsOverlay.renderPalettes(); settingsOverlay.setVisible(true); });
+    // NEW: Helper function to ensure only one menu is open at a time
+    scene.closeAllOverlays = () => {
+        binderOverlay.setVisible(false);
+        storeOverlay.setVisible(false);
+        inventoryOverlay.setVisible(false);
+        settingsOverlay.setVisible(false);
+        scene.phoneOverlay.setVisible(false);
+        scene.events.emit('close_all_dropdowns');
+    };
+
+    // Update Header Buttons to close other overlays first
+    storeIconBtn.on('pointerdown', () => { scene.closeAllOverlays(); storeOverlay.currentView = 'shop'; renderStoreView(scene, storeOverlay); storeOverlay.setVisible(true); });
+    settingsBtn.on('pointerdown', () => { scene.closeAllOverlays(); settingsOverlay.renderPalettes(); settingsOverlay.setVisible(true); });
+    phoneBtn.on('pointerdown', () => { 
+        unreadMessage = false; 
+        scene.phoneNotification.setVisible(false); 
+        scene.closeAllOverlays(); 
+        renderPhoneView(scene, scene.phoneOverlay); 
+        scene.phoneOverlay.setVisible(true); 
+    });
 
     if (!currentTrade) scene.time.delayedCall(15000, () => generateTrade(scene));
 
     // --- MAIN HUD BUTTONS & DROP ZONES ---
-    
-    // 1. TRADING STASH
     addShadow(160, 138, 240, 70, 12);
     let tradeBtn = createButton(scene, 160, 138, 240, 70, 0x57bcf2, 0x000000, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, null);
 
-    // "Coming Soon" Badge attached to the Trading Stash button
     let badgeBg = scene.add.rectangle(90, -25, 110, 26, 0xe74c3c).setStrokeStyle(2, 0xffffff);
     let badgeTxt = scene.add.text(90, -25, 'COMING SOON', { fontFamily: 'Arial', fontSize: '12px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-    
-    // Give it a playful tilt!
     badgeBg.setAngle(12);
     badgeTxt.setAngle(12);
-    
     tradeBtn.add([badgeBg, badgeTxt]);
 
-    // 2. SELL ON MOJIMARKET
     addShadow(160, 710, 240, 70, 12);
     scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }, () => {});
 
@@ -146,6 +157,7 @@ function create() {
     let binderColor = playerUnlocks.binder ? 0xffc87c : 0x7f8c8d; 
     scene.binderZone = createButton(scene, 864, 138, 240, 70, binderColor, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
         if (playerUnlocks.binder) {
+            scene.closeAllOverlays(); // Close others
             renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
         } else {
             showFloatingText(scene, 864, 138, 'LOCKED! BUY IN STORE', '#e74c3c');
@@ -154,6 +166,7 @@ function create() {
 
     addShadow(864, 710, 240, 70, 12);
     scene.invZone = createButton(scene, 864, 710, 240, 70, 0xda7aff, 0x000000, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+        scene.closeAllOverlays(); // Close others
         renderInventoryView(scene, inventoryOverlay); inventoryOverlay.setVisible(true); 
     });
 
@@ -175,12 +188,19 @@ function create() {
 
 function spawnBoosterPack(scene, packId) {
     const packDef = packDatabase[packId];
+    let pulledThisPack = {}; // Track pulls so duplicates in the same pack don't both get "NEW"
+    
     for (let i = 0; i < 3; i++) {
-        // Pass the category filter to the pull logic!
         let pulledMoji = pullCardWithWeights(packDef.weights, packDef.category);
+        
+        // NEW: Check if the player owns 0 of this card, and hasn't pulled it yet in this specific pack
+        let isNewCard = (playerInventory[pulledMoji.id] === 0 && !pulledThisPack[pulledMoji.id]);
+        pulledThisPack[pulledMoji.id] = true;
+        
         let randX = Phaser.Math.Between(150, 874); 
         let randY = Phaser.Math.Between(340, 510);
-        createDraggableCard(scene, randX, randY, pulledMoji);
+        
+        createDraggableCard(scene, randX, randY, pulledMoji, null, isNewCard);
     }
 }
 
@@ -239,9 +259,17 @@ function createPackGraphic(scene, packId) {
     return [bg, strip, nameTxt];
 }
 
-function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null) {
+function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, isNew = false) {
     const card = scene.add.container(x, y);
     card.add(createCardGraphic(scene, mojiData));
+    
+    // NEW: Add the tilted "NEW!" badge if this card has never been collected
+    if (isNew) {
+        let newBg = scene.add.rectangle(-75, -135, 60, 24, 0xe74c3c).setAngle(-15).setStrokeStyle(2, 0xffffff);
+        let newTxt = scene.add.text(-75, -135, 'NEW!', { fontFamily: 'Arial', fontSize: '14px', color: '#fff', fontStyle: 'bold' }).setAngle(-15).setOrigin(0.5);
+        card.add([newBg, newTxt]);
+    }
+    
     card.setSize(220, 320);
     card.setInteractive();
     scene.input.setDraggable(card);
