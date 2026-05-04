@@ -190,6 +190,7 @@ function create() {
         delay: 1000,
         callback: () => {
             checkBailout(scene);
+            checkAchievements(scene);
 
             // Check if a trade is currently active
             if (currentTrade) {
@@ -228,7 +229,7 @@ function spawnBoosterPack(scene, packId) {
     for (let i = 0; i < 3; i++) {
         let pulledMoji = pullCardWithWeights(packDef.weights, packDef.category);
         
-        // NEW: Check if the player owns 0 of this card, and hasn't pulled it yet in this specific pack
+        // Check if the player owns 0 of this card, and hasn't pulled it yet in this specific pack
         let isNewCard = (playerInventory[pulledMoji.id] === 0 && !pulledThisPack[pulledMoji.id]);
         pulledThisPack[pulledMoji.id] = true;
         
@@ -315,8 +316,7 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
         card.add([starOutline, starWhite, starRed, newTxt]);
     }
 
-    // --- THESE WERE THE MISSING LINES! ---
-    card.setSize(220, 320);
+        card.setSize(220, 320);
     card.setInteractive();
     scene.input.setDraggable(card);
     card.setDepth(10); 
@@ -327,7 +327,6 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
         cardsOnTable.push({ instanceId: card.instanceId, mojiId: mojiData.id, x: x, y: y });
         saveGame();
     }
-    // -------------------------------------
 
     card.startX = x;
     card.startY = y;
