@@ -1,8 +1,8 @@
 const myMojiDatabase = [
-    // --- COMMONS (54 Cards) ---
+    // --- COMMONS (57 Cards) ---
     { id: "m_001", name: "Classic Smile", rarity: "Common", category: "Faces", baseValue: 1.50 },
     { id: "m_002", name: "Sweat Drop", rarity: "Common", category: "Faces", baseValue: 1.25 },
-    { id: "m_003", name: "Thumbs Up", rarity: "Common", category: "Faces", baseValue: 1.00 },
+    { id: "m_003", name: "Thumbs Up", rarity: "Common", category: "Hands", baseValue: 1.00 },
     { id: "m_004", name: "Sleepy Zzz", rarity: "Common", category: "Faces", baseValue: 1.50 },
     { id: "m_005", name: "Slight Frown", rarity: "Common", category: "Faces", baseValue: 0.50 },
     { id: "m_006", name: "Crying Laugh", rarity: "Common", category: "Faces", baseValue: 1.50 },
@@ -54,8 +54,11 @@ const myMojiDatabase = [
     { id: "m_102", name: "Basketball", rarity: "Common", category: "Sports", baseValue: 1.00 },
     { id: "m_103", name: "Electric Guitar", rarity: "Common", category: "Music", baseValue: 1.50 },
     { id: "m_104", name: "Acoustic Guitar", rarity: "Common", category: "Music", baseValue: 1.25 },
+    { id: "m_114", name: "Saxaphone", rarity: "Common", category: "Music", baseValue: 2.80 },
+    { id: "m_117", name: "Lolly Pop", rarity: "Common", category: "Food", baseValue: 5.00 },
+    { id: "m_124", name: "Baby Bottle", rarity: "Common", category: "Objects", baseValue: 4.00 },
 
-    // --- RARES (30 Cards) ---
+    // --- RARES (36 Cards) ---
     { id: "m_021", name: "Star Eyes", rarity: "Rare", category: "Faces", baseValue: 15.00 },
     { id: "m_022", name: "Cool Glasses", rarity: "Rare", category: "Faces", baseValue: 18.50 },
     { id: "m_023", name: "Party Horn", rarity: "Rare", category: "Faces", baseValue: 12.00 },
@@ -86,8 +89,14 @@ const myMojiDatabase = [
     { id: "m_094", name: "Frothy Beer Mug", rarity: "Rare", category: "Food", baseValue: 15.00 },
     { id: "m_105", name: "Shiny Trophy", rarity: "Rare", category: "Sports", baseValue: 15.00 },
     { id: "m_106", name: "Grand Piano", rarity: "Rare", category: "Music", baseValue: 18.00 },
+    { id: "m_110", name: "Peace Fingers", rarity: "Rare", category: "Hands", baseValue: 20.00 },
+    { id: "m_115", name: "Dancer", rarity: "Rare", category: "Sport", baseValue: 20.00 },
+    { id: "m_116", name: "Heart Hands", rarity: "Rare", category: "Hands", baseValue: 20.00 },
+    { id: "m_119", name: "Rock N Roll Hands", rarity: "Rare", category: "Hands", baseValue: 20.00 },
+    { id: "m_122", name: "Chick", rarity: "Rare", category: "Animals", baseValue: 50.00 },
+    { id: "m_123", name: "Snowman", rarity: "Rare", category: "Animals", baseValue: 15.00 },
 
-    // --- EPICS (15 Cards) ---
+    // --- EPICS (21 Cards) ---
     { id: "m_029", name: "Melting Face", rarity: "Epic", category: "Faces", baseValue: 85.00 },
     { id: "m_030", name: "Mind Blown", rarity: "Epic", category: "Faces", baseValue: 110.00 },
     { id: "m_031", name: "Cosmic Swirl", rarity: "Epic", category: "Cosmic", baseValue: 95.00 },
@@ -103,8 +112,14 @@ const myMojiDatabase = [
     { id: "m_097", name: "Gourmet Lobster", rarity: "Epic", category: "Food", baseValue: 150.00 },
     { id: "m_098", name: "Simmering Stew", rarity: "Epic", category: "Food", baseValue: 85.00 },
     { id: "m_107", name: "Golden Ticket", rarity: "Epic", category: "Objects", baseValue: 100.00 },
+    { id: "m_109", name: "The Golden Duck", rarity: "Epic", category: "Animal", baseValue: 160.00 },
+    { id: "m_111", name: "Metalic Bow", rarity: "Epic", category: "Objects", baseValue: 100.00 },
+    { id: "m_112", name: "Smooshed Face", rarity: "Epic", category: "Faces", baseValue: 1.00 },
+    { id: "m_113", name: "Cosmic Duck", rarity: "Epic", category: "Cosmic", baseValue: 180.00 },
+    { id: "m_120", name: "Galaxy Kiss", rarity: "Epic", category: "Memes", baseValue: 100.00 },
+    { id: "m_121", name: "Cosmic Heart", rarity: "Epic", category: "Cosmic", baseValue: 200.00 },
 
-    // --- LEGENDARIES (9 Cards) ---
+    // --- LEGENDARIES (10 Cards) ---
     { id: "m_033", name: "Golden Crown", rarity: "Legendary", category: "Objects", baseValue: 500.00 },
     { id: "m_034", name: "Holographic Ghost", rarity: "Legendary", category: "Spooky", baseValue: 1200.00 },
     { id: "m_067", name: "Infinity Rainbow", rarity: "Legendary", category: "Magic", baseValue: 1500.00 },
@@ -113,5 +128,7 @@ const myMojiDatabase = [
     { id: "m_070", name: "Galaxy Brain", rarity: "Legendary", category: "Memes", baseValue: 5000.00 },
     { id: "m_099", name: "The Golden Apple", rarity: "Legendary", category: "Food", baseValue: 2500.00 },
     { id: "m_100", name: "Holographic Burger", rarity: "Legendary", category: "Food", baseValue: 3000.00 },
-    { id: "m_108", name: "The One Ring", rarity: "Legendary", category: "Objects", baseValue: 4000.00 }
+    { id: "m_108", name: "The One Ring", rarity: "Legendary", category: "Objects", baseValue: 4000.00 },
+    { id: "m_118", name: "Galaxy Poop", rarity: "Legendary", category: "Memes", baseValue: 3500.00 }
+     
 ];
