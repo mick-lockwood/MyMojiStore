@@ -120,18 +120,24 @@ function create() {
     const binderOverlay = createBinderOverlay(scene);
     scene.binderOverlay = binderOverlay; 
     
+    // NEW: Initialize the Achievements menu BEFORE the settings menu!
+    scene.achievementsOverlay = createAchievementsOverlay(scene);
+
     const storeOverlay = createStoreOverlay(scene);
     const inventoryOverlay = createInventoryOverlay(scene);
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
     scene.phoneOverlay = createPhoneOverlay(scene); 
 
-    // NEW: Helper function to ensure only one menu is open at a time
     scene.closeAllOverlays = () => {
         binderOverlay.setVisible(false);
         storeOverlay.setVisible(false);
         inventoryOverlay.setVisible(false);
         settingsOverlay.setVisible(false);
         scene.phoneOverlay.setVisible(false);
+        
+        // NEW: Ensure it closes with everything else
+        if (scene.achievementsOverlay) scene.achievementsOverlay.setVisible(false); 
+        
         scene.events.emit('close_all_dropdowns');
     };
 
