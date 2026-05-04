@@ -60,8 +60,10 @@ function renderPhoneView(scene, overlay) {
         let owned = playerInventory[moji.id];
         let canFulfill = playerUnlocks.binder ? owned > 1 : owned > 0;
         
+        // Inside the SELL block:
         if (canFulfill) {
             acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'SELL IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
+                gameStats.npcTrades++;
                 playerInventory[moji.id]--;
                 playerMoney += currentTrade.price;
                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
@@ -79,6 +81,7 @@ function renderPhoneView(scene, overlay) {
                 if (playerMoney >= currentTrade.price) {
                     playerMoney -= currentTrade.price;
                     playerInventory[moji.id]++;
+                    gameStats.npcTrades++;
                     scene.moneyText.setText('$' + playerMoney.toFixed(2));
                     finalizeTrade(`BOUGHT ${moji.name}!`);
                 } else {
