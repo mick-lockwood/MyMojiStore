@@ -211,6 +211,7 @@ function create() {
         },
         loop: true
     });
+}
 
 function spawnBoosterPack(scene, packId) {
     const packDef = packDatabase[packId];
