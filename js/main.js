@@ -67,7 +67,14 @@ function create() {
         
         if (proceed) {
             if (playerMoney >= cost) {
-                let newName = prompt("Enter your new store name:", storeName);
+                
+                // NEW: Dynamic message that warns them about future costs!
+                let promptMsg = hasRenamed 
+                    ? "Enter your new store name:" 
+                    : "Enter your new store name:\n\n(NOTE: Your first rebrand is FREE! Future name changes will cost $50.00)";
+                
+                let newName = prompt(promptMsg, storeName);
+                
                 if (newName && newName.trim() !== "") {
                     if (cost > 0) {
                         playerMoney -= cost;
@@ -76,8 +83,9 @@ function create() {
                     storeName = newName.trim();
                     hasRenamed = true;
                     scene.titleText.setText(storeName);
-                    updatePencilPos(); // Move the pencil to fit the new text width!
+                    updatePencilPos(); 
                     saveGame();
+                    checkBailout(scene); 
                 }
             } else {
                 alert("You don't have enough money to rebrand right now!");
