@@ -163,8 +163,14 @@ function create() {
             createDraggableCard(scene, savedCard.x, savedCard.y, mojiData, savedCard.instanceId);
         }
     });
-    
-    checkBailout(scene);
+
+    // The Global Watcher! 
+    // This runs in the background every 1 second and checks if the player is soft-locked.
+    scene.time.addEvent({
+        delay: 1000,
+        callback: () => checkBailout(scene),
+        loop: true
+    });
 }
 
 function spawnBoosterPack(scene, packId) {
