@@ -31,9 +31,11 @@ function renderPhoneView(scene, overlay) {
         
     let msgTxt = scene.add.text(0, -100, msg, { fontSize: '18px', color: '#ecf0f1', align: 'center', wordWrap: { width: 280 } }).setOrigin(0.5);
 
-    // NEW: Calculate and show the remaining time
+    // Calculate and show the remaining time
     let secondsLeft = Math.max(0, Math.floor((tradeExpirationTime - Date.now()) / 1000));
     let timeTxt = scene.add.text(140, -170, `⏳ ${secondsLeft}s`, { fontSize: '14px', color: '#e74c3c', fontStyle: 'bold' }).setOrigin(1, 0.5);
+
+    scene.activePhoneTimerText = timeTxt;
     
     // Optional: Make it pulse red if under 10 seconds!
     if (secondsLeft <= 10) {
