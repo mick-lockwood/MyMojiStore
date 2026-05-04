@@ -1,19 +1,26 @@
 // --- GLOBAL STATE & LOCAL STORAGE ---
 let playerMoney = 50.00;
-let playerPacks = { "basic": 0, "premium": 0, "legendary": 0 };
 let playerInventory = {};
-let shoppingCart = { "basic": 0, "premium": 0, "legendary": 0 }; 
 let cardsOnTable = []; 
 
-// NEW: Store Customization State
+// NEW: Auto-generate pack and cart trackers dynamically!
+let playerPacks = {};
+let shoppingCart = {};
+if (typeof packDatabase !== 'undefined') {
+    for (let key in packDatabase) {
+        playerPacks[key] = 0;
+        shoppingCart[key] = 0;
+    }
+}
+
+// Store Customization State
 let storeName = "MyMoji Store";
-let hasRenamed = false; // Tracks if they've used their free name change
+let hasRenamed = false; 
 
 // NPC Trade & Phone State
 let currentTrade = null;
 let unreadMessage = false;
 
-// UPDATED: Added 'banner' to the theme trackers
 let themeColors = { 
     table: '#f4f4f4', binder: 0x1a1a1a, inventory: 0x1a1a1a, banner: 0xfce883,
     active: { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a, banner: 0xfce883 }
