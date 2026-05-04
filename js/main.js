@@ -120,11 +120,14 @@ function create() {
     const binderOverlay = createBinderOverlay(scene);
     scene.binderOverlay = binderOverlay; 
     
-    // NEW: Initialize the Achievements menu BEFORE the settings menu!
+    // Initialize the Achievements menu BEFORE the settings menu!
     scene.achievementsOverlay = createAchievementsOverlay(scene);
 
     const storeOverlay = createStoreOverlay(scene);
+    scene.storeOverlay = storeOverlay;
+    
     const inventoryOverlay = createInventoryOverlay(scene);
+    
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
     scene.phoneOverlay = createPhoneOverlay(scene); 
 
