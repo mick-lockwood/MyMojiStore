@@ -33,10 +33,20 @@ function create() {
 
     // --- TOP UI HEADER ---
     
-    // NEW: Smooth, straight-down, faded shadow specifically for the banner!
     for (let i = 1; i <= 8; i++) {
         scene.add.rectangle(512, 40 + (i * 3), 1024, 80, 0x000000, 0.15 - (i * 0.015));
     }
+    
+    scene.headerBg = scene.add.rectangle(512, 40, 1024, 80, themeColors.active.banner); 
+
+    // NEW: Calculate the best text color based on the banner background
+    let bannerContrast = getContrastColor(themeColors.active.banner);
+
+    scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bannerContrast });
+    let totalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
+    scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: bannerContrast });
+
+    scene.titleText = scene.add.text(512, 40, storeName, { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: bannerContrast }).setOrigin(0.5);
     
     // Assign the banner background to a variable so the settings menu can change its color
     scene.headerBg = scene.add.rectangle(512, 40, 1024, 80, themeColors.active.banner); 
@@ -208,11 +218,15 @@ function pullCardWithWeights(weights, categoryFilter = "all") {
 }
 
 function createCardGraphic(scene, mojiData) {
-    // NEW: Special aesthetics for Glitch cards!
+    let bgColor = 0xffffff; // Common default
+    if (mojiData.rarity === 'Rare') bgColor = 0xd0ebff;      // Pastel Blue
+    if (mojiData.rarity === 'Epic') bgColor = 0xe8d0ff;      // Pastel Purple
+    if (mojiData.rarity === 'Legendary') bgColor = 0xfff0b3; // Pastel Gold
+    if (mojiData.rarity === 'Glitch') bgColor = 0x111111;    // Dark Mode
+
     let isGlitch = mojiData.rarity === "Glitch";
-    let bgColor = isGlitch ? 0x111111 : 0xffffff;
-    let strokeColor = isGlitch ? 0xff00ff : 0x1a1a1a; // Neon Pink border
-    let textColor = isGlitch ? '#00ffff' : '#000000'; // Cyan text
+    let strokeColor = isGlitch ? 0xff00ff : 0x1a1a1a; 
+    let textColor = isGlitch ? '#00ffff' : '#000000'; 
     let valColor = isGlitch ? '#ff00ff' : '#27ae60';
 
     const bg = scene.add.rectangle(0, 0, 220, 320, bgColor).setStrokeStyle(6, strokeColor);
