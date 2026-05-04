@@ -47,20 +47,20 @@ function renderStoreView(scene, overlay) {
         if (overlay.currentStoreTab === 'packs') {
             let packKeys = Object.keys(packDatabase);
             
-            // ADJUSTED: Pushed higher, spread further apart, smaller scale
-            let startX = -280; 
-            let startY = -140; 
-            let spacingX = 280;
-            let spacingY = 270; 
+            // ADJUSTED: 4 Columns, 2 Rows. Tighter spacing and smaller scale!
+            let startX = -330; 
+            let startY = -120; 
+            let spacingX = 220;
+            let spacingY = 240; 
 
             packKeys.forEach((key, index) => {
-                let col = index % 3; 
-                let row = Math.floor(index / 3); 
+                let col = index % 4; // 4 columns
+                let row = Math.floor(index / 4); // 2 rows
                 
                 let def = packDatabase[key];
                 
                 let packCont = scene.add.container(startX + (col * spacingX), startY + (row * spacingY));
-                packCont.setScale(0.8); // Shrunk from 0.85 to 0.80
+                packCont.setScale(0.65); // Shrunk to 65% to fit 4 neatly
 
                 packCont.add(createPackGraphic(scene, key));
 
@@ -85,11 +85,12 @@ function renderStoreView(scene, overlay) {
                     let def = upgradeDatabase[key];
                     let upgCont = scene.add.container(upgStartX + (upgIndex * 300), 20);
                     
-                    // CHANGED: Removed the '0x34495e' background fill entirely, just added a clean grey outline
-                    let bg = scene.add.rectangle(0, 0, 250, 100).setStrokeStyle(2, 0x7f8c8d);
+                    // CHANGED: Removed the .setStrokeStyle(...) completely so the border is gone!
+                    let bg = scene.add.rectangle(0, 0, 250, 100);
                     let nameTxt = scene.add.text(0, -20, def.name, { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                     
                     let buyBtn = createButton(scene, 0, 25, 180, 36, 0xf39c12, 0xffffff, `BUY FOR $${def.cost.toFixed(2)}`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+                        // ... [Keep your existing upgrade buyBtn logic here] ...
                         if (playerMoney >= def.cost) {
                             playerMoney -= def.cost;
                             scene.moneyText.setText('$' + playerMoney.toFixed(2));
@@ -100,6 +101,7 @@ function renderStoreView(scene, overlay) {
                             if (key === 'binder') {
                                 scene.binderZone.destroy();
                                 scene.binderZone = createButton(scene, 864, 138, 240, 70, 0xffc87c, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
+                                    scene.closeAllOverlays(); // NEW: Make sure unlocking the binder applies the exclusive overlay logic!
                                     renderBinderGrid(scene, scene.binderOverlay); scene.binderOverlay.setVisible(true); 
                                 });
                             }
