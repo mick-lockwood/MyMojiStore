@@ -82,13 +82,11 @@ loadGame();
 
 function checkBailout(scene) {
     let totalCards = Object.values(playerInventory).reduce((a, b) => a + b, 0) + cardsOnTable.length;
-    let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
-    
-    // NEW: Dynamically find the cheapest pack in the database
+    let totalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
     let cheapestPackCost = Math.min(...Object.values(packDatabase).map(p => p.cost));
     
-    // If player has less than the cheapest pack and NOTHING to sell
     if (playerMoney < cheapestPackCost && totalPacks === 0 && totalCards === 0) {
+        gameStats.bailouts++;
         playerMoney += 20.00;
         
         // Update the UI if the scene is available
