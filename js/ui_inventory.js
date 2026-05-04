@@ -11,10 +11,10 @@ function createInventoryOverlay(scene) {
 
     overlay.add([overlay.bg, closeTxt]);
 
-    // FIXED: Pushed tabs down to -240 (Below the title)
-    const packsTab = scene.add.text(-100, -240, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    // Pushed up to -250
+    const packsTab = scene.add.text(-100, -250, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     let dblLabel = playerUnlocks.binder ? 'DOUBLES' : 'CARDS';
-    const doublesTab = scene.add.text(100, -240, dblLabel, { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    const doublesTab = scene.add.text(100, -250, dblLabel, { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     
     overlay.packsTab = packsTab; 
     overlay.doublesTab = doublesTab; 
