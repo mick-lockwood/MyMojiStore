@@ -1,26 +1,28 @@
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
     
-    const bg = scene.add.rectangle(0, 0, 600, 420, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
+    // INCREASED HEIGHT: From 420 to 500 to comfortably fit the 4th row of colors!
+    const bg = scene.add.rectangle(0, 0, 600, 500, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
     overlay.add(bg); 
     
-    const title = scene.add.text(0, -170, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
-    const closeTxt = scene.add.text(270, -170, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    // Adjusted Y coords to match taller background
+    const title = scene.add.text(0, -210, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
+    const closeTxt = scene.add.text(270, -210, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    const resetBtn = createButton(scene, 0, 160, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-        if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
-    });
-
-    const instrBtn = createButton(scene, 0, 100, 200, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+    const instrBtn = createButton(scene, 0, 130, 200, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
         alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 108 MyMojis!");
+    });
+    
+    const resetBtn = createButton(scene, 0, 190, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
     overlay.paletteContainer = scene.add.container(0, 0);
     overlay.add([title, closeTxt, resetBtn, instrBtn, overlay.paletteContainer]);
 
-    const stdColors = [0x1a1a1a, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad, 0xd35400];
-    const vipColors = [0xf1c40f, 0xbdc3c7, 0xcd7f32, 0xff00ff];
+    const stdColors = [0x1a1a1a, 0xfce883, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad];
+    const vipColors = [0xd35400, 0xf1c40f, 0xbdc3c7, 0xff00ff];
     const allColors = [...stdColors, ...vipColors];
 
     overlay.renderPalettes = () => {
@@ -44,7 +46,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
             allColors.forEach((color, index) => {
                 let isVip = index >= stdColors.length;
-                let isUnlocked = playerUnlocks.colors.includes(color);
+                let isUnlocked = playerUnlocks.colors.includes(color) || color === 0xfce883; // 0xfce883 is the default banner yellow, so it's always unlocked
                 let isActive = themeColors.active && themeColors.active[type] === color; 
                 
                 let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setInteractive({ useHandCursor: true });
@@ -76,7 +78,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
                 } else {
                     if (isActive) {
-                        let checkColor = (color === 0xf4f4f4 || color === 0xbdc3c7 || color === 0xf1c40f) ? '#000000' : '#ffffff';
+                        let checkColor = (color === 0xf4f4f4 || color === 0xbdc3c7 || color === 0xf1c40f || color === 0xfce883) ? '#000000' : '#ffffff';
                         let checkTxt = scene.add.text(startX + (index * spacing), y, '✔', { fontSize: '18px', color: checkColor, fontStyle: 'bold' }).setOrigin(0.5);
                         overlay.paletteContainer.add([swatch, checkTxt]);
                     } else {
@@ -94,6 +96,10 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                             themeColors.table = '#' + color.toString(16).padStart(6, '0'); 
                             scene.cameras.main.setBackgroundColor(themeColors.table); 
                         }
+                        if (type === 'banner') { 
+                            themeColors.banner = color; 
+                            scene.headerBg.setFillStyle(color); 
+                        }
                         if (type === 'binder') { 
                             themeColors.binder = color; 
                             binderOverlay.bg.setFillStyle(color); 
@@ -109,9 +115,11 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             });
         };
 
-        drawRow(-90, "Table Color", 'table');
-        drawRow(-30, "Binder Color", 'binder');
-        drawRow(30, "Inventory Color", 'inv');
+        // NEW: Draw the 4 rows!
+        drawRow(-130, "Table Color", 'table');
+        drawRow(-70, "Banner Color", 'banner');
+        drawRow(-10, "Binder Color", 'binder');
+        drawRow(50, "Inventory Color", 'inv');
     };
 
     overlay.renderPalettes(); 
