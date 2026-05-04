@@ -9,8 +9,10 @@ function createStoreOverlay(scene) {
     overlay.bg = bg;
     
     const title = scene.add.text(0, -290, 'MOJIMART', { fontFamily: 'Impact, sans-serif', fontSize: '32px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
-    
+    overlay.titleTxt = title;
+
     const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: bgContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    overlay.closeTxt = closeTxt;
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
     
@@ -32,8 +34,13 @@ function renderStoreView(scene, overlay) {
     let storeBgColor = themeColors.active.store || 0x1a1a1a; 
     let bgContrast = getContrastColor(storeBgColor);
 
+    // <--- Dynamically update the main title and close button! --->
+    if (overlay.titleTxt) overlay.titleTxt.setColor(bgContrast);
+    if (overlay.closeTxt) overlay.closeTxt.setColor(bgContrast);
+
     let totalItems = 0;
     let totalCost = 0;
+    
     for (let k in shoppingCart) {
         totalItems += shoppingCart[k];
         totalCost += shoppingCart[k] * packDatabase[k].cost;
