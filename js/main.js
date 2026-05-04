@@ -263,23 +263,24 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     const card = scene.add.container(x, y);
     card.add(createCardGraphic(scene, mojiData));
     
-    // NEW: Add the tilted "NEW!" badge if this card has never been collected
+    // Chunky star-shaped badge pushed off the top-left corner
     if (isNew) {
-        let newBg = scene.add.rectangle(-75, -135, 60, 24, 0xe74c3c).setAngle(-15).setStrokeStyle(2, 0xffffff);
-        let newTxt = scene.add.text(-75, -135, 'NEW!', { fontFamily: 'Arial', fontSize: '14px', color: '#fff', fontStyle: 'bold' }).setAngle(-15).setOrigin(0.5);
-        card.add([newBg, newTxt]);
-    }
-    
-    card.setSize(220, 320);
-    card.setInteractive();
-    scene.input.setDraggable(card);
-    card.setDepth(10); 
+        let badgeX = -110; // Left edge of the card
+        let badgeY = -160; // Top edge of the card
+        
+        // Stacked stars to create the thick border look
+        let starOutline = scene.add.star(badgeX, badgeY, 5, 22, 42, 0x1a1a1a);
+        let starWhite = scene.add.star(badgeX, badgeY, 5, 18, 38, 0xffffff);
+        let starRed = scene.add.star(badgeX, badgeY, 5, 14, 34, 0xe74c3c);
+        let newTxt = scene.add.text(badgeX, badgeY, 'NEW', { fontFamily: 'Impact', fontSize: '16px', color: '#fce883', stroke: '#1a1a1a', strokeThickness: 3 }).setOrigin(0.5);
+        
+        // Give them a slight tilt
+        starOutline.setAngle(-15);
+        starWhite.setAngle(-15);
+        starRed.setAngle(-15);
+        newTxt.setAngle(-15);
 
-    card.instanceId = existingInstanceId || ('card_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
-    
-    if (!existingInstanceId) {
-        cardsOnTable.push({ instanceId: card.instanceId, mojiId: mojiData.id, x: x, y: y });
-        saveGame();
+        card.add([starOutline, starWhite, starRed, newTxt]);
     }
 
     card.startX = x;
