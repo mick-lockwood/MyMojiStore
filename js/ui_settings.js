@@ -1,22 +1,22 @@
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
     
-    // INCREASED HEIGHT: From 420 to 500 to comfortably fit the 4th row of colors!
-    const bg = scene.add.rectangle(0, 0, 600, 500, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
+    // INCREASED HEIGHT: From 500 to 560 to comfortably fit a 5th row for the Store!
+    const bg = scene.add.rectangle(0, 0, 600, 560, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
     overlay.add(bg); 
     
     // Adjusted Y coords to match taller background
-    const title = scene.add.text(0, -210, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
-    const closeTxt = scene.add.text(270, -210, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    const title = scene.add.text(0, -240, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
+    const closeTxt = scene.add.text(270, -240, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    const instrBtn = createButton(scene, 0, 130, 200, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+    const instrBtn = createButton(scene, 0, 160, 200, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
         alert(
             "HOW TO PLAY:\n\n" +
             "1. Buy packs from the Store.\n" +
             "2. Open packs in your Inventory.\n" +
             "3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n" +
-            "4. Collect all 144 MyMojis!\n\n" +
+            "4. Collect all 149 MyMojis!\n\n" +
             "💡 PRO TIPS:\n" +
             "- Check your Phone (📱) for special, high-paying NPC trade offers!\n" +
             "- Need cash fast? Use the 'Quick Sell' buttons in your Inventory to liquidate duplicate cards for 50% value.\n" +
@@ -24,7 +24,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         );
     });
     
-    const resetBtn = createButton(scene, 0, 190, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+    const resetBtn = createButton(scene, 0, 220, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
@@ -56,7 +56,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
             allColors.forEach((color, index) => {
                 let isVip = index >= stdColors.length;
-                let isUnlocked = playerUnlocks.colors.includes(color) || color === 0xfce883; // 0xfce883 is the default banner yellow, so it's always unlocked
+                let isUnlocked = playerUnlocks.colors.includes(color) || color === 0xfce883; 
                 let isActive = themeColors.active && themeColors.active[type] === color; 
                 
                 let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setInteractive({ useHandCursor: true });
@@ -88,7 +88,8 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
                 } else {
                     if (isActive) {
-                        let checkColor = (color === 0xf4f4f4 || color === 0xbdc3c7 || color === 0xf1c40f || color === 0xfce883) ? '#000000' : '#ffffff';
+                        // NEW: Utilizing the helper function to automatically determine checkmark color!
+                        let checkColor = getContrastColor(color);
                         let checkTxt = scene.add.text(startX + (index * spacing), y, '✔', { fontSize: '18px', color: checkColor, fontStyle: 'bold' }).setOrigin(0.5);
                         overlay.paletteContainer.add([swatch, checkTxt]);
                     } else {
@@ -110,7 +111,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                             themeColors.banner = color; 
                             scene.headerBg.setFillStyle(color); 
                             
-                            // NEW: Instantly update header text colors!
                             let contrastTxt = getContrastColor(color);
                             scene.moneyText.setColor(contrastTxt);
                             scene.packsText.setColor(contrastTxt);
@@ -120,7 +120,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                             themeColors.binder = color; 
                             binderOverlay.bg.setFillStyle(color); 
                             
-                            // NEW: Instantly refresh the binder UI to flip text colors!
                             if (scene.binderOverlay && scene.binderOverlay.visible) {
                                 renderBinderGrid(scene, scene.binderOverlay);
                             }
@@ -129,11 +128,17 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                             themeColors.inventory = color; 
                             inventoryOverlay.bg.setFillStyle(color); 
 
-                            // NEW: Instantly refresh the inventory UI!
                             if (scene.inventoryOverlay && scene.inventoryOverlay.visible) {
                                 renderInventoryView(scene, scene.inventoryOverlay);
                             }
                         }
+                        // NEW: Update Store logic (Assuming your storeOverlay has a `.bg` property like binder/inv do)
+                        if (type === 'store') {
+                            themeColors.store = color;
+                            // If you need it to immediately refresh while open, you can call renderStoreView here
+                            // but usually settings overlays cover the screen, so it applies on next open.
+                        }
+                        
                         saveGame(); 
                         overlay.renderPalettes(); 
                     });
@@ -141,11 +146,12 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             });
         };
 
-        // NEW: Draw the 4 rows!
-        drawRow(-130, "Table Color", 'table');
-        drawRow(-70, "Banner Color", 'banner');
-        drawRow(-10, "Binder Color", 'binder');
-        drawRow(50, "Inventory Color", 'inv');
+        // NEW: Draw the 5 rows!
+        drawRow(-160, "Table Color", 'table');
+        drawRow(-100, "Banner Color", 'banner');
+        drawRow(-40, "Binder Color", 'binder');
+        drawRow(20, "Inventory Color", 'inv');
+        drawRow(80, "Store Color", 'store');
     };
 
     overlay.renderPalettes(); 
