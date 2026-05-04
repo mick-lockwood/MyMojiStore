@@ -10,7 +10,8 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const closeTxt = scene.add.text(270, -240, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    const instrBtn = createButton(scene, 0, 160, 200, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+    // CHANGED: Shrunk to 180px wide and moved left (-110 X coordinate)
+    const instrBtn = createButton(scene, -110, 160, 180, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         alert(
             "HOW TO PLAY:\n\n" +
             "1. Buy packs from the Store.\n" +
@@ -23,13 +24,23 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             "- Bankrupt? Don't panic! If you have absolutely 0 cards, 0 packs, and can't afford a new pack, the MyMoji Foundation will automatically grant you a $20 bailout so you can keep playing!"
         );
     });
+
+    // NEW: Achievements button on the right (110 X coordinate)
+    const achBtn = createButton(scene, 110, 160, 180, 40, 0xf1c40f, 0x000000, '🏆 ACHIEVEMENTS', { fontFamily: 'Arial', fontSize: '16px', color: '#000', fontStyle: 'bold' }, () => {
+        overlay.setVisible(false); // Hide the settings menu
+        renderAchievementsView(scene, scene.achievementsOverlay); // Build the latest achievement data
+        scene.achievementsOverlay.setVisible(true); // Pop it open!
+    });
     
+    // (Reset button stays exactly the same)
     const resetBtn = createButton(scene, 0, 220, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
     overlay.paletteContainer = scene.add.container(0, 0);
-    overlay.add([title, closeTxt, resetBtn, instrBtn, overlay.paletteContainer]);
+    
+    // Make sure achBtn is added to the overlay array!
+    overlay.add([title, closeTxt, resetBtn, instrBtn, achBtn, overlay.paletteContainer]);
 
     const stdColors = [0x1a1a1a, 0xfce883, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad];
     const vipColors = [0xd35400, 0xf1c40f, 0xbdc3c7, 0xff00ff];
