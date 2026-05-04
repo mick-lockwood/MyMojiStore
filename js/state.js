@@ -71,9 +71,18 @@ function checkBailout(scene) {
     let totalCards = Object.values(playerInventory).reduce((a, b) => a + b, 0) + cardsOnTable.length;
     let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
     
-    if (playerMoney < 5.00 && totalPacks === 0 && totalCards === 0) {
+    // NEW: Dynamically find the cheapest pack in the database
+    let cheapestPackCost = Math.min(...Object.values(packDatabase).map(p => p.cost));
+    
+    // If player has less than the cheapest pack and NOTHING to sell
+    if (playerMoney < cheapestPackCost && totalPacks === 0 && totalCards === 0) {
         playerMoney += 20.00;
-        scene.moneyText.setText('$' + playerMoney.toFixed(2));
+        
+        // Update the UI if the scene is available
+        if (scene && scene.moneyText) {
+            scene.moneyText.setText('$' + playerMoney.toFixed(2));
+        }
+        
         alert("BAILOUT! The MyMoji Foundation saw you were completely broke and deposited $20.00 into your account!");
         saveGame();
     }
