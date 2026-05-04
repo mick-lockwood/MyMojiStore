@@ -55,6 +55,8 @@ function createBinderOverlay(scene) {
     let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
     
     let trackerTxt = scene.add.text(0, -170, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0.5);
+    overlay.gridContainer.add([title, trackerTxt]); // Make sure trackerTxt is added to the container!
+    
     overlay.prevBtn = scene.add.text(-440, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     overlay.nextBtn = scene.add.text(440, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
     
@@ -73,8 +75,6 @@ function createBinderOverlay(scene) {
 
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
-
-    overlay.gridContainer.add([title, trackerTxt]); // Make sure trackerTxt is added to the container!
     
     let filteredDb = myMojiDatabase.filter(moji => {
         let owned = Number(playerInventory[moji.id]);
