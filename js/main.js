@@ -51,7 +51,7 @@ function create() {
     // Position the pencil dynamically based on how long the text is
     let updatePencilPos = () => { scene.pencilIcon.setX(512 + (scene.titleText.width / 2) + 25); };
     
-    scene.pencilIcon = scene.add.text(0, 40, '✏️', { fontSize: '24px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    scene.pencilIcon = scene.add.text(0, 40, '✏️', { fontSize: '24px', padding: { top: 10, bottom: 10 } }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     updatePencilPos(); // Initial placement
 
     scene.pencilIcon.on('pointerover', () => scene.tweens.add({ targets: scene.pencilIcon, scale: 1.2, duration: 100 }));
@@ -183,29 +183,34 @@ function create() {
         callback: () => {
             checkBailout(scene);
 
-            // NEW: Check if a trade has expired
-            if (currentTrade && Date.now() > tradeExpirationTime) {
-                // Wipe the trade out
-                currentTrade = null;
-                unreadMessage = false;
-                if (scene.phoneNotification) scene.phoneNotification.setVisible(false);
-                saveGame();
+            // Check if a trade is currently active
+            if (currentTrade) {
+                let secondsLeft = Math.max(0, Math.floor((tradeExpirationTime - Date.now()) / 1000));
                 
-                // If they are currently staring at the phone when it expires, kick them out or refresh it!
-                if (scene.phoneOverlay && scene.phoneOverlay.visible) {
-                    // Update the phone view if it exists in the global scope, or just close it
-                    if (typeof renderPhoneView === 'function') {
-                        renderPhoneView(scene, scene.phoneOverlay);
-                    }
+                // NEW: If the phone overlay is open, tick the timer down visually!
+                if (scene.activePhoneTimerText && scene.activePhoneTimerText.active) {
+                    scene.activePhoneTimerText.setText(`⏳ ${secondsLeft}s`);
                 }
 
-                // Queue up a new trade to happen sometime in the next 30-60 seconds
-                scene.time.delayedCall(Phaser.Math.Between(30000, 60000), () => generateTrade(scene));
+                // If time ran out, wipe the trade
+                if (Date.now() > tradeExpirationTime) {
+                    currentTrade = null;
+                    unreadMessage = false;
+                    if (scene.phoneNotification) scene.phoneNotification.setVisible(false);
+                    saveGame();
+                    
+                    if (scene.phoneOverlay && scene.phoneOverlay.visible) {
+                        if (typeof renderPhoneView === 'function') {
+                            renderPhoneView(scene, scene.phoneOverlay);
+                        }
+                    }
+
+                    scene.time.delayedCall(Phaser.Math.Between(30000, 60000), () => generateTrade(scene));
+                }
             }
         },
         loop: true
     });
-}
 
 function spawnBoosterPack(scene, packId) {
     const packDef = packDatabase[packId];
@@ -284,18 +289,15 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     const card = scene.add.container(x, y);
     card.add(createCardGraphic(scene, mojiData));
     
-    // Chunky star-shaped badge pushed off the top-left corner
     if (isNew) {
-        let badgeX = -110; // Left edge of the card
-        let badgeY = -160; // Top edge of the card
+        let badgeX = -110; 
+        let badgeY = -160; 
         
-        // Stacked stars to create the thick border look
         let starOutline = scene.add.star(badgeX, badgeY, 5, 22, 42, 0x1a1a1a);
         let starWhite = scene.add.star(badgeX, badgeY, 5, 18, 38, 0xffffff);
         let starRed = scene.add.star(badgeX, badgeY, 5, 14, 34, 0xe74c3c);
         let newTxt = scene.add.text(badgeX, badgeY, 'NEW', { fontFamily: 'Impact', fontSize: '16px', color: '#fce883', stroke: '#1a1a1a', strokeThickness: 3 }).setOrigin(0.5);
         
-        // Give them a slight tilt
         starOutline.setAngle(-15);
         starWhite.setAngle(-15);
         starRed.setAngle(-15);
@@ -303,6 +305,20 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
 
         card.add([starOutline, starWhite, starRed, newTxt]);
     }
+
+    // --- THESE WERE THE MISSING LINES! ---
+    card.setSize(220, 320);
+    card.setInteractive();
+    scene.input.setDraggable(card);
+    card.setDepth(10); 
+
+    card.instanceId = existingInstanceId || ('card_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
+    
+    if (!existingInstanceId) {
+        cardsOnTable.push({ instanceId: card.instanceId, mojiId: mojiData.id, x: x, y: y });
+        saveGame();
+    }
+    // -------------------------------------
 
     card.startX = x;
     card.startY = y;
