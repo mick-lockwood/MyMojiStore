@@ -142,12 +142,14 @@ function renderAchievementsView(scene, overlay) {
     overlay.listContainer.add([prevBtn, pageTxt, nextBtn]);
 
     // --- Draw the Achievement List ---
-    let startY = -180;
+    let startY = -155; // PUSHED DOWN (was -180)
     let startIndex = overlay.currentPage * itemsPerPage;
     let endIndex = Math.min(startIndex + itemsPerPage, achievementDatabase.length);
 
     let unlockedCount = playerAchievements.length;
-    let trackerTxt = scene.add.text(0, -210, `UNLOCKED: ${unlockedCount} / ${achievementDatabase.length}`, { fontSize: '18px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
+    
+    // PUSHED UP (was -210)
+    let trackerTxt = scene.add.text(0, -225, `UNLOCKED: ${unlockedCount} / ${achievementDatabase.length}`, { fontSize: '18px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
     overlay.listContainer.add(trackerTxt);
 
     for (let i = startIndex; i < endIndex; i++) {
