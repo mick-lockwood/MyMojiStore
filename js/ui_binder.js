@@ -64,21 +64,21 @@ function createBinderOverlay(scene) {
 
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
-    
-    // --- Dynamic Collection Tracker & Title ---
-    
-    // Placed to the right of the Filter button (assuming Filter ends around x: -20)
-    const title = scene.add.text(20, -220, 'BINDER', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }).setOrigin(0, 0.5);
+
+    // NEW: Calculate the dynamic text color for the Binder!
+    let bgContrast = getContrastColor(themeColors.active.binder);
+
+    // Apply the dynamic color to the Title
+    const title = scene.add.text(20, -220, 'BINDER', { fontFamily: 'Impact', fontSize: '32px', color: bgContrast }).setOrigin(0, 0.5);
     
     let totalCards = myMojiDatabase.length;
     let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
     let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
     
-    // Placed right next to the BINDER title
+    // (We leave the tracker text orange so it always pops!)
     let trackerTxt = scene.add.text(140, -220, `-  COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0, 0.5);
     
     overlay.gridContainer.add([title, trackerTxt]);
-    // -----------------------------------------------
     
     let filteredDb = myMojiDatabase.filter(moji => {
         let owned = Number(playerInventory[moji.id]);
@@ -129,9 +129,10 @@ function renderBinderGrid(scene, overlay) {
     let endIndex = Math.min(startIndex + 18, filteredDb.length);
 
     if (filteredDb.length === 0) {
-        let emptyTxt = scene.add.text(0, 0, "No cards match this filter.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+        // Apply the dynamic color to the "Empty" text and keep your return statement!
+        let emptyTxt = scene.add.text(0, 0, "No cards match this filter.", { fontSize: '24px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
         overlay.gridContainer.add(emptyTxt);
-        return;
+        return; 
     }
 
     for (let i = startIndex; i < endIndex; i++) {
