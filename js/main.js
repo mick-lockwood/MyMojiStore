@@ -178,10 +178,31 @@ function create() {
     });
 
     // The Global Watcher! 
-    // This runs in the background every 1 second and checks if the player is soft-locked.
     scene.time.addEvent({
         delay: 1000,
-        callback: () => checkBailout(scene),
+        callback: () => {
+            checkBailout(scene);
+
+            // NEW: Check if a trade has expired
+            if (currentTrade && Date.now() > tradeExpirationTime) {
+                // Wipe the trade out
+                currentTrade = null;
+                unreadMessage = false;
+                if (scene.phoneNotification) scene.phoneNotification.setVisible(false);
+                saveGame();
+                
+                // If they are currently staring at the phone when it expires, kick them out or refresh it!
+                if (scene.phoneOverlay && scene.phoneOverlay.visible) {
+                    // Update the phone view if it exists in the global scope, or just close it
+                    if (typeof renderPhoneView === 'function') {
+                        renderPhoneView(scene, scene.phoneOverlay);
+                    }
+                }
+
+                // Queue up a new trade to happen sometime in the next 30-60 seconds
+                scene.time.delayedCall(Phaser.Math.Between(30000, 60000), () => generateTrade(scene));
+            }
+        },
         loop: true
     });
 }
