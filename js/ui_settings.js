@@ -109,6 +109,12 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                         if (type === 'banner') { 
                             themeColors.banner = color; 
                             scene.headerBg.setFillStyle(color); 
+                            
+                            // NEW: Instantly update header text colors!
+                            let contrastTxt = getContrastColor(color);
+                            scene.moneyText.setColor(contrastTxt);
+                            scene.packsText.setColor(contrastTxt);
+                            scene.titleText.setColor(contrastTxt);
                         }
                         if (type === 'binder') { 
                             themeColors.binder = color; 
