@@ -174,8 +174,6 @@ function renderStoreView(scene, overlay) {
                 
                 saveGame();
                 
-                checkBailout(scene);
-                
                 scene.moneyText.setColor('#f1c40f'); 
                 scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222'));
 
