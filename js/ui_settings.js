@@ -11,7 +11,17 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
     const instrBtn = createButton(scene, 0, 130, 200, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
-        alert("HOW TO PLAY:\n\n1. Buy packs from the Store.\n2. Open packs in your Inventory.\n3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n4. Collect all 108 MyMojis!");
+        alert(
+            "HOW TO PLAY:\n\n" +
+            "1. Buy packs from the Store.\n" +
+            "2. Open packs in your Inventory.\n" +
+            "3. Drag cards to the Binder to save them, or to the Market to sell them for cash.\n" +
+            "4. Collect all 108 MyMojis!\n\n" +
+            "💡 PRO TIPS:\n" +
+            "- Check your Phone (📱) for special, high-paying NPC trade offers!\n" +
+            "- Need cash fast? Use the 'Quick Sell' buttons in your Inventory to liquidate duplicate cards for 50% value.\n" +
+            "- Bankrupt? Don't panic! If you have absolutely 0 cards, 0 packs, and can't afford a new pack, the MyMoji Foundation will automatically grant you a $20 bailout so you can keep playing!"
+        );
     });
     
     const resetBtn = createButton(scene, 0, 190, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
