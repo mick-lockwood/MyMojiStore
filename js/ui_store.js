@@ -46,10 +46,23 @@ function renderStoreView(scene, overlay) {
 
         if (overlay.currentStoreTab === 'packs') {
             let packKeys = Object.keys(packDatabase);
-            let startX = -250;
+            
+            // Grid alignment math
+            let startX = -280; 
+            let startY = -120; 
+            let spacingX = 280;
+            let spacingY = 240;
+
             packKeys.forEach((key, index) => {
+                let col = index % 3; // 0, 1, 2
+                let row = Math.floor(index / 3); // 0 (top row), 1 (bottom row)
+                
                 let def = packDatabase[key];
-                let packCont = scene.add.container(startX + (index * 250), -50);
+                
+                // Calculate position and shrink slightly to fit 6 packs nicely
+                let packCont = scene.add.container(startX + (col * spacingX), startY + (row * spacingY));
+                packCont.setScale(0.85); 
+
                 packCont.add(createPackGraphic(scene, key));
 
                 let priceTxt = scene.add.text(0, 130, '$' + def.cost.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
@@ -61,7 +74,8 @@ function renderStoreView(scene, overlay) {
                 packCont.add([priceTxt, addBtn]);
                 overlay.contentContainer.add(packCont);
             });
-        } 
+        }
+            
         else if (overlay.currentStoreTab === 'unlocks') {
             let upgStartX = -150;
             let upgIndex = 0;
