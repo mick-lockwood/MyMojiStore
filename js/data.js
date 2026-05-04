@@ -9,3 +9,9 @@ const packDatabase = {
     "food": { name: "Food Pack", cost: 12.00, color: 0xe74c3c, category: "Food", weights: { "Common": 7500, "Rare": 2000, "Epic": 450, "Legendary": 48, "Glitch": 2 } },
     "animals": { name: "Animals Pack", cost: 12.00, color: 0x3498db, category: "Animals", weights: { "Common": 7500, "Rare": 2000, "Epic": 450, "Legendary": 48, "Glitch": 2 } }
 };
+
+// --- DATABASE: UPGRADES ---
+const upgradeDatabase = { 
+    "binder": { name: "Pro Binder", cost: 150.00 }, 
+    "colorThemes": { name: "Color Palettes", cost: 75.00 } 
+};
