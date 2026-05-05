@@ -370,19 +370,10 @@ function fireParticles(scene, x, y, rarity) {
     }
 }
 
-function createPackGraphic(scene, packId) {
-    const packDef = packDatabase[packId];
-    const bg = scene.add.rectangle(0, 0, 140, 200, packDef.color).setStrokeStyle(4, 0x1a1a1a);
-    const strip = scene.add.rectangle(0, -70, 140, 30, 0x1a1a1a);
-    const nameTxt = scene.add.text(0, 0, packDef.name.replace(' ', '\n'), { fontFamily: 'Arial', fontSize: '20px', color: '#ffffff', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
-    return [bg, strip, nameTxt];
-}
-
 function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, isNew = false, startFaceDown = false) {
     const card = scene.add.container(x, y);
     card.setSize(220, 320);
 
-    // Helper to add the NEW badge after a flip
     const attachNewBadge = () => {
         if (!isNew) return;
         let badgeX = -110, badgeY = -160;
@@ -398,14 +389,13 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
         card.add(backGraphics);
         card.isFaceDown = true;
     } else {
-        // FIXED: Only generate the front of the card immediately if it starts face up!
         let faceGraphics = createCardGraphic(scene, mojiData);
         card.add(faceGraphics);
         attachNewBadge();
     }
 
     card.setInteractive();
-    scene.input.setDraggable(card, !startFaceDown); // Prevent dragging while face down
+    scene.input.setDraggable(card, !startFaceDown); 
     card.setDepth(10);
 
     card.instanceId = existingInstanceId || ('card_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
@@ -418,54 +408,60 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     card.startX = x;
     card.startY = y;
 
-    // --- THE FLIP LOGIC ---
     card.on('pointerdown', function () {
         if (card.isFaceDown) {
             card.isFaceDown = false;
-            card.setDepth(50); // Bring it to the front so it flips over the other cards!
+            
+            // FIXED: Force this specific card to the absolute top of the display list!
+            scene.children.bringToTop(card);
+            card.setDepth(50); 
             
             let isEpic = mojiData.rarity === 'Legendary' || mojiData.rarity === 'Glitch';
 
-            // Tween 1: Squish the card flat (simulate turning sideways)
             scene.tweens.add({
                 targets: card,
                 scaleX: 0,
                 duration: 150,
                 onComplete: () => {
-                    card.removeAll(true); // Delete the card back
+                    card.removeAll(true); 
                     
-                    // FIXED: Generate the front of the card exactly as it flips!
                     let faceGraphics = createCardGraphic(scene, mojiData);
                     card.add(faceGraphics); 
 
                     const finishFlip = () => {
-                        // Tween 2: Expand the card back to full size
                         scene.tweens.add({
                             targets: card,
                             scaleX: 1,
                             duration: 150,
                             onComplete: () => {
-                                attachNewBadge(); // Only show NEW once they see it!
-                                scene.input.setDraggable(card, true); // Allow dragging now
+                                attachNewBadge(); 
+                                scene.input.setDraggable(card, true); 
+                                
+                                // FIXED: Drop the depth back down so it doesn't block future drags!
+                                card.setDepth(10);
+                                
                                 if (isEpic) fireParticles(scene, card.x, card.y, mojiData.rarity);
                             }
                         });
                     };
 
                     if (isEpic) {
-                        scene.cameras.main.shake(600, 0.015); // Screen shake!
-                        scene.time.delayedCall(800, finishFlip); // 0.8 second dramatic pause
+                        scene.cameras.main.shake(600, 0.015); 
+                        scene.time.delayedCall(800, finishFlip); 
                     } else {
-                        finishFlip(); // Normal cards flip instantly
+                        finishFlip(); 
                     }
                 }
             });
         }
     });
 
-    // Only allow drag scaling if the card is already flipped
     card.on('dragstart', function () { 
         if (card.isFaceDown) return;
+        
+        // FIXED: Also apply the top-layer logic when picking up a card to drag it!
+        scene.children.bringToTop(this);
+        
         this.setScale(1.05); 
         this.setDepth(50); 
         this.startX = this.x; 
