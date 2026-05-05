@@ -174,12 +174,12 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             });
         };
 
-        drawRow(-160, "Table Color", 'table');
-        drawRow(-100, "Banner Color", 'banner');
-        drawRow(-40, "Binder Color", 'binder');
-        drawRow(20, "Inventory Color", 'inv');
-        drawRow(80, "Store Color", 'store');
-        drawRow(140, "Trading Hall Color", 'trading');
+        drawRow(-160, "Table", 'table');
+        drawRow(-100, "Banner", 'banner');
+        drawRow(-40, "Binder", 'binder');
+        drawRow(20, "Inventory", 'inv');
+        drawRow(80, "Store", 'store');
+        drawRow(140, "Trading Hall", 'trading');
     };
 
     overlay.renderPalettes(); 
