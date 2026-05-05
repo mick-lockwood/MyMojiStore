@@ -367,41 +367,48 @@ function addShimmerEffect(scene, card, rarity) {
         repeat: -1
     });
 
-    // 2. FIXED: Exact-Fit Foil Flash
-    // We make it 210x310 so it perfectly coats the inside of the card border
-    let foilFlash = scene.add.rectangle(0, 0, 210, 310, 0xffffff, 0);
-    foilFlash.setBlendMode(Phaser.BlendModes.ADD);
-    card.addAt(foilFlash, 2); // Place it right over the card background
+    // 2. FIXED: Vertical Foil Sweep
+    // By keeping it vertical (no angle) and exactly 310px tall, it never spills out!
+    let sweep = scene.add.rectangle(-150, 0, 50, 310, 0xffffff, 0.3);
+    sweep.setBlendMode(Phaser.BlendModes.ADD);
+    card.add(sweep); // Add it to the very top so it brightens everything!
 
     scene.tweens.add({
-        targets: foilFlash,
-        alpha: { from: 0.5, to: 0 },
+        targets: sweep,
+        x: 150, // Sweep from left to right
         duration: 1000,
-        ease: 'Sine.easeOut',
+        ease: 'Sine.easeInOut',
         repeat: -1,
         repeatDelay: 1500 
     });
 
-    // 3. Continuous Ambient Sparkles
+    // 3. UPGRADED: A storm of floating sparkles!
     const spawnSparkle = () => {
         if (!card.active) return; 
         
-        let sx = Phaser.Math.Between(-100, 100);
-        let sy = Phaser.Math.Between(-150, 150);
-        let spark = scene.add.circle(sx, sy, Phaser.Math.Between(2, 5), 0xffffff);
-        spark.setBlendMode(Phaser.BlendModes.ADD);
-        card.add(spark);
-
-        scene.tweens.add({
-            targets: spark,
-            y: sy - 40, 
-            alpha: { from: 1, to: 0 },
-            scale: { from: 1, to: 0 },
-            duration: Phaser.Math.Between(800, 1500),
-            onComplete: () => spark.destroy()
-        });
+        // Spawn 2 to 4 sparkles every single tick
+        let sparkCount = Phaser.Math.Between(2, 4);
         
-        scene.time.delayedCall(Phaser.Math.Between(200, 400), spawnSparkle);
+        for(let i = 0; i < sparkCount; i++) {
+            let sx = Phaser.Math.Between(-105, 105);
+            let sy = Phaser.Math.Between(-155, 155);
+            let spark = scene.add.circle(sx, sy, Phaser.Math.Between(1, 4), 0xffffff);
+            spark.setBlendMode(Phaser.BlendModes.ADD);
+            card.add(spark);
+
+            scene.tweens.add({
+                targets: spark,
+                y: sy - Phaser.Math.Between(30, 80), // Float upward
+                x: sx + Phaser.Math.Between(-20, 20), // Drift slightly sideways
+                alpha: { from: 1, to: 0 },
+                scale: { from: 1, to: 0 },
+                duration: Phaser.Math.Between(600, 1200),
+                onComplete: () => spark.destroy()
+            });
+        }
+        
+        // Trigger the next batch much faster (every 100-200ms)
+        scene.time.delayedCall(Phaser.Math.Between(100, 200), spawnSparkle);
     };
     
     spawnSparkle(); 
