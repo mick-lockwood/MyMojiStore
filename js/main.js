@@ -382,8 +382,6 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     const card = scene.add.container(x, y);
     card.setSize(220, 320);
 
-    let faceGraphics = createCardGraphic(scene, mojiData);
-
     // Helper to add the NEW badge after a flip
     const attachNewBadge = () => {
         if (!isNew) return;
@@ -400,12 +398,14 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
         card.add(backGraphics);
         card.isFaceDown = true;
     } else {
+        // FIXED: Only generate the front of the card immediately if it starts face up!
+        let faceGraphics = createCardGraphic(scene, mojiData);
         card.add(faceGraphics);
         attachNewBadge();
     }
 
     card.setInteractive();
-    scene.input.setDraggable(card, !startFaceDown); // Prevent dragging while face down!
+    scene.input.setDraggable(card, !startFaceDown); // Prevent dragging while face down
     card.setDepth(10);
 
     card.instanceId = existingInstanceId || ('card_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
@@ -418,7 +418,7 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     card.startX = x;
     card.startY = y;
 
-    // --- NEW: THE FLIP LOGIC ---
+    // --- THE FLIP LOGIC ---
     card.on('pointerdown', function () {
         if (card.isFaceDown) {
             card.isFaceDown = false;
@@ -433,7 +433,10 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                 duration: 150,
                 onComplete: () => {
                     card.removeAll(true); // Delete the card back
-                    card.add(faceGraphics); // Attach the real face
+                    
+                    // FIXED: Generate the front of the card exactly as it flips!
+                    let faceGraphics = createCardGraphic(scene, mojiData);
+                    card.add(faceGraphics); 
 
                     const finishFlip = () => {
                         // Tween 2: Expand the card back to full size
