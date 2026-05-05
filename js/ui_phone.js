@@ -60,8 +60,9 @@ function renderPhoneView(scene, overlay) {
     };
 
     if (isBuy) {
-        let owned = playerInventory[moji.id];
-        let canFulfill = playerUnlocks.binder ? owned > 1 : owned > 0;
+        let owned = playerInventory[moji.id] || 0;
+        // As long as you have at least 1, you can sell it!
+        let canFulfill = owned > 0; 
         
         if (canFulfill) {
             acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'SELL IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
@@ -69,7 +70,7 @@ function renderPhoneView(scene, overlay) {
                 scene.moneyText.setText('$' + playerMoney.toFixed(2)); finalizeTrade(`SOLD FOR $${currentTrade.price.toFixed(2)}!`);
             });
         } else {
-            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'NO SPARES', { fontSize: '14px', color: '#bdc3c7', fontStyle: 'bold'}, null);
+            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'NOT OWNED', { fontSize: '14px', color: '#bdc3c7', fontStyle: 'bold'}, null);
         }
     } else {
         if (playerMoney >= currentTrade.price) {
