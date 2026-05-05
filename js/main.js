@@ -170,7 +170,12 @@ function create() {
 
     // --- MAIN HUD BUTTONS & DROP ZONES ---
     addShadow(160, 138, 240, 70, 12);
-    let tradeBtn = createButton(scene, 160, 138, 240, 70, 0x57bcf2, 0x000000, 'TRADING STASH', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, null);
+    
+    let tradeBtn = createButton(scene, 160, 138, 240, 70, 0x8e44ad, 0x000000, 'TRADING HALL', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#ffffff' }, () => {
+        scene.closeAllOverlays();
+        renderTradingView(scene, scene.tradingOverlay);
+        scene.tradingOverlay.setVisible(true);
+    });
 
     let badgeBg = scene.add.rectangle(90, -25, 110, 26, 0xe74c3c).setStrokeStyle(2, 0xffffff);
     let badgeTxt = scene.add.text(90, -25, 'COMING SOON', { fontFamily: 'Arial', fontSize: '12px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
