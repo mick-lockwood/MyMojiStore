@@ -62,9 +62,13 @@ function renderInventoryView(scene, overlay) {
     
     overlay.doublesTab.setText(playerUnlocks.binder ? 'DOUBLES' : 'CARDS');
 
-    // FIXED: Apply dynamic contrast color to tabs based on which is active!
-    overlay.packsTab.setColor(overlay.currentTab === 'packs' ? bgContrast : '#7f8c8d');
-    overlay.doublesTab.setColor(overlay.currentTab === 'doubles' ? bgContrast : '#7f8c8d');
+    // FIXED: Both tabs always use the contrast color now...
+    overlay.packsTab.setColor(bgContrast);
+    overlay.doublesTab.setColor(bgContrast);
+    
+    // ...but we dim the inactive tab to 50% opacity!
+    overlay.packsTab.setAlpha(overlay.currentTab === 'packs' ? 1 : 0.5);
+    overlay.doublesTab.setAlpha(overlay.currentTab === 'doubles' ? 1 : 0.5);
     
     // Apply dynamic color to UI arrows and close button
     overlay.closeTxt.setColor(bgContrast);
