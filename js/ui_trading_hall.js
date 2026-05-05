@@ -1,14 +1,13 @@
 function createTradingOverlay(scene) {
-    let overlayBgColor = themeColors.active.store || 0x111111; 
+    // NEW: Now looks for a 'trading' color in your active theme!
+    let overlayBgColor = themeColors.active.trading || themeColors.active.store || 0x111111; 
     let bgContrast = getContrastColor(overlayBgColor);
 
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
 
-    // 1. TALLER BACKGROUND: Increased height to 680
     const bg = scene.add.rectangle(0, 0, 900, 680, overlayBgColor).setStrokeStyle(4, 0x9b59b6).setInteractive(); 
     overlay.bg = bg;
 
-    // 2. SHIFTED HEADER UP: Moved title and subtitle up slightly
     const title = scene.add.text(0, -300, 'THE TRADING HALL', { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
     overlay.titleTxt = title;
 
@@ -33,18 +32,20 @@ function createTradingOverlay(scene) {
 function renderTradingView(scene, overlay) {
     overlay.contentContainer.removeAll(true);
 
-    let overlayBgColor = themeColors.active.store || 0x111111; 
+    // Recalculate if theme changes
+    let overlayBgColor = themeColors.active.trading || themeColors.active.store || 0x111111; 
     let bgContrast = getContrastColor(overlayBgColor);
 
+    if (overlay.bg) overlay.bg.setFillStyle(overlayBgColor);
     if (overlay.titleTxt) overlay.titleTxt.setColor(bgContrast);
     if (overlay.subTitleTxt) overlay.subTitleTxt.setColor(bgContrast);
     if (overlay.closeTxt) overlay.closeTxt.setColor(bgContrast);
 
-    // 3. PERFECTED GRID MATH
+    // FIXED: Adjusted Row Spacing & Starting Heights
     let startX = -330; 
-    let startY = -120;  
+    let startY = -130;  
     let spacingX = 220;
-    let spacingY = 255; 
+    let spacingY = 285; 
     
     let missingCards = [];
     myMojiDatabase.forEach(moji => {
@@ -69,8 +70,6 @@ function renderTradingView(scene, overlay) {
         let row = Math.floor(index / 4); 
         
         let cardCont = scene.add.container(startX + (col * spacingX), startY + (row * spacingY));
-        
-        // 4. SCALED DOWN SLIGHTLY (0.6 instead of 0.65)
         cardCont.setScale(0.6); 
 
         let graphics = createCardGraphic(scene, moji);
@@ -78,11 +77,11 @@ function renderTradingView(scene, overlay) {
         
         let blackMarketPrice = moji.baseValue * 5;
 
-        // 5. TUCKED CLOSER TO CARD (Y changed from 190 to 175)
-        let priceTxt = scene.add.text(0, 175, '$' + blackMarketPrice.toFixed(2), { fontSize: '28px', color: '#e74c3c', fontStyle: 'bold' }).setOrigin(0.5);
+        // FIXED: Pushed much further down (195) to clear the card border
+        let priceTxt = scene.add.text(0, 195, '$' + blackMarketPrice.toFixed(2), { fontSize: '28px', color: '#e74c3c', fontStyle: 'bold' }).setOrigin(0.5);
         
-        // 6. TUCKED CLOSER TO CARD (Y changed from 240 to 225)
-        let buyBtn = createButton(scene, 0, 225, 140, 40, 0x9b59b6, null, 'BUY CARD', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        // FIXED: Made the button physically larger (180x50) and pushed it further down (255)
+        let buyBtn = createButton(scene, 0, 255, 180, 50, 0x9b59b6, null, 'BUY CARD', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
             if (playerMoney >= blackMarketPrice) {
                 playSound(scene, 'coin', { volume: 0.6 }); 
                 playerMoney -= blackMarketPrice;
@@ -109,20 +108,21 @@ function renderTradingView(scene, overlay) {
     });
 
     if (totalPages > 1) {
-        // 7. PUSHED PAGINATION DOWN SLIGHTLY
+        // FIXED: Pushed X out to -200 to give the text more room
         if (overlay.currentPage > 0) {
-            let prevBtn = createButton(scene, -150, 300, 120, 40, 0x34495e, 0xffffff, '◀ PREV', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            let prevBtn = createButton(scene, -200, 305, 120, 40, 0x34495e, 0xffffff, '◀ PREV', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
                 overlay.currentPage--;
                 renderTradingView(scene, overlay);
             });
             overlay.contentContainer.add(prevBtn);
         }
 
-        let pageTxt = scene.add.text(0, 300, `PAGE ${overlay.currentPage + 1} OF ${totalPages}`, { fontSize: '20px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
+        let pageTxt = scene.add.text(0, 305, `PAGE ${overlay.currentPage + 1} OF ${totalPages}`, { fontSize: '20px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
         overlay.contentContainer.add(pageTxt);
 
+        // FIXED: Pushed X out to +200 
         if (overlay.currentPage < totalPages - 1) {
-            let nextBtn = createButton(scene, 150, 300, 120, 40, 0x34495e, 0xffffff, 'NEXT ▶', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            let nextBtn = createButton(scene, 200, 305, 120, 40, 0x34495e, 0xffffff, 'NEXT ▶', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
                 overlay.currentPage++;
                 renderTradingView(scene, overlay);
             });
