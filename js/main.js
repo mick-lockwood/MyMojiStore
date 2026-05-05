@@ -138,6 +138,9 @@ function create() {
     scene.storeOverlay = storeOverlay;
     
     const inventoryOverlay = createInventoryOverlay(scene);
+
+    const tradingOverlay = createTradingOverlay(scene);
+    scene.tradingOverlay = tradingOverlay;
     
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
     scene.phoneOverlay = createPhoneOverlay(scene); 
