@@ -391,7 +391,7 @@ function addShimmerEffect(scene, card, rarity) {
     scene.tweens.add({
         targets: sweepCont,
         x: 85, // Sweep exactly to the right inner border
-        duration: 1500,
+        duration: 2500,
         ease: 'Sine.easeInOut',
         yoyo: true, 
         repeat: -1
