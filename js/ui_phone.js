@@ -23,7 +23,6 @@ function renderPhoneView(scene, overlay) {
     let moji = myMojiDatabase.find(m => m.id === currentTrade.mojiId);
     let isBuy = currentTrade.type === 'buy'; 
     
-    // PUSHED UP: Bubble center moved to -140
     let bubble = scene.add.rectangle(0, -140, 310, 130, 0x34495e).setStrokeStyle(2, 0xffffff);
     
     let msg = isBuy 
@@ -32,7 +31,6 @@ function renderPhoneView(scene, overlay) {
         
     let msgTxt = scene.add.text(0, -140, msg, { fontSize: '16px', color: '#ecf0f1', align: 'center', wordWrap: { width: 280 } }).setOrigin(0.5);
 
-    // PUSHED UP: Timer moved to -190
     let secondsLeft = Math.max(0, Math.floor((tradeExpirationTime - Date.now()) / 1000));
     let timeTxt = scene.add.text(140, -190, `⏳ ${secondsLeft}s`, { fontSize: '14px', color: '#e74c3c', fontStyle: 'bold' }).setOrigin(1, 0.5);
 
@@ -41,12 +39,10 @@ function renderPhoneView(scene, overlay) {
         scene.tweens.add({ targets: timeTxt, scale: 1.2, alpha: 0.5, yoyo: true, repeat: -1, duration: 300 });
     }
 
-    // BIGGER & SHIFTED: Scale increased to 0.5, moved up slightly to Y: 10
     let cardG = scene.add.container(0, 10);
     cardG.add(createCardGraphic(scene, moji));
     cardG.setScale(0.5);
     
-    // SHIFTED DOWN: Moved below the larger card
     let valTxt = scene.add.text(0, 120, `Market Value: $${moji.baseValue.toFixed(2)}`, { fontSize: '15px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0.5);
     
     let ownedCount = playerInventory[moji.id] || 0;
@@ -63,7 +59,6 @@ function renderPhoneView(scene, overlay) {
         scene.time.delayedCall(Phaser.Math.Between(30000, 60000), () => generateTrade(scene));
     };
 
-    // ADJUSTED: Buttons settled cleanly at Y: 190
     if (isBuy) {
         let owned = playerInventory[moji.id];
         let canFulfill = playerUnlocks.binder ? owned > 1 : owned > 0;
@@ -80,8 +75,17 @@ function renderPhoneView(scene, overlay) {
         if (playerMoney >= currentTrade.price) {
             acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'BUY IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
                 if (playerMoney >= currentTrade.price) {
-                    playerMoney -= currentTrade.price; playerInventory[moji.id]++; gameStats.npcTrades++;
-                    scene.moneyText.setText('$' + playerMoney.toFixed(2)); finalizeTrade(`BOUGHT ${moji.name}!`);
+                    playerMoney -= currentTrade.price; 
+                    gameStats.npcTrades++;
+                    scene.moneyText.setText('$' + playerMoney.toFixed(2)); 
+                    
+                    // ---> NEW: Spawn the purchased card onto the table! <---
+                    let isNewCard = (playerInventory[moji.id] === 0);
+                    let randX = Phaser.Math.Between(150, 874); 
+                    let randY = Phaser.Math.Between(340, 510);
+                    createDraggableCard(scene, randX, randY, moji, null, isNewCard);
+                    
+                    finalizeTrade(`BOUGHT ${moji.name}!`);
                 } else { alert("Not enough money!"); renderPhoneView(scene, overlay); }
             });
         } else {
