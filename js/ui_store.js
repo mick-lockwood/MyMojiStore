@@ -53,14 +53,15 @@ function renderStoreView(scene, overlay) {
         });
         overlay.contentContainer.add(viewCartBtn);
 
-        // CHANGED: Using bgContrast instead of hardcoded white
         let packsColor = overlay.currentStoreTab === 'packs' ? bgContrast : '#7f8c8d';
         let unlocksColor = overlay.currentStoreTab === 'unlocks' ? bgContrast : '#7f8c8d';
 
-        let packsTab = scene.add.text(-100, -230, 'PACKS', { fontSize: '24px', fontStyle: 'bold', color: packsColor }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+        let packsTab = scene.add.text(-100, -230, 'PACKS', { fontSize: '24px', fontStyle: 'bold', color: bgContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+        packsTab.setAlpha(overlay.currentStoreTab === 'packs' ? 1 : 0.5);
         packsTab.on('pointerdown', () => { overlay.currentStoreTab = 'packs'; renderStoreView(scene, overlay); });
 
-        let unlocksTab = scene.add.text(100, -230, 'UNLOCKS', { fontSize: '24px', fontStyle: 'bold', color: unlocksColor }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+        let unlocksTab = scene.add.text(100, -230, 'UNLOCKS', { fontSize: '24px', fontStyle: 'bold', color: bgContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+        unlocksTab.setAlpha(overlay.currentStoreTab === 'unlocks' ? 1 : 0.5);
         unlocksTab.on('pointerdown', () => { overlay.currentStoreTab = 'unlocks'; renderStoreView(scene, overlay); });
 
         overlay.contentContainer.add([packsTab, unlocksTab]);
@@ -137,11 +138,13 @@ function renderStoreView(scene, overlay) {
                 }
             }
 
-            let colorInfoTxt = scene.add.text(0, 160, "Looking for Color Themes?\nOpen the Settings Menu (⚙️) to unlock palettes!", { fontSize: '20px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
+            let colorInfoTxt = scene.add.text(0, 160, "Looking for Color Themes?\nOpen the Settings Menu (⚙️) to unlock palettes!", { fontSize: '20px', color: bgContrast, align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
+            colorInfoTxt.setAlpha(0.7);
             overlay.contentContainer.add(colorInfoTxt);
 
             if (!hasUnlocks) {
-                let emptyTxt = scene.add.text(0, 20, "All store upgrades purchased!", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
+                let emptyTxt = scene.add.text(0, 20, "All store upgrades purchased!", { fontSize: '24px', color: bgContrast }).setOrigin(0.5);
+                emptyTxt.setAlpha(0.7);
                 overlay.contentContainer.add(emptyTxt);
             }
         }
