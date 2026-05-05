@@ -177,12 +177,6 @@ function create() {
         scene.tradingOverlay.setVisible(true);
     });
 
-    let badgeBg = scene.add.rectangle(90, -25, 110, 26, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-    let badgeTxt = scene.add.text(90, -25, 'COMING SOON', { fontFamily: 'Arial', fontSize: '12px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-    badgeBg.setAngle(12);
-    badgeTxt.setAngle(12);
-    tradeBtn.add([badgeBg, badgeTxt]);
-
     addShadow(160, 710, 240, 70, 12);
     scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }, () => {});
 
