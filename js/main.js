@@ -288,7 +288,13 @@ function createCardGraphic(scene, mojiData) {
 
     const bg = scene.add.rectangle(0, 0, 220, 320, bgColor).setStrokeStyle(6, strokeColor);
     const imgBox = scene.add.rectangle(0, -40, 180, 160, 0xe0e0e0).setStrokeStyle(3, 0xcccccc);
-    let nameTxt = scene.add.text(0, -130, mojiData.name, { fontSize: '18px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
+    let nameTxt = scene.add.text(0, -135, mojiData.name, { 
+        fontSize: '18px', 
+        color: textColor, 
+        fontStyle: 'bold', 
+        align: 'center',
+        wordWrap: { width: 130, useAdvancedWrap: true } 
+    }).setOrigin(0.5);
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: textColor }).setOrigin(0.5);
     let valTxt = scene.add.text(0, 130, '$' + mojiData.baseValue.toFixed(2), { fontSize: '18px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
     
