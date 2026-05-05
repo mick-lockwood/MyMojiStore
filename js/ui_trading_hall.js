@@ -1,28 +1,29 @@
 function createTradingOverlay(scene) {
-    // NEW: Now looks for a 'trading' color in your active theme!
     let overlayBgColor = themeColors.active.trading || themeColors.active.store || 0x111111; 
     let bgContrast = getContrastColor(overlayBgColor);
 
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(100); 
 
-    const bg = scene.add.rectangle(0, 0, 900, 680, overlayBgColor).setStrokeStyle(4, 0x9b59b6).setInteractive(); 
+    // FIXED: Increased height to 740
+    const bg = scene.add.rectangle(0, 0, 900, 740, overlayBgColor).setStrokeStyle(4, 0x9b59b6).setInteractive(); 
     overlay.bg = bg;
 
-    const title = scene.add.text(0, -300, 'THE TRADING HALL', { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
+    // FIXED: Pushed Title and SubTitle up to make room
+    const title = scene.add.text(0, -320, 'THE TRADING HALL', { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
     overlay.titleTxt = title;
 
-    const subTitle = scene.add.text(0, -260, 'Buy missing cards at a 500% markup. No refunds.', { fontFamily: 'Arial', fontSize: '18px', color: bgContrast }).setOrigin(0.5);
+    const subTitle = scene.add.text(0, -280, 'Buy missing cards at a 500% markup. No refunds.', { fontFamily: 'Arial', fontSize: '18px', color: bgContrast }).setOrigin(0.5);
     subTitle.setAlpha(0.8); 
     overlay.subTitleTxt = subTitle;
 
-    const closeTxt = scene.add.text(410, -300, '✖', { fontSize: '28px', color: bgContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    // FIXED: Pushed Close Button up to match Title
+    const closeTxt = scene.add.text(410, -320, '✖', { fontSize: '28px', color: bgContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     overlay.closeTxt = closeTxt;
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
     overlay.add([bg, title, subTitle, closeTxt]);
 
     overlay.currentPage = 0; 
-
     overlay.contentContainer = scene.add.container(0, 0);
     overlay.add(overlay.contentContainer);
 
