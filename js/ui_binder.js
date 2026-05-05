@@ -162,14 +162,13 @@ function renderBinderGrid(scene, overlay) {
         miniCard.setScale(0.45); 
 
         if (owned === 0) {
-            graphics[0].setFillStyle(0x222222).setAlpha(0.6); // The main card background
-            graphics[1].setFillStyle(0x222222).setAlpha(0.6); // The inner image box
-            
-            for(let j = 2; j < graphics.length; j++) {
-                graphics[j].setAlpha(0.4); // Gently dim the text without destroying its color
-            }
+            graphics.forEach(g => { 
+                g.setAlpha(0.4);
+            });
 
-            let qMark = scene.add.text(0, 0, '?', { fontSize: '80px', color: '#444444', fontStyle: 'bold' }).setOrigin(0.5);
+            let qMark = scene.add.text(0, -40, '?', { fontSize: '80px', color: '#1a1a1a', fontStyle: 'bold' }).setOrigin(0.5);
+            qMark.setAlpha(0.6);
+            
             miniCard.add(qMark);
         } else {
             miniCard.setSize(220, 320); 
