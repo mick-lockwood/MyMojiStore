@@ -75,7 +75,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
                 if (!isUnlocked) {
                     let lockTxt = scene.add.text(startX + (index * spacing), y, isVip ? 'VIP' : '🔒', { fontSize: isVip ? '11px' : '14px', color: isVip ? '#f1c40f' : '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-                    overlay.paletteContainer.add([swatch, lockTxt]);
+                    if (isVip) lockTxt.setStroke('#000000', 3);
 
                     swatch.on('pointerdown', () => {
                         if (isVip && !allStdUnlocked) {
