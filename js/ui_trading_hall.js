@@ -109,26 +109,37 @@ function renderTradingView(scene, overlay) {
     });
 
     if (totalPages > 1) {
-        // FIXED: Pushed Y down to 345
+        // FIXED: Replaced 'createButton' with a text-only clickable object!
         if (overlay.currentPage > 0) {
-            let prevBtn = createButton(scene, -200, 345, 120, 40, 0x34495e, 0xffffff, '◀ PREV', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            let prevTxt = scene.add.text(-200, 345, '◀ PREV', { fontSize: '22px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+            
+            // Add a snappy hover effect so it feels interactive
+            prevTxt.on('pointerover', () => scene.tweens.add({ targets: prevTxt, scale: 1.2, duration: 100 }));
+            prevTxt.on('pointerout', () => scene.tweens.add({ targets: prevTxt, scale: 1, duration: 100 }));
+            
+            prevTxt.on('pointerdown', () => {
                 overlay.currentPage--;
                 renderTradingView(scene, overlay);
             });
-            overlay.contentContainer.add(prevBtn);
+            overlay.contentContainer.add(prevTxt);
         }
 
-        // FIXED: Pushed Y down to 345
         let pageTxt = scene.add.text(0, 345, `PAGE ${overlay.currentPage + 1} OF ${totalPages}`, { fontSize: '20px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
         overlay.contentContainer.add(pageTxt);
 
-        // FIXED: Pushed Y down to 345
+        // FIXED: Replaced 'createButton' with a text-only clickable object!
         if (overlay.currentPage < totalPages - 1) {
-            let nextBtn = createButton('NEXT ▶', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            let nextTxt = scene.add.text(200, 345, 'NEXT ▶', { fontSize: '22px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+            
+            // Add a snappy hover effect so it feels interactive
+            nextTxt.on('pointerover', () => scene.tweens.add({ targets: nextTxt, scale: 1.2, duration: 100 }));
+            nextTxt.on('pointerout', () => scene.tweens.add({ targets: nextTxt, scale: 1, duration: 100 }));
+            
+            nextTxt.on('pointerdown', () => {
                 overlay.currentPage++;
                 renderTradingView(scene, overlay);
             });
-            overlay.contentContainer.add(nextBtn);
+            overlay.contentContainer.add(nextTxt);
         }
     }
 
