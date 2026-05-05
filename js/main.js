@@ -350,38 +350,50 @@ function createCardBackGraphic(scene) {
 }
 
 function addShimmerEffect(scene, card, rarity) {
-    // 1. THE MASK: Create a perfectly sized invisible box to crop the effect!
-    let maskShape = scene.make.graphics();
-    maskShape.fillStyle(0xffffff);
-    // Draw it slightly smaller than 220x320 so it stays perfectly inside your black border
-    maskShape.fillRect(-106, -156, 212, 312); 
-    card.add(maskShape); // Add it to the card so the mask moves when dragged!
-    maskShape.setVisible(false); // Hide the actual graphics
-    
-    let cardMask = maskShape.createGeometryMask();
+    let epicColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
 
-    // 2. THE FOIL SWEEP: Now perfectly masked!
-    let sweepColor = rarity === 'Glitch' ? 0x2ecc71 : 0xffffff; // Green tint for Glitch, pure white for Legendary
-    let sweep = scene.add.rectangle(-200, 0, 70, 450, sweepColor, 0.4);
-    sweep.setAngle(25); // We can make it beautifully angled again because the mask will chop off the corners!
+    // 1. THE SOFT AURA (Feathered Edge Technique)
+    let glowCont = scene.add.container(0, 0);
+    card.addAt(glowCont, 0); // Put it at the very back of the card
+
+    // Draw 5 overlapping rectangles, getting larger and more transparent
+    for (let i = 0; i < 5; i++) {
+        let padding = i * 8; // Expands outward
+        let alpha = 0.3 - (i * 0.06); // Fades out smoothly
+        
+        let glowRing = scene.add.rectangle(0, 0, 220 + padding, 320 + padding, epicColor, alpha);
+        glowRing.setBlendMode(Phaser.BlendModes.ADD);
+        glowCont.add(glowRing);
+    }
+
+    // Pulse the entire soft aura container
+    scene.tweens.add({
+        targets: glowCont,
+        alpha: 0.3,
+        scaleX: 1.08,
+        scaleY: 1.08,
+        duration: 1200,
+        yoyo: true,
+        repeat: -1
+    });
+
+    // 2. THE FOIL SWEEP (Vertical & Perfectly Sized = No Spilling!)
+    let sweepColor = rarity === 'Glitch' ? 0x2ecc71 : 0xffffff;
+    // We make it 310px tall so it perfectly fits inside your black border
+    let sweep = scene.add.rectangle(-150, 0, 40, 310, sweepColor, 0.3);
     sweep.setBlendMode(Phaser.BlendModes.ADD);
-    
-    sweep.setMask(cardMask); // <--- THIS IS THE MAGIC LINE!
-    card.add(sweep); 
+    card.add(sweep); // Put it on the front of the card
 
     scene.tweens.add({
         targets: sweep,
-        x: 200, // Sweep from left to right
-        duration: 1200,
+        x: 150, // Sweep smoothly from left to right
+        duration: 1000,
         ease: 'Sine.easeInOut',
         repeat: -1,
         repeatDelay: 1500 
     });
 
-    // 3. THE SPARKLES: A massive storm of floating colored particles
-    // (We intentionally DO NOT mask these, because they look awesome floating out into the air!)
-    let sparkColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
-    
+    // 3. THE SPARKLE STORM
     const spawnSparkle = () => {
         if (!card.active) return; 
         
@@ -389,7 +401,7 @@ function addShimmerEffect(scene, card, rarity) {
         for(let i = 0; i < sparkCount; i++) {
             let sx = Phaser.Math.Between(-105, 105);
             let sy = Phaser.Math.Between(-155, 155);
-            let spark = scene.add.circle(sx, sy, Phaser.Math.Between(1, 4), sparkColor);
+            let spark = scene.add.circle(sx, sy, Phaser.Math.Between(1, 4), epicColor);
             spark.setBlendMode(Phaser.BlendModes.ADD);
             card.add(spark);
 
