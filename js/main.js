@@ -352,9 +352,9 @@ function createCardBackGraphic(scene) {
 function addShimmerEffect(scene, card, rarity) {
     let epicColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
 
-    // 1. THE SOFT AURA (Unchanged, looks great!)
+    // 1. THE SOFT AURA 
     let glowCont = scene.add.container(0, 0);
-    card.addAt(glowCont, 0); // Put it at the very back of the card
+    card.addAt(glowCont, 0); 
 
     for (let i = 0; i < 5; i++) {
         let padding = i * 8; 
@@ -374,29 +374,26 @@ function addShimmerEffect(scene, card, rarity) {
         repeat: -1
     });
 
-    // 2. THE FOIL SWEEP (Bulletproof Method - No overlapping tweens!)
+    // 2. THE FOIL SWEEP (Taller, Wider, and Subtler!)
     let sweepColor = rarity === 'Glitch' ? 0x2ecc71 : 0xffffff;
     
-    // Create a container for the light bar, starting safely inside the left border
-    let sweepCont = scene.add.container(-70, 0); 
+    // Start wider: -85 touches the exact left inner border
+    let sweepCont = scene.add.container(-85, 0); 
     card.add(sweepCont); 
 
-    // Build a "soft" vertical light bar using 3 stacked rectangles
-    // This gives it a natural glowing gradient edge without needing complex alpha tweens!
-    let wideBar = scene.add.rectangle(0, 0, 50, 308, sweepColor, 0.15).setBlendMode(Phaser.BlendModes.ADD);
-    let midBar  = scene.add.rectangle(0, 0, 25, 308, sweepColor, 0.3).setBlendMode(Phaser.BlendModes.ADD);
-    let coreBar = scene.add.rectangle(0, 0, 8,  308, sweepColor, 0.8).setBlendMode(Phaser.BlendModes.ADD);
+    // Taller (316) to close the gap, and alphas dropped way down for a subtle gloss
+    let wideBar = scene.add.rectangle(0, 0, 50, 316, sweepColor, 0.05).setBlendMode(Phaser.BlendModes.ADD);
+    let midBar  = scene.add.rectangle(0, 0, 25, 316, sweepColor, 0.12).setBlendMode(Phaser.BlendModes.ADD);
+    let coreBar = scene.add.rectangle(0, 0, 8,  316, sweepColor, 0.35).setBlendMode(Phaser.BlendModes.ADD);
 
     sweepCont.add([wideBar, midBar, coreBar]);
 
-    // A single, simple movement tween that bounces back and forth!
-    // By keeping it between -70 and 70, it mathematically cannot spill over the black border.
     scene.tweens.add({
         targets: sweepCont,
-        x: 70, // Move safely to the right inner border
+        x: 85, // Sweep exactly to the right inner border
         duration: 1500,
         ease: 'Sine.easeInOut',
-        yoyo: true, // It will smoothly sweep back to the left!
+        yoyo: true, 
         repeat: -1
     });
 
