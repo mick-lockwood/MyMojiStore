@@ -65,23 +65,16 @@ function createBinderOverlay(scene) {
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
 
-    // NEW: Calculate the dynamic text color for the Binder!
+    // Calculate the dynamic text color for the Binder!
     let bgContrast = getContrastColor(themeColors.active.binder);
-
-    // Apply the dynamic color to the Title
-    // PUSHED UP to -275 so it sits right next to your filter buttons!
-    // Centered at X: 0, pushed way up to Y: -320
-    const title = scene.add.text(0, -320, 'BINDER', { fontFamily: 'Impact', fontSize: '32px', color: bgContrast }).setOrigin(0.5);
-    
+        
     let totalCards = myMojiDatabase.length;
     let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
     let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
     
-    // Pushed to X: 440 (far right) and Right-Aligned using setOrigin(1, 0.5)
-    // We also moved it slightly down to Y: -280 so it aligns with your Sort/Filter buttons
-    let trackerTxt = scene.add.text(440, -280, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(1, 0.5);
+    let trackerTxt = scene.add.text(0, -320, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '20px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
     
-    overlay.gridContainer.add([title, trackerTxt]);
+    overlay.gridContainer.add(trackerTxt);
     
     let filteredDb = myMojiDatabase.filter(moji => {
         let owned = Number(playerInventory[moji.id]);
