@@ -231,6 +231,34 @@ function create() {
     });
 }
 
+function showPackCloseup(scene, packKey) {
+    const closeup = scene.add.container(512, 384).setDepth(200);
+    const bg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0).setInteractive(); 
+    
+    const packGraphic = scene.add.container(0, -60);
+    packGraphic.add(createPackGraphic(scene, packKey));
+    packGraphic.setScale(1.8); 
+
+    const openBtn = createButton(scene, 0, 260, 200, 60, 0x2ecc71, 0xffffff, 'OPEN!', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }, () => {
+        playerPacks[packKey] -= 1; 
+        saveGame();
+        
+        let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
+        scene.packsText.setText('PACKS: ' + totalPacks);
+
+        closeup.destroy();
+        spawnBoosterPack(scene, packKey);
+    });
+
+    let tableBgColor = themeColors.active.table || 0x2c3e50; 
+    let tableContrast = getContrastColor(tableBgColor);
+
+    const closeTxt = scene.add.text(160, -250, '✖', { fontSize: '36px', color: tableContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    closeTxt.on('pointerdown', () => closeup.destroy());
+
+    closeup.add([bg, packGraphic, openBtn, closeTxt]);
+}
+
 function spawnBoosterPack(scene, packId) {
     gameStats.packsOpened++;
     
