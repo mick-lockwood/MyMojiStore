@@ -214,7 +214,12 @@ function renderStoreView(scene, overlay) {
                 
                 saveGame();
                 scene.moneyText.setColor('#f1c40f'); 
-                scene.time.delayedCall(300, () => scene.moneyText.setColor('#222222'));
+                
+                scene.time.delayedCall(300, () => {
+                    let bannerColor = themeColors.active.banner || 0x1a1a1a;
+                    let currentContrast = getContrastColor(bannerColor);
+                    scene.moneyText.setColor(currentContrast);
+                });
 
                 let newTotalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
                 scene.packsText.setText('PACKS: ' + newTotalPacks);
