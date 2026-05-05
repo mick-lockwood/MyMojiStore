@@ -323,7 +323,7 @@ function createCardGraphic(scene, mojiData) {
         color: textColor, 
         fontStyle: 'bold', 
         align: 'center',
-        wordWrap: { width: 170, useAdvancedWrap: true } 
+        wordWrap: { width: 180, useAdvancedWrap: true } 
     }).setOrigin(0.5);
     
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: textColor }).setOrigin(0.5);
