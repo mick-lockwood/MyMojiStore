@@ -109,21 +109,22 @@ function renderTradingView(scene, overlay) {
     });
 
     if (totalPages > 1) {
-        // FIXED: Pushed X out to -200 to give the text more room
+        // FIXED: Pushed Y down to 345
         if (overlay.currentPage > 0) {
-            let prevBtn = createButton(scene, -200, 305, 120, 40, 0x34495e, 0xffffff, '◀ PREV', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            let prevBtn = createButton(scene, -200, 345, 120, 40, 0x34495e, 0xffffff, '◀ PREV', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
                 overlay.currentPage--;
                 renderTradingView(scene, overlay);
             });
             overlay.contentContainer.add(prevBtn);
         }
 
-        let pageTxt = scene.add.text(0, 305, `PAGE ${overlay.currentPage + 1} OF ${totalPages}`, { fontSize: '20px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
+        // FIXED: Pushed Y down to 345
+        let pageTxt = scene.add.text(0, 345, `PAGE ${overlay.currentPage + 1} OF ${totalPages}`, { fontSize: '20px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
         overlay.contentContainer.add(pageTxt);
 
-        // FIXED: Pushed X out to +200 
+        // FIXED: Pushed Y down to 345
         if (overlay.currentPage < totalPages - 1) {
-            let nextBtn = createButton(scene, 200, 305, 120, 40, 0x34495e, 0xffffff, 'NEXT ▶', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            let nextBtn = createButton(scene, 200, 345, 120, 40, 0x34495e, 0xffffff, 'NEXT ▶', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
                 overlay.currentPage++;
                 renderTradingView(scene, overlay);
             });
