@@ -356,17 +356,14 @@ function addShimmerEffect(scene, card, rarity) {
     let glowCont = scene.add.container(0, 0);
     card.addAt(glowCont, 0); // Put it at the very back of the card
 
-    // Draw 5 overlapping rectangles, getting larger and more transparent
     for (let i = 0; i < 5; i++) {
-        let padding = i * 8; // Expands outward
-        let alpha = 0.3 - (i * 0.06); // Fades out smoothly
-        
+        let padding = i * 8; 
+        let alpha = 0.3 - (i * 0.06); 
         let glowRing = scene.add.rectangle(0, 0, 220 + padding, 320 + padding, epicColor, alpha);
         glowRing.setBlendMode(Phaser.BlendModes.ADD);
         glowCont.add(glowRing);
     }
 
-    // Pulse the entire soft aura container
     scene.tweens.add({
         targets: glowCont,
         alpha: 0.3,
@@ -377,18 +374,32 @@ function addShimmerEffect(scene, card, rarity) {
         repeat: -1
     });
 
-    // 2. THE FOIL SWEEP (Vertical & Perfectly Sized = No Spilling!)
+    // 2. THE FOIL SWEEP (Mathematically Clamped = Zero Spilling!)
     let sweepColor = rarity === 'Glitch' ? 0x2ecc71 : 0xffffff;
-    // We make it 310px tall so it perfectly fits inside your black border
-    let sweep = scene.add.rectangle(-150, 0, 40, 310, sweepColor, 0.3);
+    
+    // Start it at x: -84 (perfectly touching the inside left border)
+    // Start with alpha: 0 (completely invisible)
+    let sweep = scene.add.rectangle(-84, 0, 40, 308, sweepColor, 0);
     sweep.setBlendMode(Phaser.BlendModes.ADD);
-    card.add(sweep); // Put it on the front of the card
+    card.add(sweep); 
 
+    // Tween A: The Movement (Moves exactly to the inner right border)
     scene.tweens.add({
         targets: sweep,
-        x: 150, // Sweep smoothly from left to right
+        x: 84, 
         duration: 1000,
         ease: 'Sine.easeInOut',
+        repeat: -1,
+        repeatDelay: 1500 
+    });
+
+    // Tween B: The Fade (Fades in, holds brightness, fades out before hitting the edge)
+    scene.tweens.add({
+        targets: sweep,
+        alpha: 0.5,     // Glows bright!
+        duration: 250,  // Fades in over the first 25% of the movement
+        yoyo: true,     // Will fade back out to 0 at the end
+        hold: 500,      // Holds full brightness in the middle of the card
         repeat: -1,
         repeatDelay: 1500 
     });
@@ -399,16 +410,16 @@ function addShimmerEffect(scene, card, rarity) {
         
         let sparkCount = Phaser.Math.Between(2, 4);
         for(let i = 0; i < sparkCount; i++) {
-            let sx = Phaser.Math.Between(-105, 105);
-            let sy = Phaser.Math.Between(-155, 155);
+            let sx = Phaser.Math.Between(-100, 100);
+            let sy = Phaser.Math.Between(-150, 150);
             let spark = scene.add.circle(sx, sy, Phaser.Math.Between(1, 4), epicColor);
             spark.setBlendMode(Phaser.BlendModes.ADD);
             card.add(spark);
 
             scene.tweens.add({
                 targets: spark,
-                y: sy - Phaser.Math.Between(30, 80), // Float upward
-                x: sx + Phaser.Math.Between(-20, 20), // Drift sideways
+                y: sy - Phaser.Math.Between(30, 80), 
+                x: sx + Phaser.Math.Between(-20, 20), 
                 alpha: { from: 1, to: 0 },
                 scale: { from: 1, to: 0 },
                 duration: Phaser.Math.Between(600, 1200),
