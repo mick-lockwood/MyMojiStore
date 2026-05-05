@@ -4,10 +4,21 @@ const config = {
     height: 768,
     backgroundColor: '#2c3e50',
     parent: 'game-container',
-    scene: { create: create }
+    // NEW: Add the preload function to the scene sequence!
+    scene: { preload: preload, create: create } 
 };
 
 const game = new Phaser.Game(config);
+
+function preload() {
+    // You will need to create an "assets" folder in your project folder!
+    // Give each sound a "key" (like 'coin') and point it to the file path.
+    this.load.audio('click', 'assets/click.mp3');
+    this.load.audio('pack_rip', 'assets/pack_rip.mp3');
+    this.load.audio('coin', 'assets/coin.mp3');
+    this.load.audio('flip', 'assets/card_flip.mp3');
+    this.load.audio('epic_rumble', 'assets/rumble.mp3');
+}
 
 function create() {
     const scene = this; 
