@@ -6,6 +6,8 @@ function createBinderOverlay(scene) {
 
     const spine = scene.add.rectangle(0, 0, 40, 680, 0x000000, 0.3);
     const closeTxt = scene.add.text(430, -315, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive().setOrigin(0.5);
+    
+    overlay.closeTxt = closeTxt;
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
     overlay.currentSpread = 0; 
@@ -66,6 +68,8 @@ function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
 
     let bgContrast = getContrastColor(themeColors.active.binder);
+    
+    if (overlay.closeTxt) overlay.closeTxt.setColor(bgContrast);
     
     let totalCards = myMojiDatabase.length;
     let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
