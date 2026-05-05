@@ -65,14 +65,14 @@ function createBinderOverlay(scene) {
 function renderBinderGrid(scene, overlay) {
     overlay.gridContainer.removeAll(true);
 
-    // Calculate the dynamic text color for the Binder!
     let bgContrast = getContrastColor(themeColors.active.binder);
-        
+    
     let totalCards = myMojiDatabase.length;
     let uniqueOwned = myMojiDatabase.filter(m => playerInventory[m.id] > 0).length;
     let completionPercent = Math.floor((uniqueOwned / totalCards) * 100);
     
-    let trackerTxt = scene.add.text(0, -320, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '20px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
+    // Right-aligned (origin 1, 0.5) and moved to X: 440, Y: -280
+    let trackerTxt = scene.add.text(440, -280, `COLLECTION: ${uniqueOwned} / ${totalCards} (${completionPercent}%)`, { fontSize: '18px', color: bgContrast, fontStyle: 'bold' }).setOrigin(1, 0.5);
     
     overlay.gridContainer.add(trackerTxt);
     
