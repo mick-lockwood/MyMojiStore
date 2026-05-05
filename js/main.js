@@ -253,6 +253,9 @@ function showPackCloseup(scene, packKey) {
     const openBtn = createButton(scene, 0, 260, 200, 60, 0x2ecc71, 0xffffff, 'OPEN!', { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }, () => {
         playerPacks[packKey] -= 1; 
         saveGame();
+
+        // SOUND EFFECT
+        scene.sound.play('pack_rip', { volume: 0.8 });
         
         let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
         scene.packsText.setText('PACKS: ' + totalPacks);
@@ -519,10 +522,18 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                     };
 
                     if (isEpic) {
-                        // NEW: Shake the screen for 1.5 seconds, and pause the flip for 1.5 seconds!
+                        
+                        // SOUND EFFECT
+                        scene.sound.play('epic_rumble', { volume: 1.0 });
+                        
+                        // Shake the screen for 1.5 seconds, and pause the flip for 1.5 seconds!
                         scene.cameras.main.shake(1500, 0.015); 
+                        
                         scene.time.delayedCall(1500, finishFlip); 
+                        
                     } else {
+                        // SOUND EFFECT
+                        scene.sound.play('flip', { volume: 0.4 });
                         finishFlip(); 
                     }
                 }
@@ -575,6 +586,10 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
             playerMoney += Number(mojiData.baseValue); 
             scene.moneyText.setText('$' + playerMoney.toFixed(2));
             showFloatingText(scene, this.x, this.y, 'SOLD!', '#e74c3c');
+            
+            // SOUND EFFECT
+            scene.sound.play('coin', { volume: 0.6 });
+            
             dropped = true;
         }
 
