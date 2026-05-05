@@ -163,11 +163,14 @@ function renderBinderGrid(scene, overlay) {
 
         if (owned === 0) {
             graphics.forEach(g => { 
-                g.setAlpha(0.4);
+                g.setAlpha(0.4); 
             });
 
-            let qMark = scene.add.text(0, -40, '?', { fontSize: '80px', color: '#1a1a1a', fontStyle: 'bold' }).setOrigin(0.5);
-            qMark.setAlpha(0.6);
+            let isGlitch = moji.rarity === 'Glitch';
+            let qColor = isGlitch ? '#2ecc71' : '#1a1a1a'; // Neon green for glitch, dark gray for normal
+
+            let qMark = scene.add.text(0, -40, '?', { fontSize: '80px', color: qColor, fontStyle: 'bold' }).setOrigin(0.5);
+            qMark.setAlpha(isGlitch ? 0.8 : 0.6); // Make the glitch '?' slightly brighter so it pops
             
             miniCard.add(qMark);
         } else {
