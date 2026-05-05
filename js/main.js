@@ -370,6 +370,14 @@ function fireParticles(scene, x, y, rarity) {
     }
 }
 
+function createPackGraphic(scene, packId) {
+    const packDef = packDatabase[packId];
+    const bg = scene.add.rectangle(0, 0, 140, 200, packDef.color).setStrokeStyle(4, 0x1a1a1a);
+    const strip = scene.add.rectangle(0, -70, 140, 30, 0x1a1a1a);
+    const nameTxt = scene.add.text(0, 0, packDef.name.replace(' ', '\n'), { fontFamily: 'Arial', fontSize: '20px', color: '#ffffff', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
+    return [bg, strip, nameTxt];
+}
+
 function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, isNew = false, startFaceDown = false) {
     const card = scene.add.container(x, y);
     card.setSize(220, 320);
