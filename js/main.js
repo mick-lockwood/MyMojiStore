@@ -384,8 +384,8 @@ function addShimmerEffect(scene, card, rarity) {
     // Taller (316) to close the gap, and alphas dropped way down for a subtle gloss
     let widestBar = scene.add.rectangle(0, 0, 50, 316, sweepColor, 0.02).setBlendMode(Phaser.BlendModes.ADD);
     let wideBar = scene.add.rectangle(0, 0, 30, 316, sweepColor, 0.05).setBlendMode(Phaser.BlendModes.ADD);
-    let midBar  = scene.add.rectangle(0, 0, 15, 314, sweepColor, 0.08).setBlendMode(Phaser.BlendModes.ADD);
-    let coreBar = scene.add.rectangle(0, 0, 8,  316, sweepColor, 0.12).setBlendMode(Phaser.BlendModes.ADD);
+    let midBar  = scene.add.rectangle(0, 0, 15, 314, sweepColor, 0.05).setBlendMode(Phaser.BlendModes.ADD);
+    let coreBar = scene.add.rectangle(0, 0, 8,  316, sweepColor, 0.05).setBlendMode(Phaser.BlendModes.ADD);
 
     sweepCont.add([widestBar, wideBar, midBar, coreBar]);
 
