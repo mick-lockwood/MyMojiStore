@@ -124,7 +124,7 @@ function renderTradingView(scene, overlay) {
 
         // FIXED: Pushed Y down to 345
         if (overlay.currentPage < totalPages - 1) {
-            let nextBtn = createButton(scene, 200, 345, 120, 40, 0x34495e, 0xffffff, 'NEXT ▶', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+            let nextBtn = createButton('NEXT ▶', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
                 overlay.currentPage++;
                 renderTradingView(scene, overlay);
             });
