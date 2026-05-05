@@ -349,25 +349,62 @@ function createCardBackGraphic(scene) {
     return [bg, innerBg, pattern, logo];
 }
 
-function fireParticles(scene, x, y, rarity) {
-    let pColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; // Green for Glitch, Gold for Legendary
-    
-    // Create a burst of 30 glowing sparks
-    for (let i = 0; i < 30; i++) {
-        let spark = scene.add.circle(x, y, Phaser.Math.Between(3, 8), pColor);
-        spark.setDepth(200); // Ensure they show up above everything
+function addShimmerEffect(scene, card, rarity) {
+    let auraColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
+
+    // 1. Pulsing Glowing Aura behind the card
+    let glow = scene.add.rectangle(0, 0, 240, 340, auraColor, 0.6);
+    glow.setBlendMode(Phaser.BlendModes.ADD); // Makes it look like actual light
+    card.addAt(glow, 0); // Slip it right to the very back of the card container
+
+    scene.tweens.add({
+        targets: glow,
+        alpha: 0.1,
+        scaleX: 1.15,
+        scaleY: 1.15,
+        duration: 800,
+        yoyo: true,
+        repeat: -1
+    });
+
+    // 2. Shiny Foil Sweep across the front
+    let sweep = scene.add.rectangle(-250, 0, 40, 450, 0xffffff, 0.3);
+    sweep.setAngle(25);
+    sweep.setBlendMode(Phaser.BlendModes.ADD);
+    card.add(sweep); // Add on top of everything else
+
+    scene.tweens.add({
+        targets: sweep,
+        x: 250,
+        duration: 1200,
+        ease: 'Sine.easeInOut',
+        repeat: -1,
+        repeatDelay: 1000 // Waits a second, then sweeps again
+    });
+
+    // 3. Continuous Ambient Sparkles
+    const spawnSparkle = () => {
+        if (!card.active) return; // Stop spawning if the card is sold/stashed
         
+        let sx = Phaser.Math.Between(-100, 100);
+        let sy = Phaser.Math.Between(-150, 150);
+        let spark = scene.add.circle(sx, sy, Phaser.Math.Between(2, 5), 0xffffff);
+        spark.setBlendMode(Phaser.BlendModes.ADD);
+        card.add(spark);
+
         scene.tweens.add({
             targets: spark,
-            x: x + Phaser.Math.Between(-200, 200),
-            y: y + Phaser.Math.Between(-200, 200),
-            alpha: 0,
-            scale: 0,
-            duration: Phaser.Math.Between(600, 1200),
-            ease: 'Cubic.easeOut',
+            y: sy - 40, // Float upward
+            alpha: { from: 1, to: 0 },
+            scale: { from: 1, to: 0 },
+            duration: Phaser.Math.Between(800, 1500),
             onComplete: () => spark.destroy()
         });
-    }
+        
+        scene.time.delayedCall(Phaser.Math.Between(200, 400), spawnSparkle);
+    };
+    
+    spawnSparkle(); // Kick off the infinite sparkle loop!
 }
 
 function createPackGraphic(scene, packId) {
@@ -419,8 +456,6 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     card.on('pointerdown', function () {
         if (card.isFaceDown) {
             card.isFaceDown = false;
-            
-            // FIXED: Force this specific card to the absolute top of the display list!
             scene.children.bringToTop(card);
             card.setDepth(50); 
             
@@ -444,18 +479,18 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                             onComplete: () => {
                                 attachNewBadge(); 
                                 scene.input.setDraggable(card, true); 
-                                
-                                // FIXED: Drop the depth back down so it doesn't block future drags!
                                 card.setDepth(10);
                                 
-                                if (isEpic) fireParticles(scene, card.x, card.y, mojiData.rarity);
+                                // NEW: Apply the persistent shimmer effect!
+                                if (isEpic) addShimmerEffect(scene, card, mojiData.rarity);
                             }
                         });
                     };
 
                     if (isEpic) {
-                        scene.cameras.main.shake(600, 0.015); 
-                        scene.time.delayedCall(800, finishFlip); 
+                        // NEW: Shake the screen for 1.5 seconds, and pause the flip for 1.5 seconds!
+                        scene.cameras.main.shake(1500, 0.015); 
+                        scene.time.delayedCall(1500, finishFlip); 
                     } else {
                         finishFlip(); 
                     }
