@@ -350,56 +350,53 @@ function createCardBackGraphic(scene) {
 }
 
 function addShimmerEffect(scene, card, rarity) {
-    let auraColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
+    // 1. THE MASK: Create a perfectly sized invisible box to crop the effect!
+    let maskShape = scene.make.graphics();
+    maskShape.fillStyle(0xffffff);
+    // Draw it slightly smaller than 220x320 so it stays perfectly inside your black border
+    maskShape.fillRect(-106, -156, 212, 312); 
+    card.add(maskShape); // Add it to the card so the mask moves when dragged!
+    maskShape.setVisible(false); // Hide the actual graphics
+    
+    let cardMask = maskShape.createGeometryMask();
 
-    // 1. Pulsing Glowing Aura behind the card
-    let glow = scene.add.rectangle(0, 0, 240, 340, auraColor, 0.6);
-    glow.setBlendMode(Phaser.BlendModes.ADD); 
-    card.addAt(glow, 0); 
-
-    scene.tweens.add({
-        targets: glow,
-        alpha: 0.1,
-        scaleX: 1.15,
-        scaleY: 1.15,
-        duration: 800,
-        yoyo: true,
-        repeat: -1
-    });
-
-    // 2. FIXED: Vertical Foil Sweep
-    // By keeping it vertical (no angle) and exactly 310px tall, it never spills out!
-    let sweep = scene.add.rectangle(-150, 0, 50, 310, 0xffffff, 0.3);
+    // 2. THE FOIL SWEEP: Now perfectly masked!
+    let sweepColor = rarity === 'Glitch' ? 0x2ecc71 : 0xffffff; // Green tint for Glitch, pure white for Legendary
+    let sweep = scene.add.rectangle(-200, 0, 70, 450, sweepColor, 0.4);
+    sweep.setAngle(25); // We can make it beautifully angled again because the mask will chop off the corners!
     sweep.setBlendMode(Phaser.BlendModes.ADD);
-    card.add(sweep); // Add it to the very top so it brightens everything!
+    
+    sweep.setMask(cardMask); // <--- THIS IS THE MAGIC LINE!
+    card.add(sweep); 
 
     scene.tweens.add({
         targets: sweep,
-        x: 150, // Sweep from left to right
-        duration: 1000,
+        x: 200, // Sweep from left to right
+        duration: 1200,
         ease: 'Sine.easeInOut',
         repeat: -1,
         repeatDelay: 1500 
     });
 
-    // 3. UPGRADED: A storm of floating sparkles!
+    // 3. THE SPARKLES: A massive storm of floating colored particles
+    // (We intentionally DO NOT mask these, because they look awesome floating out into the air!)
+    let sparkColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
+    
     const spawnSparkle = () => {
         if (!card.active) return; 
         
-        // Spawn 2 to 4 sparkles every single tick
         let sparkCount = Phaser.Math.Between(2, 4);
-        
         for(let i = 0; i < sparkCount; i++) {
             let sx = Phaser.Math.Between(-105, 105);
             let sy = Phaser.Math.Between(-155, 155);
-            let spark = scene.add.circle(sx, sy, Phaser.Math.Between(1, 4), 0xffffff);
+            let spark = scene.add.circle(sx, sy, Phaser.Math.Between(1, 4), sparkColor);
             spark.setBlendMode(Phaser.BlendModes.ADD);
             card.add(spark);
 
             scene.tweens.add({
                 targets: spark,
                 y: sy - Phaser.Math.Between(30, 80), // Float upward
-                x: sx + Phaser.Math.Between(-20, 20), // Drift slightly sideways
+                x: sx + Phaser.Math.Between(-20, 20), // Drift sideways
                 alpha: { from: 1, to: 0 },
                 scale: { from: 1, to: 0 },
                 duration: Phaser.Math.Between(600, 1200),
@@ -407,7 +404,6 @@ function addShimmerEffect(scene, card, rarity) {
             });
         }
         
-        // Trigger the next batch much faster (every 100-200ms)
         scene.time.delayedCall(Phaser.Math.Between(100, 200), spawnSparkle);
     };
     
