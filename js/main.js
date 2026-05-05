@@ -261,21 +261,23 @@ function showPackCloseup(scene, packKey) {
 
 function spawnBoosterPack(scene, packId) {
     gameStats.packsOpened++;
-    
     const packDef = packDatabase[packId];
     let pulledThisPack = {};
     
+    // Math for a perfectly centered, overlapped array of 3 cards
+    let startX = 362; 
+    let spacingX = 150; 
+    let y = 450; 
+
     for (let i = 0; i < 3; i++) {
         let pulledMoji = pullCardWithWeights(packDef.weights, packDef.category);
-        
-        // Check if the player owns 0 of this card, and hasn't pulled it yet in this specific pack
         let isNewCard = (playerInventory[pulledMoji.id] === 0 && !pulledThisPack[pulledMoji.id]);
         pulledThisPack[pulledMoji.id] = true;
         
-        let randX = Phaser.Math.Between(150, 874); 
-        let randY = Phaser.Math.Between(340, 510);
+        let x = startX + (i * spacingX);
         
-        createDraggableCard(scene, randX, randY, pulledMoji, null, isNewCard);
+        // The "true" at the end tells the card to spawn face down!
+        createDraggableCard(scene, x, y, pulledMoji, null, isNewCard, true); 
     }
 }
 
@@ -337,6 +339,37 @@ function createCardGraphic(scene, mojiData) {
     return [bg, imgBox, nameTxt, rarityTxt, valTxt, numTxt];
 }
 
+function createCardBackGraphic(scene) {
+    const bg = scene.add.rectangle(0, 0, 220, 320, 0x2c3e50).setStrokeStyle(6, 0xffffff);
+    const innerBg = scene.add.rectangle(0, 0, 190, 290, 0x34495e).setStrokeStyle(3, 0xf1c40f);
+    
+    const pattern = scene.add.text(0, 0, '?', { fontSize: '100px', color: '#1a252f', fontStyle: 'bold' }).setOrigin(0.5);
+    const logo = scene.add.text(0, 0, 'MyMoji', { fontFamily: 'Impact', fontSize: '42px', color: '#f1c40f', stroke: '#000000', strokeThickness: 4, angle: -15 }).setOrigin(0.5);
+    
+    return [bg, innerBg, pattern, logo];
+}
+
+function fireParticles(scene, x, y, rarity) {
+    let pColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; // Green for Glitch, Gold for Legendary
+    
+    // Create a burst of 30 glowing sparks
+    for (let i = 0; i < 30; i++) {
+        let spark = scene.add.circle(x, y, Phaser.Math.Between(3, 8), pColor);
+        spark.setDepth(200); // Ensure they show up above everything
+        
+        scene.tweens.add({
+            targets: spark,
+            x: x + Phaser.Math.Between(-200, 200),
+            y: y + Phaser.Math.Between(-200, 200),
+            alpha: 0,
+            scale: 0,
+            duration: Phaser.Math.Between(600, 1200),
+            ease: 'Cubic.easeOut',
+            onComplete: () => spark.destroy()
+        });
+    }
+}
+
 function createPackGraphic(scene, packId) {
     const packDef = packDatabase[packId];
     const bg = scene.add.rectangle(0, 0, 140, 200, packDef.color).setStrokeStyle(4, 0x1a1a1a);
@@ -345,31 +378,35 @@ function createPackGraphic(scene, packId) {
     return [bg, strip, nameTxt];
 }
 
-function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, isNew = false) {
+function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, isNew = false, startFaceDown = false) {
     const card = scene.add.container(x, y);
-    card.add(createCardGraphic(scene, mojiData));
-    
-    if (isNew) {
-        let badgeX = -110; 
-        let badgeY = -160; 
-        
-        let starOutline = scene.add.star(badgeX, badgeY, 5, 22, 42, 0x1a1a1a);
-        let starWhite = scene.add.star(badgeX, badgeY, 5, 18, 38, 0xffffff);
-        let starRed = scene.add.star(badgeX, badgeY, 5, 14, 34, 0xe74c3c);
-        let newTxt = scene.add.text(badgeX, badgeY, 'NEW', { fontFamily: 'Impact', fontSize: '16px', color: '#fce883', stroke: '#1a1a1a', strokeThickness: 3 }).setOrigin(0.5);
-        
-        starOutline.setAngle(-15);
-        starWhite.setAngle(-15);
-        starRed.setAngle(-15);
-        newTxt.setAngle(-15);
+    card.setSize(220, 320);
 
+    let faceGraphics = createCardGraphic(scene, mojiData);
+
+    // Helper to add the NEW badge after a flip
+    const attachNewBadge = () => {
+        if (!isNew) return;
+        let badgeX = -110, badgeY = -160;
+        let starOutline = scene.add.star(badgeX, badgeY, 5, 22, 42, 0x1a1a1a).setAngle(-15);
+        let starWhite = scene.add.star(badgeX, badgeY, 5, 18, 38, 0xffffff).setAngle(-15);
+        let starRed = scene.add.star(badgeX, badgeY, 5, 14, 34, 0xe74c3c).setAngle(-15);
+        let newTxt = scene.add.text(badgeX, badgeY, 'NEW', { fontFamily: 'Impact', fontSize: '16px', color: '#fce883', stroke: '#1a1a1a', strokeThickness: 3 }).setOrigin(0.5).setAngle(-15);
         card.add([starOutline, starWhite, starRed, newTxt]);
+    };
+
+    if (startFaceDown) {
+        let backGraphics = createCardBackGraphic(scene);
+        card.add(backGraphics);
+        card.isFaceDown = true;
+    } else {
+        card.add(faceGraphics);
+        attachNewBadge();
     }
 
-        card.setSize(220, 320);
     card.setInteractive();
-    scene.input.setDraggable(card);
-    card.setDepth(10); 
+    scene.input.setDraggable(card, !startFaceDown); // Prevent dragging while face down!
+    card.setDepth(10);
 
     card.instanceId = existingInstanceId || ('card_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
     
@@ -381,16 +418,64 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     card.startX = x;
     card.startY = y;
 
-    card.on('drag', function (p, dragX, dragY) { this.x = dragX; this.y = dragY; });
-    
+    // --- NEW: THE FLIP LOGIC ---
+    card.on('pointerdown', function () {
+        if (card.isFaceDown) {
+            card.isFaceDown = false;
+            card.setDepth(50); // Bring it to the front so it flips over the other cards!
+            
+            let isEpic = mojiData.rarity === 'Legendary' || mojiData.rarity === 'Glitch';
+
+            // Tween 1: Squish the card flat (simulate turning sideways)
+            scene.tweens.add({
+                targets: card,
+                scaleX: 0,
+                duration: 150,
+                onComplete: () => {
+                    card.removeAll(true); // Delete the card back
+                    card.add(faceGraphics); // Attach the real face
+
+                    const finishFlip = () => {
+                        // Tween 2: Expand the card back to full size
+                        scene.tweens.add({
+                            targets: card,
+                            scaleX: 1,
+                            duration: 150,
+                            onComplete: () => {
+                                attachNewBadge(); // Only show NEW once they see it!
+                                scene.input.setDraggable(card, true); // Allow dragging now
+                                if (isEpic) fireParticles(scene, card.x, card.y, mojiData.rarity);
+                            }
+                        });
+                    };
+
+                    if (isEpic) {
+                        scene.cameras.main.shake(600, 0.015); // Screen shake!
+                        scene.time.delayedCall(800, finishFlip); // 0.8 second dramatic pause
+                    } else {
+                        finishFlip(); // Normal cards flip instantly
+                    }
+                }
+            });
+        }
+    });
+
+    // Only allow drag scaling if the card is already flipped
     card.on('dragstart', function () { 
+        if (card.isFaceDown) return;
         this.setScale(1.05); 
         this.setDepth(50); 
         this.startX = this.x; 
         this.startY = this.y; 
     });
     
+    card.on('drag', function (p, dragX, dragY) { 
+        if (!card.isFaceDown) { this.x = dragX; this.y = dragY; } 
+    });
+    
     card.on('dragend', function () {
+        if (card.isFaceDown) return;
+        
         this.setScale(1); 
         this.setDepth(10); 
         let bounds = this.getBounds();
