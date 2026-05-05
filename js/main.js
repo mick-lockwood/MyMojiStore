@@ -352,7 +352,7 @@ function createCardBackGraphic(scene) {
 function addShimmerEffect(scene, card, rarity) {
     let epicColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
 
-    // 1. THE SOFT AURA (Feathered Edge Technique)
+    // 1. THE SOFT AURA (Unchanged, looks great!)
     let glowCont = scene.add.container(0, 0);
     card.addAt(glowCont, 0); // Put it at the very back of the card
 
@@ -374,34 +374,30 @@ function addShimmerEffect(scene, card, rarity) {
         repeat: -1
     });
 
-    // 2. THE FOIL SWEEP (Mathematically Clamped = Zero Spilling!)
+    // 2. THE FOIL SWEEP (Bulletproof Method - No overlapping tweens!)
     let sweepColor = rarity === 'Glitch' ? 0x2ecc71 : 0xffffff;
     
-    // Start it at x: -84 (perfectly touching the inside left border)
-    // Start with alpha: 0 (completely invisible)
-    let sweep = scene.add.rectangle(-84, 0, 40, 308, sweepColor, 0);
-    sweep.setBlendMode(Phaser.BlendModes.ADD);
-    card.add(sweep); 
+    // Create a container for the light bar, starting safely inside the left border
+    let sweepCont = scene.add.container(-70, 0); 
+    card.add(sweepCont); 
 
-    // Tween A: The Movement (Moves exactly to the inner right border)
+    // Build a "soft" vertical light bar using 3 stacked rectangles
+    // This gives it a natural glowing gradient edge without needing complex alpha tweens!
+    let wideBar = scene.add.rectangle(0, 0, 50, 308, sweepColor, 0.15).setBlendMode(Phaser.BlendModes.ADD);
+    let midBar  = scene.add.rectangle(0, 0, 25, 308, sweepColor, 0.3).setBlendMode(Phaser.BlendModes.ADD);
+    let coreBar = scene.add.rectangle(0, 0, 8,  308, sweepColor, 0.8).setBlendMode(Phaser.BlendModes.ADD);
+
+    sweepCont.add([wideBar, midBar, coreBar]);
+
+    // A single, simple movement tween that bounces back and forth!
+    // By keeping it between -70 and 70, it mathematically cannot spill over the black border.
     scene.tweens.add({
-        targets: sweep,
-        x: 84, 
-        duration: 1000,
+        targets: sweepCont,
+        x: 70, // Move safely to the right inner border
+        duration: 1500,
         ease: 'Sine.easeInOut',
-        repeat: -1,
-        repeatDelay: 1500 
-    });
-
-    // Tween B: The Fade (Fades in, holds brightness, fades out before hitting the edge)
-    scene.tweens.add({
-        targets: sweep,
-        alpha: 0.5,     // Glows bright!
-        duration: 250,  // Fades in over the first 25% of the movement
-        yoyo: true,     // Will fade back out to 0 at the end
-        hold: 500,      // Holds full brightness in the middle of the card
-        repeat: -1,
-        repeatDelay: 1500 
+        yoyo: true, // It will smoothly sweep back to the left!
+        repeat: -1
     });
 
     // 3. THE SPARKLE STORM
