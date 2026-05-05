@@ -37,15 +37,23 @@ function renderPhoneView(scene, overlay) {
 
     scene.activePhoneTimerText = timeTxt;
     
-    // Optional: Make it pulse red if under 10 seconds!
     if (secondsLeft <= 10) {
         scene.tweens.add({ targets: timeTxt, scale: 1.2, alpha: 0.5, yoyo: true, repeat: -1, duration: 300 });
     }
 
-    let cardG = scene.add.container(0, 70);
+    // SLIGHTLY ADJUSTED: Moved card up from 70 to 50 to make room for the new text
+    let cardG = scene.add.container(0, 50);
     cardG.add(createCardGraphic(scene, moji));
     cardG.setScale(0.4);
     
+    // --- NEW: Card Value & Owned Indicators ---
+    let valTxt = scene.add.text(0, 140, `Market Value: $${moji.baseValue.toFixed(2)}`, { fontSize: '15px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0.5);
+    
+    let ownedCount = playerInventory[moji.id] || 0;
+    let ownColor = ownedCount > 0 ? '#2ecc71' : '#e74c3c';
+    let ownTxt = scene.add.text(0, 165, `You own: ${ownedCount}`, { fontSize: '15px', color: ownColor, fontStyle: 'bold' }).setOrigin(0.5);
+    // ------------------------------------------
+
     let acceptBtn, declineBtn;
     
     const finalizeTrade = (messageText) => {
@@ -60,9 +68,9 @@ function renderPhoneView(scene, overlay) {
         let owned = playerInventory[moji.id];
         let canFulfill = playerUnlocks.binder ? owned > 1 : owned > 0;
         
-        // Inside the SELL block:
         if (canFulfill) {
-            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'SELL IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
+            // SLIGHTLY ADJUSTED: Moved buttons down from 190 to 215
+            acceptBtn = createButton(scene, -80, 215, 120, 40, 0x27ae60, null, 'SELL IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
                 gameStats.npcTrades++;
                 playerInventory[moji.id]--;
                 playerMoney += currentTrade.price;
@@ -70,14 +78,11 @@ function renderPhoneView(scene, overlay) {
                 finalizeTrade(`SOLD FOR $${currentTrade.price.toFixed(2)}!`);
             });
         } else {
-            // Passed 'null' at the end so it's a completely dead, unclickable button
-            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'NO SPARES', { fontSize: '14px', color: '#bdc3c7', fontStyle: 'bold'}, null);
+            acceptBtn = createButton(scene, -80, 215, 120, 40, 0x7f8c8d, null, 'NO SPARES', { fontSize: '14px', color: '#bdc3c7', fontStyle: 'bold'}, null);
         }
     } else {
         if (playerMoney >= currentTrade.price) {
-            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x27ae60, null, 'BUY IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
-                
-                // BULLETPROOF CHECK: Verify money at the exact moment of clicking
+            acceptBtn = createButton(scene, -80, 215, 120, 40, 0x27ae60, null, 'BUY IT', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
                 if (playerMoney >= currentTrade.price) {
                     playerMoney -= currentTrade.price;
                     playerInventory[moji.id]++;
@@ -86,19 +91,18 @@ function renderPhoneView(scene, overlay) {
                     finalizeTrade(`BOUGHT ${moji.name}!`);
                 } else {
                     alert("Wait! You don't have enough money for this right now!");
-                    renderPhoneView(scene, overlay); // Refresh the UI to show the 'TOO POOR' button
+                    renderPhoneView(scene, overlay); 
                 }
-                
             });
         } else {
-            // Passed 'null' at the end so it's completely unclickable
-            acceptBtn = createButton(scene, -80, 190, 120, 40, 0x7f8c8d, null, 'TOO POOR', { fontSize: '16px', color: '#bdc3c7', fontStyle: 'bold'}, null);
+            acceptBtn = createButton(scene, -80, 215, 120, 40, 0x7f8c8d, null, 'TOO POOR', { fontSize: '16px', color: '#bdc3c7', fontStyle: 'bold'}, null);
         }
     }
     
-    declineBtn = createButton(scene, 80, 190, 120, 40, 0xe74c3c, null, 'DECLINE', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
+    // SLIGHTLY ADJUSTED: Moved button down from 190 to 215
+    declineBtn = createButton(scene, 80, 215, 120, 40, 0xe74c3c, null, 'DECLINE', { fontSize: '16px', color: '#fff', fontStyle: 'bold'}, () => {
         finalizeTrade("OFFER DECLINED.");
     });
     
-    overlay.msgContainer.add([bubble, msgTxt, timeTxt, cardG, acceptBtn, declineBtn]);
+    overlay.msgContainer.add([bubble, msgTxt, timeTxt, cardG, valTxt, ownTxt, acceptBtn, declineBtn]);
 }
