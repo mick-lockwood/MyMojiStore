@@ -234,7 +234,10 @@ function showPackCloseup(scene, packKey) {
         spawnBoosterPack(scene, packKey);
     });
 
-    const closeTxt = scene.add.text(450, -320, '✖', { fontSize: '36px', color: '#000000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    let tableBgColor = themeColors.active.table || 0x2c3e50; 
+    let tableContrast = getContrastColor(tableBgColor);
+
+    const closeTxt = scene.add.text(160, -250, '✖', { fontSize: '36px', color: tableContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => closeup.destroy());
 
     closeup.add([bg, packGraphic, openBtn, closeTxt]);
