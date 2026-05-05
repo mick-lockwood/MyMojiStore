@@ -354,8 +354,8 @@ function addShimmerEffect(scene, card, rarity) {
 
     // 1. Pulsing Glowing Aura behind the card
     let glow = scene.add.rectangle(0, 0, 240, 340, auraColor, 0.6);
-    glow.setBlendMode(Phaser.BlendModes.ADD); // Makes it look like actual light
-    card.addAt(glow, 0); // Slip it right to the very back of the card container
+    glow.setBlendMode(Phaser.BlendModes.ADD); 
+    card.addAt(glow, 0); 
 
     scene.tweens.add({
         targets: glow,
@@ -367,24 +367,24 @@ function addShimmerEffect(scene, card, rarity) {
         repeat: -1
     });
 
-    // 2. Shiny Foil Sweep across the front
-    let sweep = scene.add.rectangle(-250, 0, 40, 450, 0xffffff, 0.3);
-    sweep.setAngle(25);
-    sweep.setBlendMode(Phaser.BlendModes.ADD);
-    card.add(sweep); // Add on top of everything else
+    // 2. FIXED: Exact-Fit Foil Flash
+    // We make it 210x310 so it perfectly coats the inside of the card border
+    let foilFlash = scene.add.rectangle(0, 0, 210, 310, 0xffffff, 0);
+    foilFlash.setBlendMode(Phaser.BlendModes.ADD);
+    card.addAt(foilFlash, 2); // Place it right over the card background
 
     scene.tweens.add({
-        targets: sweep,
-        x: 250,
-        duration: 1200,
-        ease: 'Sine.easeInOut',
+        targets: foilFlash,
+        alpha: { from: 0.5, to: 0 },
+        duration: 1000,
+        ease: 'Sine.easeOut',
         repeat: -1,
-        repeatDelay: 1000 // Waits a second, then sweeps again
+        repeatDelay: 1500 
     });
 
     // 3. Continuous Ambient Sparkles
     const spawnSparkle = () => {
-        if (!card.active) return; // Stop spawning if the card is sold/stashed
+        if (!card.active) return; 
         
         let sx = Phaser.Math.Between(-100, 100);
         let sy = Phaser.Math.Between(-150, 150);
@@ -394,7 +394,7 @@ function addShimmerEffect(scene, card, rarity) {
 
         scene.tweens.add({
             targets: spark,
-            y: sy - 40, // Float upward
+            y: sy - 40, 
             alpha: { from: 1, to: 0 },
             scale: { from: 1, to: 0 },
             duration: Phaser.Math.Between(800, 1500),
@@ -404,7 +404,7 @@ function addShimmerEffect(scene, card, rarity) {
         scene.time.delayedCall(Phaser.Math.Between(200, 400), spawnSparkle);
     };
     
-    spawnSparkle(); // Kick off the infinite sparkle loop!
+    spawnSparkle(); 
 }
 
 function createPackGraphic(scene, packId) {
