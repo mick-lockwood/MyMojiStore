@@ -149,6 +149,7 @@ function create() {
         binderOverlay.setVisible(false);
         storeOverlay.setVisible(false);
         inventoryOverlay.setVisible(false);
+        tradingOverlay.setVisible(false);
         settingsOverlay.setVisible(false);
         scene.phoneOverlay.setVisible(false);
         
