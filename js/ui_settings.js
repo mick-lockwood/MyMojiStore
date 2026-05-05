@@ -1,17 +1,17 @@
 function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const overlay = scene.add.container(512, 384).setVisible(false).setDepth(300);
     
-    // INCREASED HEIGHT: From 500 to 560 to comfortably fit a 5th row for the Store!
-    const bg = scene.add.rectangle(0, 0, 600, 560, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
+    // 1. INCREASED HEIGHT: From 560 to 640 to comfortably fit a 6th row!
+    const bg = scene.add.rectangle(0, 0, 600, 640, 0xffffff).setStrokeStyle(4, 0x000000).setInteractive();
     overlay.add(bg); 
     
-    // Adjusted Y coords to match taller background
-    const title = scene.add.text(0, -240, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
-    const closeTxt = scene.add.text(270, -240, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
+    // 2. SHIFTED HEADER UP: Adjusted Y coords to -280 to match taller background
+    const title = scene.add.text(0, -280, 'SETTINGS', { fontFamily: 'Impact', fontSize: '32px', color: '#000' }).setOrigin(0.5);
+    const closeTxt = scene.add.text(270, -280, '✖', { fontSize: '28px', color: '#000' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    // CHANGED: Shrunk to 180px wide and moved left (-110 X coordinate)
-    const instrBtn = createButton(scene, -110, 160, 180, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+    // 3. SHIFTED BUTTONS DOWN: Moved to Y 220
+    const instrBtn = createButton(scene, -110, 220, 180, 40, 0x3498db, 0x000000, 'HOW TO PLAY', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         alert(
             "HOW TO PLAY:\n\n" +
             "1. Buy packs from the Store.\n" +
@@ -25,21 +25,19 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         );
     });
 
-    // NEW: Achievements button on the right (110 X coordinate)
-    const achBtn = createButton(scene, 110, 160, 180, 40, 0xf1c40f, 0x000000, '🏆 ACHIEVEMENTS', { fontFamily: 'Arial', fontSize: '16px', color: '#000', fontStyle: 'bold' }, () => {
-        overlay.setVisible(false); // Hide the settings menu
-        renderAchievementsView(scene, scene.achievementsOverlay); // Build the latest achievement data
-        scene.achievementsOverlay.setVisible(true); // Pop it open!
+    const achBtn = createButton(scene, 110, 220, 180, 40, 0xf1c40f, 0x000000, '🏆 ACHIEVEMENTS', { fontFamily: 'Arial', fontSize: '16px', color: '#000', fontStyle: 'bold' }, () => {
+        overlay.setVisible(false); 
+        renderAchievementsView(scene, scene.achievementsOverlay); 
+        scene.achievementsOverlay.setVisible(true); 
     });
     
-    // (Reset button stays exactly the same)
-    const resetBtn = createButton(scene, 0, 220, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+    // SHIFTED DOWN: Moved to Y 280
+    const resetBtn = createButton(scene, 0, 280, 200, 40, 0xe74c3c, 0x000000, 'DELETE SAVE FILE', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
     overlay.paletteContainer = scene.add.container(0, 0);
     
-    // Make sure ALL of your buttons AND the paletteContainer are inside this array!
     overlay.add([bg, title, closeTxt, resetBtn, instrBtn, achBtn, overlay.paletteContainer]);
 
     const stdColors = [0x1a1a1a, 0xfce883, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad];
@@ -101,7 +99,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
                 } else {
                     if (isActive) {
-                        // NEW: Utilizing the helper function to automatically determine checkmark color!
                         let checkColor = getContrastColor(color);
                         let checkTxt = scene.add.text(startX + (index * spacing), y, '✔', { fontSize: '18px', color: checkColor, fontStyle: 'bold' }).setOrigin(0.5);
                         overlay.paletteContainer.add([swatch, checkTxt]);
@@ -145,17 +142,28 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
                                 renderInventoryView(scene, scene.inventoryOverlay);
                             }
                         }
-                        // Update Store logic (Assuming your storeOverlay has a `.bg` property like binder/inv do)
                         if (type === 'store') {
                             themeColors.store = color;
                             
-                            // NEW: Actually change the background graphic!
                             if (scene.storeOverlay && scene.storeOverlay.bg) {
                                 scene.storeOverlay.bg.setFillStyle(color);
                             }
                             
                             if (scene.storeOverlay && scene.storeOverlay.visible) {
                                 renderStoreView(scene, scene.storeOverlay);
+                            }
+                        }
+                        
+                        // 4. NEW: Trading Hall Logic added!
+                        if (type === 'trading') {
+                            themeColors.trading = color;
+                            
+                            if (scene.tradingOverlay && scene.tradingOverlay.bg) {
+                                scene.tradingOverlay.bg.setFillStyle(color);
+                            }
+                            
+                            if (scene.tradingOverlay && scene.tradingOverlay.visible) {
+                                renderTradingView(scene, scene.tradingOverlay);
                             }
                         }
                         
@@ -166,12 +174,12 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             });
         };
 
-        // NEW: Draw the 5 rows!
         drawRow(-160, "Table Color", 'table');
         drawRow(-100, "Banner Color", 'banner');
         drawRow(-40, "Binder Color", 'binder');
         drawRow(20, "Inventory Color", 'inv');
         drawRow(80, "Store Color", 'store');
+        drawRow(140, "Trading Hall Color", 'trading');
     };
 
     overlay.renderPalettes(); 
