@@ -1,3 +1,17 @@
+function playSound(scene, key, config = {}) {
+    // If the whole game is muted, abort immediately!
+    if (audioSettings.muted) return;
+
+    if (scene.cache.audio.exists(key)) {
+        // Multiply the requested volume by the global SFX volume
+        let baseVolume = config.volume || 1;
+        config.volume = baseVolume * audioSettings.sfx;
+        
+        scene.sound.play(key, config);
+    } else {
+        console.warn('Sound skipped (not found):', key);
+    }
+}
 function getContrastColor(hexColor) {
     let r, g, b;
     // Handle both string ('#ffffff') and number (0xffffff) formats
