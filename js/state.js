@@ -114,18 +114,17 @@ function generateTrade(scene) {
         
     currentTrade = { type: isBuy ? 'buy' : 'sell', mojiId: randomMoji.id, price: Number((randomMoji.baseValue * priceMultiplier).toFixed(2)) };
     
-    // NEW: Set the expiration for 2 minutes (120,000 milliseconds) from now
+    // Set the expiration for 2 minutes (120,000 milliseconds) from now
     tradeExpirationTime = Date.now() + 120000; 
 
     unreadMessage = true;
     
-    // SOUND EFFECT
-    if (scene.sound) {
-        scene.sound.play('phone_notification', { volume: 0.7 });
-        
+    // FIXED: Moved outside the sound check!
     if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
     
-    }
+    // FIXED: Use our custom playSound helper so it respects the Mute button!
+    playSound(scene, 'phone_notification', { volume: 0.7 });
+
     saveGame();
 }
 
