@@ -129,6 +129,7 @@ function create() {
         scene.phoneNotification.setVisible(false); 
         renderPhoneView(scene, scene.phoneOverlay); 
         scene.phoneOverlay.setVisible(true); 
+        scene.sound.play('phone_notification', { volume: 1.0 });
     });
 
     // --- OVERLAYS ---
@@ -531,7 +532,8 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                     if (isEpic) {
                         
                         // SOUND EFFECT
-                        scene.sound.play('flip', { volume: 1.0 });
+                        scene.sound.play('epic_rumble', { volume: 1.0 });
+                        scene.sound.play('epic_reveal', { volume: 1.0 });
                         
                         // Shake the screen for 1.5 seconds, and pause the flip for 1.5 seconds!
                         scene.cameras.main.shake(1500, 0.015); 
