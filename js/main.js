@@ -536,7 +536,9 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                         // Shake the screen for 1.5 seconds, and pause the flip for 1.5 seconds!
                         scene.cameras.main.shake(1500, 0.015); 
                         
-                        scene.time.delayedCall(1500, finishFlip); 
+                        scene.time.delayedCall(1500, finishFlip);
+                        
+                        // SOUND EFFECT
                         scene.sound.play('epic_reveal', { volume: 1.0 });
                         
                     } else {
