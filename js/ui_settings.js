@@ -36,6 +36,54 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         if (confirm("Delete save and start over?")) { localStorage.removeItem('myMojiSave'); location.reload(); }
     });
 
+    // --- AUDIO CONTROLS ---
+    
+    // Helper to format the button text nicely (e.g., "BGM: 30%")
+    const getVolText = (label, val) => `${label}: ${Math.round(val * 100)}%`;
+
+    // 1. Background Music Button (Cycles 0%, 30%, 60%, 100%)
+    let bgmBtn = createButton(scene, -110, 160, 180, 40, 0x27ae60, 0x000000, getVolText('MUSIC', audioSettings.bgm), { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        audioSettings.bgm += 0.3;
+        if (audioSettings.bgm > 1.0) audioSettings.bgm = 0; // Loop back to 0
+        
+        // Instantly update the playing track!
+        if (scene.bgmTrack && !audioSettings.muted) {
+            scene.bgmTrack.setVolume(audioSettings.bgm);
+        }
+        
+        bgmBtn.list[1].setText(getVolText('MUSIC', audioSettings.bgm));
+        saveGame();
+    });
+
+    // 2. Sound Effects Button (Cycles 0%, 50%, 100%)
+    let sfxBtn = createButton(scene, 110, 160, 180, 40, 0x2980b9, 0x000000, getVolText('SFX', audioSettings.sfx), { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        audioSettings.sfx += 0.5;
+        if (audioSettings.sfx > 1.0) audioSettings.sfx = 0; // Loop back to 0
+        
+        playSound(scene, 'coin', { volume: 1.0 }); // Play a test sound!
+        
+        sfxBtn.list[1].setText(getVolText('SFX', audioSettings.sfx));
+        saveGame();
+    });
+
+    // 3. Master Mute Button
+    let muteColor = audioSettings.muted ? 0xe74c3c : 0x7f8c8d;
+    let muteText = audioSettings.muted ? '🔇 MUTED' : '🔊 AUDIO ON';
+    
+    let muteBtn = createButton(scene, 0, 100, 200, 40, muteColor, 0x000000, muteText, { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        audioSettings.muted = !audioSettings.muted;
+        
+        // Update the BGM instantly
+        if (scene.bgmTrack) {
+            scene.bgmTrack.setVolume(audioSettings.muted ? 0 : audioSettings.bgm);
+        }
+        
+        // Update button visuals
+        muteBtn.list[0].setFillStyle(audioSettings.muted ? 0xe74c3c : 0x7f8c8d);
+        muteBtn.list[1].setText(audioSettings.muted ? '🔇 MUTED' : '🔊 AUDIO ON');
+        saveGame();
+    });
+
     overlay.paletteContainer = scene.add.container(0, 0);
     
     overlay.add([bg, title, closeTxt, resetBtn, instrBtn, achBtn, overlay.paletteContainer]);
