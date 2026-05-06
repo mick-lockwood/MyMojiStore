@@ -17,7 +17,11 @@ function preload() {
     this.load.audio('pack_rip', 'assets/pack_rip.mp3');
     this.load.audio('coin', 'assets/coin.mp3');
     this.load.audio('flip', 'assets/card_flip.mp3');
-    this.load.audio('epic_rumble', 'assets/rumble.mp3');
+    this.load.audio('epic_rumble', 'assets/rumble_01.mp3');
+    this.load.audio('epic_reveal', 'assets/epic_reveal.mp3');
+    this.load.audio('phone_notification', 'assets/phone_notification.mp3');
+    this.load.audio('achievement_notification', 'assets/achievement_notification.mp3');
+    
 }
 
 function create() {
