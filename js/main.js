@@ -1,3 +1,5 @@
+console.log("HELLO WORLD");
+
 const config = {
     type: Phaser.AUTO,
     width: 1024,
