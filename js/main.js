@@ -21,6 +21,24 @@ function preload() {
     this.load.audio('epic_reveal', 'assets/epic_reveal.mp3');
     this.load.audio('phone_notification', 'assets/phone_notification.mp3');
     this.load.audio('achievement_notification', 'assets/achievement_notification.mp3');
+    // --- BACKGROUND MUSIC FILES ---
+    this.load.audio('bg_music_01', 'assets/bg_music_01.mp3');
+    this.load.audio('bg_music_02', 'assets/bg_music_02.mp3');
+    this.load.audio('bg_music_03', 'assets/bg_music_03.mp3');
+    this.load.audio('bg_music_04', 'assets/bg_music_04.mp3');
+    this.load.audio('bg_music_05', 'assets/bg_music_05.mp3');
+    this.load.audio('bg_music_06', 'assets/bg_music_06.mp3');
+    this.load.audio('bg_music_07', 'assets/bg_music_07.mp3');
+    this.load.audio('bg_music_08', 'assets/bg_music_08.mp3');
+    this.load.audio('bg_music_09', 'assets/bg_music_09.mp3');
+    this.load.audio('bg_music_10', 'assets/bg_music_10.mp3');
+    this.load.audio('bg_music_11', 'assets/bg_music_11.mp3');
+    this.load.audio('bg_music_12', 'assets/bg_music_12.mp3');
+    this.load.audio('bg_music_13', 'assets/bg_music_13.mp3');
+    this.load.audio('bg_music_14', 'assets/bg_music_14.mp3');
+    this.load.audio('bg_music_15', 'assets/bg_music_15.mp3');
+    this.load.audio('bg_music_16', 'assets/bg_music_16.mp3');
+    this.load.audio('bg_music_17', 'assets/bg_music_17.mp3');
     
 }
 
