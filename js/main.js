@@ -46,16 +46,50 @@ function create() {
     const scene = this; 
     scene.cameras.main.setBackgroundColor(themeColors.table);
     
-    // --- BACKGROUND MUSIC ---
-    // Create the track, set it to loop forever, and apply our saved volume!
-    scene.bgmTrack = scene.sound.add('bg_music', { 
-        loop: true, 
-        volume: audioSettings.muted ? 0 : audioSettings.bgm 
-    });
-    
-    // Note: Browsers sometimes block audio until the user clicks the screen once.
-    // Phaser is smart and will automatically start it as soon as they click anywhere!
-    scene.bgmTrack.play();
+    // --- BACKGROUND MUSIC PLAYLIST ---
+    scene.playlist = ['music_1', 'music_2', 'music_3']; // Add all your track keys here!
+    scene.currentTrackIndex = 0;
+
+    // A reusable function to play the current song and queue the next one
+    Phaser.Utils.Array.Shuffle(scene.playlist); 
+    scene.playNextSong = () => {
+        // 1. Clean up the old track if one is currently playing
+        if (scene.bgmTrack) {
+            scene.bgmTrack.stop();
+            scene.bgmTrack.destroy();
+        }
+
+        // 2. Grab the next song key from the array
+        let nextSongKey = scene.playlist[scene.currentTrackIndex];
+
+        // 3. Add the new song (Notice we removed `loop: true`!)
+        scene.bgmTrack = scene.sound.add(nextSongKey, { 
+            volume: audioSettings.muted ? 0 : audioSettings.bgm 
+        });
+
+        // 4. Listen for the EXACT moment this song finishes
+        scene.bgmTrack.once('complete', () => {
+            // Move to the next track
+            scene.currentTrackIndex++;
+            
+            // If we reached the end of the playlist, loop back to the first song
+            if (scene.currentTrackIndex >= scene.playlist.length) {
+                scene.currentTrackIndex = 0; 
+            }
+            
+            // Recursively call this function to play the next song!
+            Phaser.Utils.Array.Shuffle(scene.playlist); 
+            scene.playNextSong();
+        });
+
+        // 5. Hit play!
+        scene.bgmTrack.play();
+    };
+
+    Phaser.Utils.Array.Shuffle(scene.playlist); 
+    scene.playNextSong();
+
+    // ----------------------------------
 
     // Standard hard angled shadow for buttons
     const addShadow = (x, y, w, h, radius = 0) => {
