@@ -86,7 +86,7 @@ function renderTradingView(scene, overlay) {
             if (playerMoney >= blackMarketPrice) { 
                 playerMoney -= blackMarketPrice;
                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
-                playSound(scene, 'coin', { volume: 0.6 });
+                scene.sound.play('coin', { volume: 0.6 });
                 
                 playerInventory[moji.id] = 1; 
                 saveGame();
