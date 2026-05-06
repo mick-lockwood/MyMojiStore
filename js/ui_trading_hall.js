@@ -83,10 +83,10 @@ function renderTradingView(scene, overlay) {
         
         // FIXED: Made the button physically larger (180x50) and pushed it further down (255)
         let buyBtn = createButton(scene, 0, 255, 180, 50, 0x9b59b6, null, 'BUY CARD', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
-            if (playerMoney >= blackMarketPrice) {
-                playSound(scene, 'coin', { volume: 0.6 }); 
+            if (playerMoney >= blackMarketPrice) { 
                 playerMoney -= blackMarketPrice;
                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                playSound(scene, 'coin', { volume: 0.6 });
                 
                 playerInventory[moji.id] = 1; 
                 saveGame();
