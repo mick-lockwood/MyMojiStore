@@ -45,6 +45,17 @@ function preload() {
 function create() {
     const scene = this; 
     scene.cameras.main.setBackgroundColor(themeColors.table);
+    
+    // --- BACKGROUND MUSIC ---
+    // Create the track, set it to loop forever, and apply our saved volume!
+    scene.bgmTrack = scene.sound.add('bg_music', { 
+        loop: true, 
+        volume: audioSettings.muted ? 0 : audioSettings.bgm 
+    });
+    
+    // Note: Browsers sometimes block audio until the user clicks the screen once.
+    // Phaser is smart and will automatically start it as soon as they click anywhere!
+    scene.bgmTrack.play();
 
     // Standard hard angled shadow for buttons
     const addShadow = (x, y, w, h, radius = 0) => {
