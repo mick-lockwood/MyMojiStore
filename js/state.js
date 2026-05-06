@@ -115,9 +115,10 @@ function generateTrade(scene) {
     tradeExpirationTime = Date.now() + 120000; 
 
     unreadMessage = true;
-    if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
     if (scene.sound) {
         scene.sound.play('phone_notification', { volume: 0.7 });
+    if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
+    
     }
     saveGame();
 }
