@@ -4,15 +4,12 @@ const config = {
     height: 768,
     backgroundColor: '#2c3e50',
     parent: 'game-container',
-    // NEW: Add the preload function to the scene sequence!
     scene: { preload: preload, create: create } 
 };
 
 const game = new Phaser.Game(config);
 
 function preload() {
-    // You will need to create an "assets" folder in your project folder!
-    // Give each sound a "key" (like 'coin') and point it to the file path.
     this.load.audio('click', 'assets/click.mp3');
     this.load.audio('pack_rip', 'assets/pack_rip.mp3');
     this.load.audio('coin', 'assets/coin.mp3');
@@ -21,6 +18,7 @@ function preload() {
     this.load.audio('epic_reveal', 'assets/epic_reveal.mp3');
     this.load.audio('phone_notification', 'assets/phone_notification.mp3');
     this.load.audio('achievement_notification', 'assets/achievement_notification.mp3');
+    
     // --- BACKGROUND MUSIC FILES ---
     this.load.audio('bg_music_01', 'assets/bg_music_01.mp3');
     this.load.audio('bg_music_02', 'assets/bg_music_02.mp3');
@@ -39,7 +37,6 @@ function preload() {
     this.load.audio('bg_music_15', 'assets/bg_music_15.mp3');
     this.load.audio('bg_music_16', 'assets/bg_music_16.mp3');
     this.load.audio('bg_music_17', 'assets/bg_music_17.mp3');
-    
 }
 
 function create() {
@@ -47,51 +44,64 @@ function create() {
     scene.cameras.main.setBackgroundColor(themeColors.table);
     
     // --- BACKGROUND MUSIC PLAYLIST ---
-    scene.playlist = ['music_1', 'music_2', 'music_3']; // Add all your track keys here!
+    // FIXED: Ensure these keys match the preload keys exactly!
+    scene.playlist = [
+        'bg_music_01', 'bg_music_02', 'bg_music_03', 'bg_music_04',
+        'bg_music_05', 'bg_music_06', 'bg_music_07', 'bg_music_08',
+        'bg_music_09', 'bg_music_10', 'bg_music_11', 'bg_music_12',
+        'bg_music_13', 'bg_music_14', 'bg_music_15', 'bg_music_16', 'bg_music_17'
+    ]; 
     scene.currentTrackIndex = 0;
 
-    // A reusable function to play the current song and queue the next one
+    // Shuffle once at the very beginning
     Phaser.Utils.Array.Shuffle(scene.playlist); 
+
     scene.playNextSong = () => {
-        // 1. Clean up the old track if one is currently playing
         if (scene.bgmTrack) {
             scene.bgmTrack.stop();
             scene.bgmTrack.destroy();
         }
 
-        // 2. Grab the next song key from the array
         let nextSongKey = scene.playlist[scene.currentTrackIndex];
 
-        // 3. Add the new song (Notice we removed `loop: true`!)
+        // FIXED: ADDED THE SAFETY NET!
+        // If a file is missing or corrupted, skip it instead of crashing.
+        if (!scene.cache.audio.exists(nextSongKey)) {
+            console.warn(`Playlist skipped missing track: ${nextSongKey}`);
+            scene.currentTrackIndex++;
+            if (scene.currentTrackIndex >= scene.playlist.length) {
+                scene.currentTrackIndex = 0;
+            }
+            // Abort if EVERYTHING is missing
+            if (scene.playlist.every(key => !scene.cache.audio.exists(key))) return; 
+            
+            scene.playNextSong();
+            return;
+        }
+
         scene.bgmTrack = scene.sound.add(nextSongKey, { 
-            volume: audioSettings.muted ? 0 : audioSettings.bgm 
+            // Fallback just in case audioSettings hasn't loaded yet
+            volume: (typeof audioSettings !== 'undefined' && audioSettings.muted) ? 0 : (typeof audioSettings !== 'undefined' ? audioSettings.bgm : 0.3)
         });
 
-        // 4. Listen for the EXACT moment this song finishes
         scene.bgmTrack.once('complete', () => {
-            // Move to the next track
             scene.currentTrackIndex++;
-            
-            // If we reached the end of the playlist, loop back to the first song
             if (scene.currentTrackIndex >= scene.playlist.length) {
                 scene.currentTrackIndex = 0; 
+                // Reshuffle when we reach the end of the playlist
+                Phaser.Utils.Array.Shuffle(scene.playlist); 
             }
-            
-            // Recursively call this function to play the next song!
-            Phaser.Utils.Array.Shuffle(scene.playlist); 
             scene.playNextSong();
         });
 
-        // 5. Hit play!
         scene.bgmTrack.play();
     };
 
-    Phaser.Utils.Array.Shuffle(scene.playlist); 
+    // Kick off the music!
     scene.playNextSong();
 
     // ----------------------------------
 
-    // Standard hard angled shadow for buttons
     const addShadow = (x, y, w, h, radius = 0) => {
         if (radius === 0) {
             scene.add.rectangle(x + 6, y + 6, w + 8, h + 8, 0x000000, 0.05); 
@@ -116,8 +126,6 @@ function create() {
     }
     
     scene.headerBg = scene.add.rectangle(512, 40, 1024, 80, themeColors.active.banner); 
-
-    // NEW: Calculate the best text color based on the banner background
     let bannerContrast = getContrastColor(themeColors.active.banner);
 
     scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bannerContrast });
@@ -126,11 +134,10 @@ function create() {
 
     scene.titleText = scene.add.text(512, 40, storeName, { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: bannerContrast }).setOrigin(0.5);
     
-    // Position the pencil dynamically based on how long the text is
     let updatePencilPos = () => { scene.pencilIcon.setX(512 + (scene.titleText.width / 2) + 25); };
     
     scene.pencilIcon = scene.add.text(0, 40, '✏️', { fontSize: '24px', padding: { top: 10, bottom: 10 } }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    updatePencilPos(); // Initial placement
+    updatePencilPos(); 
 
     scene.pencilIcon.on('pointerover', () => scene.tweens.add({ targets: scene.pencilIcon, scale: 1.2, duration: 100 }));
     scene.pencilIcon.on('pointerout', () => scene.tweens.add({ targets: scene.pencilIcon, scale: 1, duration: 100 }));
@@ -145,8 +152,6 @@ function create() {
         
         if (proceed) {
             if (playerMoney >= cost) {
-                
-                // NEW: Dynamic message that warns them about future costs!
                 let promptMsg = hasRenamed 
                     ? "Enter your new store name:" 
                     : "Enter your new store name:\n\n(NOTE: Your first rebrand is FREE! Future name changes will cost $50.00)";
@@ -198,7 +203,6 @@ function create() {
     const binderOverlay = createBinderOverlay(scene);
     scene.binderOverlay = binderOverlay; 
     
-    // Initialize the Achievements menu BEFORE the settings menu!
     scene.achievementsOverlay = createAchievementsOverlay(scene);
 
     const storeOverlay = createStoreOverlay(scene);
@@ -220,13 +224,11 @@ function create() {
         settingsOverlay.setVisible(false);
         scene.phoneOverlay.setVisible(false);
         
-        // NEW: Ensure it closes with everything else
         if (scene.achievementsOverlay) scene.achievementsOverlay.setVisible(false); 
         
         scene.events.emit('close_all_dropdowns');
     };
 
-    // Update Header Buttons to close other overlays first
     storeIconBtn.on('pointerdown', () => { scene.closeAllOverlays(); storeOverlay.currentView = 'shop'; renderStoreView(scene, storeOverlay); storeOverlay.setVisible(true); });
     settingsBtn.on('pointerdown', () => { scene.closeAllOverlays(); settingsOverlay.renderPalettes(); settingsOverlay.setVisible(true); });
     phoneBtn.on('pointerdown', () => { 
@@ -255,7 +257,7 @@ function create() {
     let binderColor = playerUnlocks.binder ? 0xffc87c : 0x7f8c8d; 
     scene.binderZone = createButton(scene, 864, 138, 240, 70, binderColor, 0x000000, 'BINDER', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
         if (playerUnlocks.binder) {
-            scene.closeAllOverlays(); // Close others
+            scene.closeAllOverlays();
             renderBinderGrid(scene, binderOverlay); binderOverlay.setVisible(true); 
         } else {
             showFloatingText(scene, 864, 138, 'LOCKED! BUY IN STORE', '#e74c3c');
@@ -264,7 +266,7 @@ function create() {
 
     addShadow(864, 710, 240, 70, 12);
     scene.invZone = createButton(scene, 864, 710, 240, 70, 0xda7aff, 0x000000, 'INVENTORY', { fontFamily: 'Impact, sans-serif', fontSize: '24px', color: '#111111' }, () => { 
-        scene.closeAllOverlays(); // Close others
+        scene.closeAllOverlays();
         renderInventoryView(scene, inventoryOverlay); inventoryOverlay.setVisible(true); 
     });
 
@@ -275,23 +277,19 @@ function create() {
         }
     });
 
-    // The Global Watcher! 
     scene.time.addEvent({
         delay: 1000,
         callback: () => {
             checkBailout(scene);
             checkAchievements(scene);
 
-            // Check if a trade is currently active
             if (currentTrade) {
                 let secondsLeft = Math.max(0, Math.floor((tradeExpirationTime - Date.now()) / 1000));
                 
-                // NEW: If the phone overlay is open, tick the timer down visually!
                 if (scene.activePhoneTimerText && scene.activePhoneTimerText.active) {
                     scene.activePhoneTimerText.setText(`⏳ ${secondsLeft}s`);
                 }
 
-                // If time ran out, wipe the trade
                 if (Date.now() > tradeExpirationTime) {
                     currentTrade = null;
                     unreadMessage = false;
@@ -324,7 +322,6 @@ function showPackCloseup(scene, packKey) {
         playerPacks[packKey] -= 1; 
         saveGame();
 
-        // SOUND EFFECT
         scene.sound.play('pack_rip', { volume: 0.8 });
         
         let totalPacks = playerPacks.basic + playerPacks.premium + playerPacks.legendary;
@@ -348,7 +345,6 @@ function spawnBoosterPack(scene, packId) {
     const packDef = packDatabase[packId];
     let pulledThisPack = {};
     
-    // Math for a perfectly centered, overlapped array of 3 cards
     let startX = 362; 
     let spacingX = 150; 
     let y = 450; 
@@ -359,26 +355,21 @@ function spawnBoosterPack(scene, packId) {
         pulledThisPack[pulledMoji.id] = true;
         
         let x = startX + (i * spacingX);
-        
-        // The "true" at the end tells the card to spawn face down!
         createDraggableCard(scene, x, y, pulledMoji, null, isNewCard, true); 
     }
 }
 
 function pullCardWithWeights(weights, categoryFilter = "all") {
-    // 1. Filter the database if a specific category is required
     let pool = myMojiDatabase;
     if (categoryFilter !== "all") {
         pool = myMojiDatabase.filter(m => m.category === categoryFilter);
     }
 
-    // 2. Sum up the weights of the remaining cards
     let totalWeight = 0;
     for (let i = 0; i < pool.length; i++) {
         totalWeight += (weights[pool[i].rarity] || 0);
     }
 
-    // 3. Roll the dice
     let randomNum = Math.random() * totalWeight;
     for (let i = 0; i < pool.length; i++) {
         let weight = (weights[pool[i].rarity] || 0);
@@ -389,21 +380,19 @@ function pullCardWithWeights(weights, categoryFilter = "all") {
 }
 
 function createCardGraphic(scene, mojiData) {
-    let bgColor = 0xffffff; // Common default
-    if (mojiData.rarity === 'Rare') bgColor = 0xd0ebff;      // Pastel Blue
-    if (mojiData.rarity === 'Epic') bgColor = 0xe8d0ff;      // Pastel Purple
-    if (mojiData.rarity === 'Legendary') bgColor = 0xfff0b3; // Pastel Gold
-    if (mojiData.rarity === 'Glitch') bgColor = 0x111111;    // Dark Mode
+    let bgColor = 0xffffff; 
+    if (mojiData.rarity === 'Rare') bgColor = 0xd0ebff;      
+    if (mojiData.rarity === 'Epic') bgColor = 0xe8d0ff;      
+    if (mojiData.rarity === 'Legendary') bgColor = 0xfff0b3; 
+    if (mojiData.rarity === 'Glitch') bgColor = 0x111111;    
 
     let isGlitch = mojiData.rarity === 'Glitch';
     let strokeColor = isGlitch ? 0xff00ff : 0x1a1a1a; 
-    let textColor = isGlitch ? '#2ecc71' : '#1a1a1a'; // Green for glitch, dark for normal!
-    let valColor = isGlitch ? '#ff00ff' : '#27ae60';
-
+    let textColor = isGlitch ? '#2ecc71' : '#1a1a1a'; 
+    
     const bg = scene.add.rectangle(0, 0, 220, 320, bgColor).setStrokeStyle(6, strokeColor);
     const imgBox = scene.add.rectangle(0, -40, 180, 160, 0xe0e0e0).setStrokeStyle(3, 0xcccccc);
     
-    // Updated with textColor, moved up, and wrap widened
     let nameTxt = scene.add.text(0, -142, mojiData.name, { 
         fontSize: '18px', 
         color: textColor, 
@@ -414,7 +403,6 @@ function createCardGraphic(scene, mojiData) {
     
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: textColor }).setOrigin(0.5);
     
-    // Updated value text to use textColor
     let valTxt = scene.add.text(0, 130, '$' + mojiData.baseValue.toFixed(2), { fontSize: '18px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
     
     let numStr = '#' + mojiData.id.split('_')[1];
@@ -436,7 +424,6 @@ function createCardBackGraphic(scene) {
 function addShimmerEffect(scene, card, rarity) {
     let epicColor = rarity === 'Glitch' ? 0x2ecc71 : 0xf1c40f; 
 
-    // 1. THE SOFT AURA 
     let glowCont = scene.add.container(0, 0);
     card.addAt(glowCont, 0); 
 
@@ -458,14 +445,11 @@ function addShimmerEffect(scene, card, rarity) {
         repeat: -1
     });
 
-    // 2. THE FOIL SWEEP (Taller, Wider, and Subtler!)
     let sweepColor = rarity === 'Glitch' ? 0x2ecc71 : 0xffffff;
     
-    // Start wider: -85 touches the exact left inner border
     let sweepCont = scene.add.container(-85, 0); 
     card.add(sweepCont); 
 
-    // Taller (316) to close the gap, and alphas dropped way down for a subtle gloss
     let widestBar = scene.add.rectangle(0, 0, 50, 316, sweepColor, 0.02).setBlendMode(Phaser.BlendModes.ADD);
     let wideBar = scene.add.rectangle(0, 0, 30, 316, sweepColor, 0.05).setBlendMode(Phaser.BlendModes.ADD);
     let midBar  = scene.add.rectangle(0, 0, 15, 314, sweepColor, 0.05).setBlendMode(Phaser.BlendModes.ADD);
@@ -475,14 +459,13 @@ function addShimmerEffect(scene, card, rarity) {
 
     scene.tweens.add({
         targets: sweepCont,
-        x: 85, // Sweep exactly to the right inner border
+        x: 85, 
         duration: 2500,
         ease: 'Sine.easeInOut',
         yoyo: true, 
         repeat: -1
     });
 
-    // 3. THE SPARKLE STORM
     const spawnSparkle = () => {
         if (!card.active) return; 
         
@@ -585,27 +568,22 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                                 scene.input.setDraggable(card, true); 
                                 card.setDepth(10);
                                 
-                                // NEW: Apply the persistent shimmer effect!
                                 if (isEpic) addShimmerEffect(scene, card, mojiData.rarity);
                             }
                         });
                     };
 
                     if (isEpic) {
-                        
-                        // SOUND EFFECT
                         scene.sound.play('epic_rumble', { volume: 1.0 });
-                        
-                        // Shake the screen for 1.5 seconds, and pause the flip for 1.5 seconds!
                         scene.cameras.main.shake(1500, 0.015); 
                         
-                        scene.time.delayedCall(1500, finishFlip);
-                        
-                        // SOUND EFFECT
-                        scene.sound.play('epic_reveal', { volume: 1.0 });
+                        // FIXED: The 'epic_reveal' sound now waits for the shake to finish before playing!
+                        scene.time.delayedCall(1500, () => {
+                            finishFlip();
+                            scene.sound.play('epic_reveal', { volume: 1.0 });
+                        });
                         
                     } else {
-                        // SOUND EFFECT
                         scene.sound.play('flip', { volume: 0.4 });
                         finishFlip(); 
                     }
@@ -617,7 +595,6 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
     card.on('dragstart', function () { 
         if (card.isFaceDown) return;
         
-        // FIXED: Also apply the top-layer logic when picking up a card to drag it!
         scene.children.bringToTop(this);
         
         this.setScale(1.05); 
@@ -660,7 +637,6 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
             scene.moneyText.setText('$' + playerMoney.toFixed(2));
             showFloatingText(scene, this.x, this.y, 'SOLD!', '#e74c3c');
             
-            // SOUND EFFECT
             scene.sound.play('coin', { volume: 0.6 });
             
             dropped = true;
