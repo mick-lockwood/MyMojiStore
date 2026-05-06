@@ -120,7 +120,6 @@ function create() {
 
     const phoneBtn = scene.add.text(860, 40, '📱', { fontSize: '40px', padding: { top: 10, bottom: 10 } }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     scene.phoneNotification = scene.add.circle(880, 20, 10, 0xe74c3c).setVisible(unreadMessage);
-        scene.sound.play('phone_notification', { volume: 1.0 });
     scene.tweens.add({ targets: scene.phoneNotification, scale: 1.3, yoyo: true, repeat: -1, duration: 400 });
     
     phoneBtn.on('pointerover', () => scene.tweens.add({ targets: phoneBtn, scale: 1.2, duration: 100 }));
