@@ -116,6 +116,9 @@ function generateTrade(scene) {
 
     unreadMessage = true;
     if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
+    if (scene.sound) {
+        scene.sound.play('phone_notification', { volume: 0.7 });
+    }
     saveGame();
 }
 
