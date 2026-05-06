@@ -114,6 +114,11 @@ function renderStoreView(scene, overlay) {
                             playerMoney -= def.cost;
                             scene.moneyText.setText('$' + playerMoney.toFixed(2));
                             playerUnlocks[key] = true;
+                        
+                            // SOUND EFFECT
+                        if (scene.sound) {
+                            scene.sound.play('coin', { volume: 0.6 });
+                            
                             saveGame();
                             checkBailout(scene);
                             
@@ -206,12 +211,12 @@ function renderStoreView(scene, overlay) {
             if (totalCost > 0 && playerMoney >= totalCost) {
                 playerMoney -= totalCost;
                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
+                scene.sound.play('coin', { volume: 0.6 });
                 
                 for (let k in shoppingCart) {
                     playerPacks[k] += shoppingCart[k];
                     shoppingCart[k] = 0;
-                }
-                
+                }                            
                 saveGame();
                 scene.moneyText.setColor('#f1c40f'); 
                 
