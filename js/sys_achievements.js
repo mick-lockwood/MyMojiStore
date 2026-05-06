@@ -47,6 +47,7 @@ function showAchievementBanner(scene, ach) {
     banner.add([bg, title, name, rewardTxt]);
     
     scene.tweens.add({ targets: banner, y: 100, ease: 'Back.easeOut', duration: 600, yoyo: true, hold: 4000, onComplete: () => banner.destroy() });
+    scene.sound.play('achievement_notification', { volume: 1.0 });
 }
 
 function checkAchievements(scene) {
