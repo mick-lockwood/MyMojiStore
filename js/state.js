@@ -4,6 +4,7 @@ let playerInventory = {};
 let cardsOnTable = []; 
 let playerAchievements = []; 
 let gameStats = { packsOpened: 0, npcTrades: 0, bailouts: 0 };
+let audioSettings = { bgm: 0.3, sfx: 0.8, muted: false };
 
 // Auto-generate pack and cart trackers dynamically!
 let playerPacks = {};
@@ -65,6 +66,7 @@ function loadGame() {
         if (parsedData.unread !== undefined) unreadMessage = parsedData.unread;
         if (parsedData.achievements) playerAchievements = parsedData.achievements;
         if (parsedData.stats) gameStats = { ...gameStats, ...parsedData.stats };
+        if (parsedData.audio) audioSettings = parsedData.audio;
     }
 }
 
@@ -72,7 +74,8 @@ function saveGame() {
     localStorage.setItem('myMojiSave', JSON.stringify({
         money: playerMoney, packs: playerPacks, inventory: playerInventory, unlocks: playerUnlocks, themes: themeColors, tableCards: cardsOnTable,
         trade: currentTrade, unread: unreadMessage, storeName: storeName, hasRenamed: hasRenamed,
-        achievements: playerAchievements, stats: gameStats 
+        achievements: playerAchievements, stats: gameStats,
+        audio: audioSettings
     }));
 }
 
