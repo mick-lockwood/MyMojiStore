@@ -114,9 +114,7 @@ function renderStoreView(scene, overlay) {
                             playerMoney -= def.cost;
                             scene.moneyText.setText('$' + playerMoney.toFixed(2));
                             playerUnlocks[key] = true;
-                        
-                            // SOUND EFFECT
-                        if (scene.sound) {
+                            
                             scene.sound.play('coin', { volume: 0.6 });
                             
                             saveGame();
