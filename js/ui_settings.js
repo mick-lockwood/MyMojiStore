@@ -86,7 +86,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
     overlay.paletteContainer = scene.add.container(0, 0);
     
-    overlay.add([bg, title, closeTxt, resetBtn, instrBtn, achBtn, overlay.paletteContainer]);
+    overlay.add([bg, title, closeTxt, muteBtn, bgmBtn, sfxBtn, resetBtn, instrBtn, achBtn, overlay.paletteContainer]);
 
     const stdColors = [0x1a1a1a, 0xfce883, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad];
     const vipColors = [0xd35400, 0xf1c40f, 0xbdc3c7, 0xff00ff];
