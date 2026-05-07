@@ -5,6 +5,13 @@ let cardsOnTable = [];
 let playerAchievements = []; 
 let gameStats = { packsOpened: 0, npcTrades: 0, bailouts: 0 };
 let audioSettings = { bgm: 0.3, sfx: 0.8, muted: false };
+let playerLevel = 1;
+let playerXP = 0;
+
+// The formula for leveling up: Starts at 100xp, and gets 50xp harder every level!
+function getXPForNextLevel() {
+    return 100 + ((playerLevel - 1) * 50); 
+}
 
 // Auto-generate pack and cart trackers dynamically!
 let playerPacks = {};
@@ -49,9 +56,13 @@ function loadGame() {
             if (parsedData.unlocks.colors) playerUnlocks.colors = parsedData.unlocks.colors;
         }
         
-        // Noad the store name and rename status
+        // Load the store name and rename status
         if (parsedData.storeName) storeName = parsedData.storeName;
         if (parsedData.hasRenamed !== undefined) hasRenamed = parsedData.hasRenamed;
+
+        // Level & XP
+        if (parsedData.level !== undefined) playerLevel = parsedData.level;
+        if (parsedData.xp !== undefined) playerXP = parsedData.xp;
 
         if (parsedData.themes) { 
             themeColors = parsedData.themes; 
@@ -75,7 +86,8 @@ function saveGame() {
         money: playerMoney, packs: playerPacks, inventory: playerInventory, unlocks: playerUnlocks, themes: themeColors, tableCards: cardsOnTable,
         trade: currentTrade, unread: unreadMessage, storeName: storeName, hasRenamed: hasRenamed,
         achievements: playerAchievements, stats: gameStats,
-        audio: audioSettings
+        audio: audioSettings,
+        level: playerLevel, xp: playerXP
     }));
 }
 
