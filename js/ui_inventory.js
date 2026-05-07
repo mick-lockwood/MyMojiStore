@@ -110,9 +110,9 @@ function renderInventoryView(scene, overlay) {
                 packCont.add(createPackGraphic(scene, key));
                 
                 let badgeBg = scene.add.circle(60, -90, 30, 0xe74c3c);
-                let badgeTxt = scene.add.text(60, -90, 'x' + count, { fontSize: '24px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                let badgeTxt = scene.add.text(60, -90, 'x' + count, { fontSize: '20px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.3);
                 
-                let viewBtn = createButton(scene, 0, 130, 140, 40, 0x27ae60, null, 'VIEW PACK', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+                let viewBtn = createButton(scene, 0, 130, 100, 25, 0x27ae60, null, 'VIEW PACK', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
                     overlay.setVisible(false); 
                     showPackCloseup(scene, key);
                 });
