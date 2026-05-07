@@ -118,3 +118,30 @@ function showFloatingText(scene, x, y, message, colorHex) {
         onComplete: () => txt.destroy()
     });
 }
+
+function gainXP(scene, amount) {
+    playerXP += amount;
+    let needed = getXPForNextLevel();
+    let leveledUp = false;
+
+    // Check if we gained enough XP to level up! (Using a while loop in case they gain multiple levels at once)
+    while (playerXP >= needed) {
+        playerXP -= needed;
+        playerLevel++;
+        leveledUp = true;
+        needed = getXPForNextLevel();
+    }
+
+    saveGame();
+    
+    // Visually update the bar if the scene is active
+    if (scene && scene.updateXPBar) {
+        scene.updateXPBar();
+    }
+
+    // Huge celebration if they leveled up!
+    if (leveledUp) {
+        playSound(scene, 'achievement_notification', { volume: 0.8 });
+        showFloatingText(scene, 512, 120, 'LEVEL UP! (LVL ' + playerLevel + ')', '#f1c40f');
+    }
+}
