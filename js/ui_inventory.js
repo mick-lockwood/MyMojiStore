@@ -98,8 +98,8 @@ function renderInventoryView(scene, overlay) {
             let totalRows = Math.ceil(activePacks.length / 3);
 
             activePacks.forEach((key, index) => {
-                let col = index % 3;
-                let row = Math.floor(index / 3);
+                let col = index % 4;
+                let row = Math.floor(index / 4);
                 let count = playerPacks[key];
 
                 let x = startX + (col * 250);
