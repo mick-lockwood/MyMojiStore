@@ -15,8 +15,6 @@ function createStoreOverlay(scene) {
     overlay.closeTxt = closeTxt;
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
     
-    
-    
     overlay.add([bg, title, closeTxt]);
 
     overlay.currentView = 'shop'; 
@@ -159,10 +157,12 @@ function renderStoreView(scene, overlay) {
         });
         overlay.contentContainer.add(backBtn);
 
-        let cartListBg = scene.add.rectangle(0, -30, 700, 350, 0x2c3e50).setStrokeStyle(2, 0xffffff);
+        // FIXED: Shifted Y to -10, and stretched height to 400!
+        let cartListBg = scene.add.rectangle(0, -10, 700, 400, 0x2c3e50).setStrokeStyle(2, 0xffffff);
         overlay.contentContainer.add(cartListBg);
 
-        let startY = -150;
+        // FIXED: Shifted starting height up to -160!
+        let startY = -160;
         let hasItems = false;
 
         for (let key in shoppingCart) {
@@ -197,15 +197,16 @@ function renderStoreView(scene, overlay) {
             overlay.contentContainer.add(emptyTxt);
         }
 
-        const cartBg = scene.add.rectangle(0, 250, 800, 80, 0x1a1a1a).setStrokeStyle(2, 0xffffff);
-        let cartTotalText = scene.add.text(-380, 250, 'TOTAL: $' + totalCost.toFixed(2), { fontSize: '28px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
+        // FIXED: Pushed all the bottom footer elements down to Y: 260
+        const cartBg = scene.add.rectangle(0, 260, 800, 80, 0x1a1a1a).setStrokeStyle(2, 0xffffff);
+        let cartTotalText = scene.add.text(-380, 260, 'TOTAL: $' + totalCost.toFixed(2), { fontSize: '28px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
-        const clearBtn = createButton(scene, 200, 250, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        const clearBtn = createButton(scene, 200, 260, 100, 40, 0xe74c3c, null, 'CLEAR', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
             for (let key in shoppingCart) shoppingCart[key] = 0;
             renderStoreView(scene, overlay);
         });
 
-        const buyBtn = createButton(scene, 320, 250, 120, 50, 0x27ae60, null, 'CHECKOUT', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
+        const buyBtn = createButton(scene, 320, 260, 120, 50, 0x27ae60, null, 'CHECKOUT', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }, () => {
             if (totalCost > 0 && playerMoney >= totalCost) {
                 playerMoney -= totalCost;
                 scene.moneyText.setText('$' + playerMoney.toFixed(2));
