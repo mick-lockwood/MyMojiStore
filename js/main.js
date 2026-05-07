@@ -133,6 +133,33 @@ function create() {
     scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: bannerContrast });
 
     scene.titleText = scene.add.text(512, 40, storeName, { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: bannerContrast }).setOrigin(0.5);
+
+    // --- XP BAR & LEVEL UI ---
+    // Background bar at the bottom edge of the header
+    scene.xpBarBg = scene.add.rectangle(0, 74, 1024, 6, 0x000000, 0.4).setOrigin(0, 0);
+    
+    // The colored fill bar
+    scene.xpBarFill = scene.add.rectangle(0, 74, 0, 6, 0x3498db).setOrigin(0, 0); 
+    
+    // The Level Text below the Title
+    scene.levelText = scene.add.text(512, 66, 'LVL ' + playerLevel, { fontFamily: 'Impact, sans-serif', fontSize: '14px', color: bannerContrast }).setOrigin(0.5);
+
+    // Attach the animation logic to the scene so `gainXP` can trigger it
+    scene.updateXPBar = () => {
+        scene.levelText.setText('LVL ' + playerLevel);
+        let needed = getXPForNextLevel();
+        let percent = playerXP / needed;
+        
+        scene.tweens.add({
+            targets: scene.xpBarFill,
+            width: 1024 * percent,
+            duration: 500,
+            ease: 'Power2.easeOut'
+        });
+    };
+    
+    // Set the initial bar width on load
+    scene.updateXPBar();
     
     let updatePencilPos = () => { scene.pencilIcon.setX(512 + (scene.titleText.width / 2) + 25); };
     
@@ -342,6 +369,7 @@ function showPackCloseup(scene, packKey) {
 
 function spawnBoosterPack(scene, packId) {
     gameStats.packsOpened++;
+    gainXP(scene, 25);
     const packDef = packDatabase[packId];
     let pulledThisPack = {};
     
@@ -622,6 +650,7 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
             if (playerUnlocks.binder) {
                 playerInventory[mojiData.id] = Number(playerInventory[mojiData.id]) + 1; 
                 showFloatingText(scene, this.x, this.y, 'SAVED!', '#9b59b6');
+                gainXP(scene, 10);
                 dropped = true;
             } else {
                 showFloatingText(scene, this.x, this.y, 'BINDER LOCKED!', '#e74c3c');
@@ -632,6 +661,7 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
         else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.invZone.getBounds())) {
             playerInventory[mojiData.id] = Number(playerInventory[mojiData.id]) + 1; 
             showFloatingText(scene, this.x, this.y, 'STASHED!', '#9b59b6');
+            gainXP(scene, 5);
             dropped = true;
         }
         else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.sellZone.getBounds())) {
