@@ -572,18 +572,29 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                             }
                         });
                     };
+                     if (isEpic) addShimmerEffect(scene, card, mojiData.rarity);
+
+                            }
+
+                        });
+
+                    };
+
+
 
                     if (isEpic) {
-                        scene.sound.play('epic_rumble', { volume: 1.0 });
-                        scene.cameras.main.shake(1500, 0.015); 
                         
-                        // FIXED: The 'epic_reveal' sound now waits for the shake to finish before playing!
-                        scene.time.delayedCall(1500, () => {
-                            finishFlip();
-                            scene.sound.play('epic_reveal', { volume: 1.0 });
+                        // SOUND EFFECT
+                        scene.sound.play('epic_rumble', { volume: 1.0 });  
+                        // Shake the screen for 1.5 seconds, and pause the flip for 1.5 seconds!
+                        scene.cameras.main.shake(1500, 0.015);    
+                        scene.time.delayedCall(1500, finishFlip); 
+                        // SOUND EFFECT
+                        scene.sound.play('epic_reveal', { volume: 1.0 
                         });
-                        
+       
                     } else {
+                        // SOUND EFFECT
                         scene.sound.play('flip', { volume: 0.4 });
                         finishFlip(); 
                     }
