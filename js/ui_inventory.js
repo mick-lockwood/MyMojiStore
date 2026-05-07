@@ -30,13 +30,13 @@ function createInventoryOverlay(scene) {
         renderInventoryView(scene, overlay); 
     });
 
+    // Pagination buttons (Used ONLY for Doubles now)
     overlay.prevBtn = scene.add.text(-400, 0, '◀', { fontSize: '48px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     overlay.nextBtn = scene.add.text(400, 0, '▶', { fontSize: '48px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     
     overlay.prevBtn.on('pointerdown', () => {
         if (overlay.currentPage > 0) { overlay.currentPage--; renderInventoryView(scene, overlay); }
     });
-    
     overlay.nextBtn.on('pointerdown', () => {
         overlay.currentPage++; renderInventoryView(scene, overlay);
     });
@@ -69,31 +69,40 @@ function renderInventoryView(scene, overlay) {
     overlay.nextBtn.setColor(bgContrast);
     
     if (overlay.currentTab === 'packs') {
+        // HIDE PAGINATION FOR PACKS!
+        overlay.prevBtn.setVisible(false);
+        overlay.nextBtn.setVisible(false);
+
         let activePacks = Object.keys(playerPacks).filter(key => playerPacks[key] > 0);
-        let itemsPerPage = 6; 
-        let maxPage = Math.ceil(activePacks.length / itemsPerPage) - 1;
-        if (maxPage < 0) maxPage = 0;
-        if (overlay.currentPage > maxPage) overlay.currentPage = maxPage;
 
-        overlay.prevBtn.setVisible(overlay.currentPage > 0);
-        overlay.nextBtn.setVisible(overlay.currentPage < maxPage);
-
-        let startIndex = overlay.currentPage * itemsPerPage;
-        let displayPacks = activePacks.slice(startIndex, startIndex + itemsPerPage);
-
-        if (displayPacks.length === 0) {
+        if (activePacks.length === 0) {
             let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
-            // FIXED: Shifted startY up to -90!
-            let startX = -250, startY = -90;
-            displayPacks.forEach((key, index) => {
+            // --- NEW: INVENTORY SCROLL MASK SETUP ---
+            let maskGraphics = scene.make.graphics();
+            maskGraphics.fillStyle(0xffffff);
+            maskGraphics.fillRect(512 - 400, 384 - 210, 800, 500); 
+            let mask = maskGraphics.createGeometryMask();
+
+            let scrollContainer = scene.add.container(0, 0);
+            scrollContainer.setMask(mask);
+            overlay.gridContainer.add(scrollContainer);
+
+            // Invisible hit zone to capture mouse wheel events
+            let scrollZone = scene.add.rectangle(0, 40, 800, 500, 0x000000, 0).setInteractive();
+            overlay.gridContainer.addAt(scrollZone, 1); // Push to back so it doesn't block buttons
+
+            // FIXED: Start safely below the tabs!
+            let startX = -250, startY = -60; 
+            let totalRows = Math.ceil(activePacks.length / 3);
+
+            activePacks.forEach((key, index) => {
                 let col = index % 3;
                 let row = Math.floor(index / 3);
                 let count = playerPacks[key];
 
                 let x = startX + (col * 250);
-                // FIXED: Tightened vertical spacing to 240!
                 let y = startY + (row * 240);
 
                 let packCont = scene.add.container(x, y);
@@ -108,12 +117,20 @@ function renderInventoryView(scene, overlay) {
                 });
                 
                 packCont.add([badgeBg, badgeTxt, viewBtn]);
-                overlay.gridContainer.add(packCont);
+                scrollContainer.add(packCont); // Add to SCROLL container
+            });
+
+            // --- NEW: SCROLL LOGIC ---
+            let maxScroll = Math.max(0, (totalRows * 240) - 500 + 80); // 80px padding
+            
+            scrollZone.on('wheel', (pointer, dx, dy, dz, event) => {
+                scrollContainer.y -= dy * 0.5; // Scroll speed
+                scrollContainer.y = Phaser.Math.Clamp(scrollContainer.y, -maxScroll, 0);
             });
         }
     } 
     else if (overlay.currentTab === 'doubles') {
-        
+        // ... (Doubles Tab remains identical) ...
         let actionPanel = scene.add.rectangle(0, -190, 840, 60, 0x000000, 0.3).setStrokeStyle(2, 0x555555);
         let qsTxt = scene.add.text(-400, -190, 'LIQUIDATE (50% VAL):', { fontSize: '14px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
