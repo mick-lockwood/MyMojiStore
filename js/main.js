@@ -142,7 +142,7 @@ function create() {
     scene.xpBarFill = scene.add.rectangle(0, 74, 0, 6, 0x3498db).setOrigin(0, 0); 
     
     // The Level Text below the Title
-    scene.levelText = scene.add.text(512, 66, 'LVL ' + playerLevel, { fontFamily: 'Impact, sans-serif', fontSize: '14px', color: bannerContrast }).setOrigin(0.5);
+    scene.levelText = scene.add.text(512, 90, 'LVL ' + playerLevel, { fontFamily: 'Impact, sans-serif', fontSize: '14px', color: bannerContrast }).setOrigin(0.5);
 
     // Attach the animation logic to the scene so `gainXP` can trigger it
     scene.updateXPBar = () => {
