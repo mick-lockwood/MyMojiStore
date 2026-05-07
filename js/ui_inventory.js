@@ -3,7 +3,7 @@ function createInventoryOverlay(scene) {
     overlay.bg = scene.add.rectangle(0, 0, 900, 650, themeColors.inventory).setStrokeStyle(4, 0xecf0f1).setInteractive(); 
     
     const closeTxt = scene.add.text(410, -290, '✖', { fontSize: '28px', color: '#ffffff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
-    overlay.closeTxt = closeTxt; // NEW: Save reference for dynamic coloring
+    overlay.closeTxt = closeTxt; 
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
     overlay.currentTab = 'packs';
@@ -11,7 +11,6 @@ function createInventoryOverlay(scene) {
 
     overlay.add([overlay.bg, closeTxt]);
 
-    // Pushed up to -250
     const packsTab = scene.add.text(-100, -250, 'MY PACKS', { fontSize: '24px', fontStyle: 'bold', color: '#fff' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
     let dblLabel = playerUnlocks.binder ? 'DOUBLES' : 'CARDS';
     const doublesTab = scene.add.text(100, -250, dblLabel, { fontSize: '24px', fontStyle: 'bold', color: '#7f8c8d' }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
@@ -19,7 +18,6 @@ function createInventoryOverlay(scene) {
     overlay.packsTab = packsTab; 
     overlay.doublesTab = doublesTab; 
     
-    // FIXED: Removed hardcoded colors here. Render function handles it now!
     packsTab.on('pointerdown', () => { 
         overlay.currentTab = 'packs'; 
         overlay.currentPage = 0; 
@@ -53,24 +51,19 @@ function createInventoryOverlay(scene) {
 function renderInventoryView(scene, overlay) {
     overlay.gridContainer.removeAll(true);
 
-    // Calculate the dynamic text color for the Inventory!
     let bgContrast = getContrastColor(themeColors.active.inv);
 
-    // FIXED: Pushed title UP to -290 (Top of the window)
     let titleTxt = scene.add.text(0, -290, 'INVENTORY', { fontFamily: 'Impact', fontSize: '32px', color: bgContrast }).setOrigin(0.5);
     overlay.gridContainer.add(titleTxt);
     
     overlay.doublesTab.setText(playerUnlocks.binder ? 'DOUBLES' : 'CARDS');
 
-    // FIXED: Both tabs always use the contrast color now...
     overlay.packsTab.setColor(bgContrast);
     overlay.doublesTab.setColor(bgContrast);
     
-    // ...but we dim the inactive tab to 50% opacity!
     overlay.packsTab.setAlpha(overlay.currentTab === 'packs' ? 1 : 0.5);
     overlay.doublesTab.setAlpha(overlay.currentTab === 'doubles' ? 1 : 0.5);
     
-    // Apply dynamic color to UI arrows and close button
     overlay.closeTxt.setColor(bgContrast);
     overlay.prevBtn.setColor(bgContrast);
     overlay.nextBtn.setColor(bgContrast);
@@ -89,18 +82,19 @@ function renderInventoryView(scene, overlay) {
         let displayPacks = activePacks.slice(startIndex, startIndex + itemsPerPage);
 
         if (displayPacks.length === 0) {
-            // Empty text logic kept safely intact
             let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
-            let startX = -250, startY = -30;
+            // FIXED: Shifted startY up to -90!
+            let startX = -250, startY = -90;
             displayPacks.forEach((key, index) => {
                 let col = index % 3;
                 let row = Math.floor(index / 3);
                 let count = playerPacks[key];
 
                 let x = startX + (col * 250);
-                let y = startY + (row * 260);
+                // FIXED: Tightened vertical spacing to 240!
+                let y = startY + (row * 240);
 
                 let packCont = scene.add.container(x, y);
                 packCont.add(createPackGraphic(scene, key));
@@ -120,9 +114,6 @@ function renderInventoryView(scene, overlay) {
     } 
     else if (overlay.currentTab === 'doubles') {
         
-        // --- NEW: QUICK SELL & BULK SELL UI ---
-        
-        // Pushed action panel and all its buttons down to -190
         let actionPanel = scene.add.rectangle(0, -190, 840, 60, 0x000000, 0.3).setStrokeStyle(2, 0x555555);
         let qsTxt = scene.add.text(-400, -190, 'LIQUIDATE (50% VAL):', { fontSize: '14px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
@@ -147,7 +138,6 @@ function renderInventoryView(scene, overlay) {
         });
 
         overlay.gridContainer.add([actionPanel, qsTxt, sellC, sellR, sellE, sellA, modeBtn]);
-        // --------------------------------------
 
         let minOwned = playerUnlocks.binder ? 1 : 0;
         let doubles = myMojiDatabase.filter(moji => Number(playerInventory[moji.id]) > minOwned);
