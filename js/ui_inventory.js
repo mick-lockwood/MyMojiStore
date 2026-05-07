@@ -109,14 +109,14 @@ function renderInventoryView(scene, overlay) {
                 packCont.setScale(0.8); // NEW: Shrink everything down by 20%
                 packCont.add(createPackGraphic(scene, key));
                 
-               let badgeTxt = scene.add.text(30, -150, 'x' + count, { fontSize: '24px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                let badgeTxt = scene.add.text(30, -150, 'x' + count, { fontSize: '24px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
                 
                 let viewBtn = createButton(scene, 0, 130, 100, 25, 0x27ae60, null, 'VIEW PACK', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
                     overlay.setVisible(false); 
                     showPackCloseup(scene, key);
                 });
                 
-                packCont.add([badgeBg, badgeTxt, viewBtn]);
+                packCont.add([ badgeTxt, viewBtn]);
                 scrollContainer.add(packCont); 
             });
 
