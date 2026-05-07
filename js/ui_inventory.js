@@ -103,7 +103,7 @@ function renderInventoryView(scene, overlay) {
                 let count = playerPacks[key];
 
                 let x = startX + (col * 250);
-                let y = startY + (row * 240);
+                let y = startY + (row * 270);
 
                 let packCont = scene.add.container(x, y);
                 packCont.add(createPackGraphic(scene, key));
