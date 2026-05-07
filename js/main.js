@@ -572,16 +572,7 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
                             }
                         });
                     };
-                     if (isEpic) addShimmerEffect(scene, card, mojiData.rarity);
-
-                            }
-
-                        });
-
-                    };
-
-
-
+                     
                     if (isEpic) {
                         
                         // SOUND EFFECT
