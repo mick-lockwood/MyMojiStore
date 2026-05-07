@@ -79,7 +79,7 @@ function renderInventoryView(scene, overlay) {
             let emptyTxt = scene.add.text(0, 0, "No packs available.", { fontSize: '24px', color: bgContrast, fontStyle: 'bold' }).setOrigin(0.5);
             overlay.gridContainer.add(emptyTxt);
         } else {
-            // --- NEW: INVENTORY SCROLL MASK SETUP ---
+            // --- INVENTORY SCROLL MASK SETUP ---
             let maskGraphics = scene.make.graphics();
             maskGraphics.fillStyle(0xffffff);
             maskGraphics.fillRect(512 - 400, 384 - 210, 800, 500); 
@@ -91,21 +91,22 @@ function renderInventoryView(scene, overlay) {
 
             // Invisible hit zone to capture mouse wheel events
             let scrollZone = scene.add.rectangle(0, 40, 800, 500, 0x000000, 0).setInteractive();
-            overlay.gridContainer.addAt(scrollZone, 1); // Push to back so it doesn't block buttons
+            overlay.gridContainer.addAt(scrollZone, 1); 
 
-            // FIXED: Start safely below the tabs!
-            let startX = -250, startY = -60; 
-            let totalRows = Math.ceil(activePacks.length / 3);
+            // FIXED: Shifted X further left, changed math for 4 columns!
+            let startX = -300, startY = -60; 
+            let totalRows = Math.ceil(activePacks.length / 4);
 
             activePacks.forEach((key, index) => {
-                let col = index % 4;
-                let row = Math.floor(index / 4);
+                let col = index % 4; // Divide by 4!
+                let row = Math.floor(index / 4); // Divide by 4!
                 let count = playerPacks[key];
 
-                let x = startX + (col * 250);
-                let y = startY + (row * 300);
+                let x = startX + (col * 200); // Tightened X spacing
+                let y = startY + (row * 220); // Tightened Y spacing
 
                 let packCont = scene.add.container(x, y);
+                packCont.setScale(0.8); // NEW: Shrink everything down by 20%
                 packCont.add(createPackGraphic(scene, key));
                 
                 let badgeBg = scene.add.circle(60, -90, 30, 0xe74c3c);
@@ -117,20 +118,19 @@ function renderInventoryView(scene, overlay) {
                 });
                 
                 packCont.add([badgeBg, badgeTxt, viewBtn]);
-                scrollContainer.add(packCont); // Add to SCROLL container
+                scrollContainer.add(packCont); 
             });
 
-            // --- NEW: SCROLL LOGIC ---
-            let maxScroll = Math.max(0, (totalRows * 240) - 500 + 80); // 80px padding
+            // FIXED: Updated maxScroll calculation to account for the tighter Y spacing
+            let maxScroll = Math.max(0, (totalRows * 220) - 500 + 80); 
             
             scrollZone.on('wheel', (pointer, dx, dy, dz, event) => {
-                scrollContainer.y -= dy * 0.5; // Scroll speed
+                scrollContainer.y -= dy * 0.5; 
                 scrollContainer.y = Phaser.Math.Clamp(scrollContainer.y, -maxScroll, 0);
             });
         }
     } 
     else if (overlay.currentTab === 'doubles') {
-        // ... (Doubles Tab remains identical) ...
         let actionPanel = scene.add.rectangle(0, -190, 840, 60, 0x000000, 0.3).setStrokeStyle(2, 0x555555);
         let qsTxt = scene.add.text(-400, -190, 'LIQUIDATE (50% VAL):', { fontSize: '14px', color: '#f39c12', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
