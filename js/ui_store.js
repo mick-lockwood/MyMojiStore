@@ -1,5 +1,4 @@
 function createStoreOverlay(scene) {
-    // NEW: Calculate contrast for the Store's base elements
     let storeBgColor = themeColors.active.store || 0x1a1a1a; 
     let bgContrast = getContrastColor(storeBgColor);
 
@@ -28,11 +27,9 @@ function createStoreOverlay(scene) {
 function renderStoreView(scene, overlay) {
     overlay.contentContainer.removeAll(true);
 
-    // NEW: Calculate contrast for the Store's inner tabs
     let storeBgColor = themeColors.active.store || 0x1a1a1a; 
     let bgContrast = getContrastColor(storeBgColor);
 
-    // <--- Dynamically update the main title and close button! --->
     if (overlay.titleTxt) overlay.titleTxt.setColor(bgContrast);
     if (overlay.closeTxt) overlay.closeTxt.setColor(bgContrast);
 
@@ -51,9 +48,6 @@ function renderStoreView(scene, overlay) {
         });
         overlay.contentContainer.add(viewCartBtn);
 
-        let packsColor = overlay.currentStoreTab === 'packs' ? bgContrast : '#7f8c8d';
-        let unlocksColor = overlay.currentStoreTab === 'unlocks' ? bgContrast : '#7f8c8d';
-
         let packsTab = scene.add.text(-100, -230, 'PACKS', { fontSize: '24px', fontStyle: 'bold', color: bgContrast }).setInteractive({ useHandCursor: true }).setOrigin(0.5);
         packsTab.setAlpha(overlay.currentStoreTab === 'packs' ? 1 : 0.5);
         packsTab.on('pointerdown', () => { overlay.currentStoreTab = 'packs'; renderStoreView(scene, overlay); });
@@ -66,21 +60,15 @@ function renderStoreView(scene, overlay) {
 
         if (overlay.currentStoreTab === 'packs') {
             let packKeys = Object.keys(packDatabase);
-            
-            let startX = -330; 
-            let startY = -120; 
-            let spacingX = 220;
-            let spacingY = 240; 
+            let startX = -330, startY = -120, spacingX = 220, spacingY = 240; 
 
             packKeys.forEach((key, index) => {
                 let col = index % 4; 
                 let row = Math.floor(index / 4); 
-                
                 let def = packDatabase[key];
                 
                 let packCont = scene.add.container(startX + (col * spacingX), startY + (row * spacingY));
                 packCont.setScale(0.65); 
-
                 packCont.add(createPackGraphic(scene, key));
 
                 let priceTxt = scene.add.text(0, 130, '$' + def.cost.toFixed(2), { fontSize: '24px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
@@ -94,9 +82,7 @@ function renderStoreView(scene, overlay) {
             });
         } 
         else if (overlay.currentStoreTab === 'unlocks') {
-            let upgStartX = -150;
-            let upgIndex = 0;
-            let hasUnlocks = false;
+            let upgStartX = -150, upgIndex = 0, hasUnlocks = false;
             
             for (let key in upgradeDatabase) {
                 if (!playerUnlocks[key]) {
@@ -112,9 +98,7 @@ function renderStoreView(scene, overlay) {
                             playerMoney -= def.cost;
                             scene.moneyText.setText('$' + playerMoney.toFixed(2));
                             playerUnlocks[key] = true;
-                            
                             scene.sound.play('coin', { volume: 0.6 });
-                            
                             saveGame();
                             checkBailout(scene);
                             
@@ -125,14 +109,12 @@ function renderStoreView(scene, overlay) {
                                     renderBinderGrid(scene, scene.binderOverlay); scene.binderOverlay.setVisible(true); 
                                 });
                             }
-                            
                             renderStoreView(scene, overlay); 
                         } else {
                             buyBtn.list[1].setColor('#e74c3c');
                             scene.time.delayedCall(300, () => buyBtn.list[1].setColor('#ffffff'));
                         }
                     });
-                    
                     upgCont.add([bg, nameTxt, buyBtn]);
                     overlay.contentContainer.add(upgCont);
                     upgIndex++;
@@ -157,17 +139,29 @@ function renderStoreView(scene, overlay) {
         });
         overlay.contentContainer.add(backBtn);
 
-        // FIXED: Shifted Y to -10, and stretched height to 400!
-        let cartListBg = scene.add.rectangle(0, -10, 700, 400, 0x2c3e50).setStrokeStyle(2, 0xffffff);
+        // BACKGROUND FOR CART LIST
+        let cartListBg = scene.add.rectangle(0, -10, 700, 400, 0x2c3e50).setStrokeStyle(2, 0xffffff).setInteractive();
         overlay.contentContainer.add(cartListBg);
 
-        // FIXED: Shifted starting height up to -160!
+        // --- NEW: SCROLL MASK SETUP ---
+        let maskGraphics = scene.make.graphics();
+        maskGraphics.fillStyle(0xffffff);
+        // Absolute coordinates based on 512, 384 center
+        maskGraphics.fillRect(512 - 350, 384 - 210, 700, 400); 
+        let mask = maskGraphics.createGeometryMask();
+
+        let scrollContainer = scene.add.container(0, 0);
+        scrollContainer.setMask(mask);
+        overlay.contentContainer.add(scrollContainer);
+
         let startY = -160;
         let hasItems = false;
+        let itemCount = 0;
 
         for (let key in shoppingCart) {
             if (shoppingCart[key] > 0) {
                 hasItems = true;
+                itemCount++;
                 let def = packDatabase[key];
                 let itemCont = scene.add.container(0, startY);
 
@@ -187,17 +181,24 @@ function renderStoreView(scene, overlay) {
                 });
 
                 itemCont.add([nameTxt, costTxt, minusBtn, countTxt, plusBtn]);
-                overlay.contentContainer.add(itemCont);
+                scrollContainer.add(itemCont); // Add to SCROLL container
                 startY += 60; 
             }
         }
+
+        // --- NEW: SCROLL LOGIC ---
+        let maxScroll = Math.max(0, (itemCount * 60) - 400 + 40); // 40px bottom padding
+        
+        cartListBg.on('wheel', (pointer, dx, dy, dz, event) => {
+            scrollContainer.y -= dy * 0.5; // Scroll speed
+            scrollContainer.y = Phaser.Math.Clamp(scrollContainer.y, -maxScroll, 0);
+        });
 
         if (!hasItems) {
             let emptyTxt = scene.add.text(0, -30, "Your cart is empty.", { fontSize: '24px', color: '#7f8c8d' }).setOrigin(0.5);
             overlay.contentContainer.add(emptyTxt);
         }
 
-        // FIXED: Pushed all the bottom footer elements down to Y: 260
         const cartBg = scene.add.rectangle(0, 260, 800, 80, 0x1a1a1a).setStrokeStyle(2, 0xffffff);
         let cartTotalText = scene.add.text(-380, 260, 'TOTAL: $' + totalCost.toFixed(2), { fontSize: '28px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0, 0.5);
 
@@ -218,11 +219,9 @@ function renderStoreView(scene, overlay) {
                 }                            
                 saveGame();
                 scene.moneyText.setColor('#f1c40f'); 
-                
                 scene.time.delayedCall(300, () => {
                     let bannerColor = themeColors.active.banner || 0x1a1a1a;
-                    let currentContrast = getContrastColor(bannerColor);
-                    scene.moneyText.setColor(currentContrast);
+                    scene.moneyText.setColor(getContrastColor(bannerColor));
                 });
 
                 let newTotalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
