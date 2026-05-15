@@ -82,24 +82,24 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const stdColors = [
         
     // --- Modern Candy ---
-        0x2b2d42, // Deep Navy (replaces harsh black)
-        0xf8f9fa, // Clean Snow (replaces blinding white)
-        0xff9ff3, // Pastel Pink
-        0xfeca57, // Warm Sun Yellow
-        0x48dbfb, // Sky Blue
-        0x1dd1a1, // Jungle Mint
-        0x5f27cd, // Vibrant Purple
-        0xc8d6e5  // Soft Blue-Gray
+    //    0x2b2d42, // Deep Navy (replaces harsh black)
+    //    0xf8f9fa, // Clean Snow (replaces blinding white)
+    //    0xff9ff3, // Pastel Pink
+    //    0xfeca57, // Warm Sun Yellow
+    //    0x48dbfb, // Sky Blue
+    //    0x1dd1a1, // Jungle Mint
+    //    0x5f27cd, // Vibrant Purple
+    //    0xc8d6e5  // Soft Blue-Gray
         
     // --- Cozy Lo-Fi Cafe ---
-    //    0x4a3b32, // Coffee Bean
-    //    0xfff3e3, // Warm Cream
-    //    0xf6bd60, // Warm Sun
-    //    0x84a59d, // Sage Green
-    //    0xf28482, // Soft Rose
-    //    0xb5838d, // Dusty Mauve
-    //    0xdda15e, // Caramel
-    //    0x6d6875  // Slate Slate
+        0x4a3b32, // Coffee Bean
+        0xfff3e3, // Warm Cream
+        0xf6bd60, // Warm Sun
+        0x84a59d, // Sage Green
+        0xf28482, // Soft Rose
+        0xb5838d, // Dusty Mauve
+        0xdda15e, // Caramel
+        0x6d6875  // Slate Slate
 
     // --- Midnight Synth ---
     //    0x0f0f1b, // Void Black
@@ -117,16 +117,16 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     const vipColors = [
         
     // --- Modern Candy ---
-        0xff6b6b, // Coral Red
-        0x0abde3, // Neon Cyan
-        0xf368e0, // Hot Magenta
-        0xff9f43  // Vibrant Orange
+    //    0xff6b6b, // Coral Red
+    //    0x0abde3, // Neon Cyan
+    //    0xf368e0, // Hot Magenta
+    //    0xff9f43  // Vibrant Orange
         
     // --- Cozy Lo-Fi Cafe ---
-    //    0x283618, // Deep Forest
-    //    0xbc6c25, // Rich Wood
-    //    0x9e2a2b, // Deep Crimson
-    //    0xe0b1cb  // Sweet Pink
+        0x283618, // Deep Forest
+        0xbc6c25, // Rich Wood
+        0x9e2a2b, // Deep Crimson
+        0xe0b1cb  // Sweet Pink
         
     // --- Midnight Synth ---   
     //    0xff3f34, // Laser Red
