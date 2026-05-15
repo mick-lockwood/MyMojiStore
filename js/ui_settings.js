@@ -163,7 +163,7 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
             allColors.forEach((color, index) => {
                 let isVip = index >= stdColors.length;
-                let isUnlocked = playerUnlocks.colors.includes(color) || color === 0xfce883; 
+                let isUnlocked = index < 4 || playerUnlocks.colors.includes(color);
                 let isActive = themeColors.active && themeColors.active[type] === color; 
                 
                 let swatch = scene.add.rectangle(startX + (index * spacing), y, 30, 30, color).setInteractive({ useHandCursor: true });
