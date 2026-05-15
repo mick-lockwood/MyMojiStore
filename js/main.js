@@ -260,6 +260,7 @@ function create() {
         tradingOverlay.setVisible(false);
         settingsOverlay.setVisible(false);
         scene.phoneOverlay.setVisible(false);
+        scene.bankOverlay.setVisible(false);
         
         if (scene.achievementsOverlay) scene.achievementsOverlay.setVisible(false); 
         
@@ -319,6 +320,21 @@ function create() {
         callback: () => {
             checkBailout(scene);
             checkAchievements(scene);
+
+            // --- BANK INTEREST TICK ---
+            tickCounter++;
+            if (tickCounter >= 60) {
+                tickCounter = 0;
+                if (playerDebt > 0) {
+                    playerDebt *= 1.01; // 1% compound interest
+                    saveGame(); 
+                    
+                    // If the bank is open, update the text live so they see it grow
+                    if (scene.bankOverlay && scene.bankOverlay.visible) {
+                        renderBankView(scene, scene.bankOverlay);
+                    }
+                }
+            }
 
             if (currentTrade) {
                 let secondsLeft = Math.max(0, Math.floor((tradeExpirationTime - Date.now()) / 1000));
