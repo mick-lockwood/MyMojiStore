@@ -6,7 +6,7 @@ const config = {
     parent: 'game-container',
     scene: { preload: preload, create: create } 
 };
-
+//
 const game = new Phaser.Game(config);
 
 function preload() {
