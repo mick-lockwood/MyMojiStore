@@ -120,7 +120,6 @@ function create() {
     };
 
     // --- TOP UI HEADER ---
-    
     for (let i = 1; i <= 8; i++) {
         scene.add.rectangle(512, 40 + (i * 3), 1024, 80, 0x000000, 0.15 - (i * 0.015));
     }
@@ -128,9 +127,20 @@ function create() {
     scene.headerBg = scene.add.rectangle(512, 40, 1024, 80, themeColors.active.banner); 
     let bannerContrast = getContrastColor(themeColors.active.banner);
 
-    scene.moneyText = scene.add.text(20, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bannerContrast });
+    // FIXED: Pushed Money and Packs text to X: 80
+    scene.moneyText = scene.add.text(80, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bannerContrast });
     let totalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
-    scene.packsText = scene.add.text(20, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: bannerContrast });
+    scene.packsText = scene.add.text(80, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: bannerContrast });
+    
+    // NEW: The Bank Button!
+    const bankBtn = scene.add.text(35, 40, '🏦', { fontSize: '40px', padding: { top: 10, bottom: 10 } }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    bankBtn.on('pointerover', () => scene.tweens.add({ targets: bankBtn, scale: 1.2, duration: 100 }));
+    bankBtn.on('pointerout', () => scene.tweens.add({ targets: bankBtn, scale: 1, duration: 100 }));
+    bankBtn.on('pointerdown', () => { 
+        scene.closeAllOverlays(); 
+        renderBankView(scene, scene.bankOverlay); 
+        scene.bankOverlay.setVisible(true); 
+    });
 
     scene.titleText = scene.add.text(512, 40, storeName, { fontFamily: 'Impact, sans-serif', fontSize: '48px', color: bannerContrast }).setOrigin(0.5);
 
