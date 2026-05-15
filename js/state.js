@@ -1,5 +1,6 @@
 // --- GLOBAL STATE & LOCAL STORAGE ---
 let playerMoney = 50.00;
+let playerDebt = 0;
 let playerInventory = {};
 let cardsOnTable = []; 
 let playerAchievements = []; 
@@ -78,6 +79,8 @@ function loadGame() {
         if (parsedData.achievements) playerAchievements = parsedData.achievements;
         if (parsedData.stats) gameStats = { ...gameStats, ...parsedData.stats };
         if (parsedData.audio) audioSettings = parsedData.audio;
+
+        if (parsedData.debt !== undefined) playerDebt = parsedData.debt;
     }
 }
 
@@ -88,6 +91,7 @@ function saveGame() {
         achievements: playerAchievements, stats: gameStats,
         audio: audioSettings,
         level: playerLevel, xp: playerXP
+        debt: playerDebt
     }));
 }
 
