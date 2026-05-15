@@ -13,7 +13,7 @@ let playerXP = 0;
 function getXPForNextLevel() {
     return 100 + ((playerLevel - 1) * 50); 
 }
-
+//
 // Auto-generate pack and cart trackers dynamically!
 let playerPacks = {};
 let shoppingCart = {};
