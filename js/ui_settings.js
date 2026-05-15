@@ -78,8 +78,67 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     
     overlay.add([bg, title, closeTxt, muteBtn, bgmBtn, sfxBtn, resetBtn, instrBtn, achBtn, overlay.paletteContainer]);
 
-    const stdColors = [0x1a1a1a, 0xfce883, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad];
-    const vipColors = [0xd35400, 0xf1c40f, 0xbdc3c7, 0xff00ff];
+    // --- Modern Candy ---
+    const stdColors = [
+        0x2b2d42, // Deep Navy (replaces harsh black)
+        0xf8f9fa, // Clean Snow (replaces blinding white)
+        0xff9ff3, // Pastel Pink
+        0xfeca57, // Warm Sun Yellow
+        0x48dbfb, // Sky Blue
+        0x1dd1a1, // Jungle Mint
+        0x5f27cd, // Vibrant Purple
+        0xc8d6e5  // Soft Blue-Gray
+    ];
+    const vipColors = [
+        0xff6b6b, // Coral Red
+        0x0abde3, // Neon Cyan
+        0xf368e0, // Hot Magenta
+        0xff9f43  // Vibrant Orange
+    ];
+    // -----------------------------
+    
+    // --- Cozy Lo-Fi Cafe ---
+    //const stdColors = [
+        0x4a3b32, // Coffee Bean
+        0xfff3e3, // Warm Cream
+        0xf6bd60, // Warm Sun
+        0x84a59d, // Sage Green
+        0xf28482, // Soft Rose
+        0xb5838d, // Dusty Mauve
+        0xdda15e, // Caramel
+        0x6d6875  // Slate Slate
+    ];
+    //const vipColors = [
+        0x283618, // Deep Forest
+        0xbc6c25, // Rich Wood
+        0x9e2a2b, // Deep Crimson
+        0xe0b1cb  // Sweet Pink
+    ];
+    // -----------------------------
+    
+    // --- Midnight Synth ---
+    //const stdColors = [
+        0x0f0f1b, // Void Black
+        0x2d3436, // Gunmetal Gray
+        0x00d2d3, // Neon Cyan
+        0xff9f43, // Neon Orange
+        0x54a0ff, // Digital Blue
+        0x10ac84, // Matrix Green
+        0x5f27cd, // Deep Synth Purple
+        0xb2bec3  // Cool Silver
+    ];
+    //const vipColors = [
+        0xff3f34, // Laser Red
+        0x01a3a4, // Toxic Green
+        0xf368e0, // Hot Pink
+        0xffdd59  // Electric Yellow
+    ];
+    // -----------------------------
+    
+    // --- ORIGINAL COLOR BACKUP ---
+    //const stdColors = [0x1a1a1a, 0xfce883, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad];
+    //const vipColors = [0xd35400, 0xf1c40f, 0xbdc3c7, 0xff00ff];
+    // -----------------------------
     const allColors = [...stdColors, ...vipColors];
 
     overlay.renderPalettes = () => {
