@@ -131,7 +131,7 @@ function generateTrade(scene) {
     currentTrade = { type: isBuy ? 'buy' : 'sell', mojiId: randomMoji.id, price: Number((randomMoji.baseValue * priceMultiplier).toFixed(2)) };
     
     // Set the expiration for 2 minutes (120,000 milliseconds) from now
-    tradeExpirationTime = Date.now() + 120000; 
+    tradeExpirationTime = Date.now() + 300000; 
 
     unreadMessage = true;
     
