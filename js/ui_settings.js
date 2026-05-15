@@ -99,40 +99,40 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     
     // --- Cozy Lo-Fi Cafe ---
     //const stdColors = [
-        0x4a3b32, // Coffee Bean
-        0xfff3e3, // Warm Cream
-        0xf6bd60, // Warm Sun
-        0x84a59d, // Sage Green
-        0xf28482, // Soft Rose
-        0xb5838d, // Dusty Mauve
-        0xdda15e, // Caramel
-        0x6d6875  // Slate Slate
-    ];
+    //    0x4a3b32, // Coffee Bean
+    //    0xfff3e3, // Warm Cream
+    //    0xf6bd60, // Warm Sun
+    //    0x84a59d, // Sage Green
+    //    0xf28482, // Soft Rose
+    //    0xb5838d, // Dusty Mauve
+    //    0xdda15e, // Caramel
+    //    0x6d6875  // Slate Slate
+    //];
     //const vipColors = [
-        0x283618, // Deep Forest
-        0xbc6c25, // Rich Wood
-        0x9e2a2b, // Deep Crimson
-        0xe0b1cb  // Sweet Pink
-    ];
+    //    0x283618, // Deep Forest
+    //    0xbc6c25, // Rich Wood
+    //    0x9e2a2b, // Deep Crimson
+    //    0xe0b1cb  // Sweet Pink
+    //];
     // -----------------------------
     
     // --- Midnight Synth ---
     //const stdColors = [
-        0x0f0f1b, // Void Black
-        0x2d3436, // Gunmetal Gray
-        0x00d2d3, // Neon Cyan
-        0xff9f43, // Neon Orange
-        0x54a0ff, // Digital Blue
-        0x10ac84, // Matrix Green
-        0x5f27cd, // Deep Synth Purple
-        0xb2bec3  // Cool Silver
-    ];
+    //    0x0f0f1b, // Void Black
+    //    0x2d3436, // Gunmetal Gray
+    //    0x00d2d3, // Neon Cyan
+    //    0xff9f43, // Neon Orange
+    //    0x54a0ff, // Digital Blue
+    //    0x10ac84, // Matrix Green
+    //    0x5f27cd, // Deep Synth Purple
+    //     0xb2bec3  // Cool Silver
+    //];
     //const vipColors = [
-        0xff3f34, // Laser Red
-        0x01a3a4, // Toxic Green
-        0xf368e0, // Hot Pink
-        0xffdd59  // Electric Yellow
-    ];
+    //    0xff3f34, // Laser Red
+    //    0x01a3a4, // Toxic Green
+    //    0xf368e0, // Hot Pink
+    //    0xffdd59  // Electric Yellow
+    //];
     // -----------------------------
     
     // --- ORIGINAL COLOR BACKUP ---
