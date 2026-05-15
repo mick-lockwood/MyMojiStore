@@ -90,7 +90,7 @@ function saveGame() {
         trade: currentTrade, unread: unreadMessage, storeName: storeName, hasRenamed: hasRenamed,
         achievements: playerAchievements, stats: gameStats,
         audio: audioSettings,
-        level: playerLevel, xp: playerXP
+        level: playerLevel, xp: playerXP,
         debt: playerDebt
     }));
 }
