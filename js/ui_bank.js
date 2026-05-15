@@ -16,7 +16,7 @@ function createBankOverlay(scene) {
 
     return overlay;
 }
-
+//
 function renderBankView(scene, overlay) {
     overlay.contentContainer.removeAll(true);
 
