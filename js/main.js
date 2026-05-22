@@ -46,7 +46,7 @@ function preload() {
     this.load.image('frame_Glitch', 'assets/frames/frame_glitch.png');
     
     // Load the Card Back
-    //this.load.image('card_back', 'assets/frames/card_back.png');
+    this.load.image('card_back', 'assets/frames/card_back.png');
 
     // 2. Auto-Load all Character Art using the Database!
     myMojiDatabase.forEach(moji => {
