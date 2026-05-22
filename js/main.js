@@ -442,7 +442,7 @@ function createCardGraphic(scene, mojiData) {
     
     // 2. MIDDLE LAYER: The Character Art
     // The Y: -20 pushes the art slightly above the center of the card. Change it if your art box is higher/lower!
-    const charArt = scene.add.image(0, -60, mojiData.id);
+    const charArt = scene.add.image(0, -52.5, mojiData.id);
     charArt.setDisplaySize(160, 140); 
     
     // 3. TOP LAYER: Dynamic Text
