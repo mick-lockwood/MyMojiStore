@@ -37,6 +37,22 @@ function preload() {
     this.load.audio('bg_music_15', 'assets/bg_music_15.mp3');
     this.load.audio('bg_music_16', 'assets/bg_music_16.mp3');
     this.load.audio('bg_music_17', 'assets/bg_music_17.mp3');
+
+// 1. Load the Base Frames
+    this.load.image('frame_Common', 'assets/frames/frame_common.png');
+    this.load.image('frame_Rare', 'assets/frames/frame_rare.png');
+    this.load.image('frame_Epic', 'assets/frames/frame_epic.png');
+    this.load.image('frame_Legendary', 'assets/frames/frame_legendary.png');
+    this.load.image('frame_Glitch', 'assets/frames/frame_glitch.png');
+    
+    // Load the Card Back
+    //this.load.image('card_back', 'assets/frames/card_back.png');
+
+    // 2. Auto-Load all Character Art using the Database!
+    myMojiDatabase.forEach(moji => {
+        // This dynamically loads 'assets/art/m_001.png' and assigns it the key 'm_001'
+        this.load.image(moji.id, `assets/art/${moji.id}.png`); 
+    });
 }
 
 function create() {
