@@ -457,7 +457,7 @@ function createCardGraphic(scene, mojiData) {
     }).setOrigin(0.5);
     
     // RARITY: Currently at Y: 85 (Right below the character art)
-    const rarityTxt = scene.add.text(0, 85, mojiData.rarity, { 
+    const rarityTxt = scene.add.text(0, 36.25, mojiData.rarity, { 
         fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(0.5);
     
