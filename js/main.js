@@ -435,44 +435,56 @@ function pullCardWithWeights(weights, categoryFilter = "all") {
 }
 
 function createCardGraphic(scene, mojiData) {
-    // 1. BASE LAYER: The Rarity Frame (e.g., 'frame_Rare')
-    // We use mojiData.rarity to automatically pick the right border!
+    // 1. BASE LAYER: The Rarity Frame
     let frameKey = 'frame_' + mojiData.rarity; 
     const bgFrame = scene.add.image(0, 0, frameKey);
-    // Scale it to fit your standard 220x320 size if your source art is bigger
     bgFrame.setDisplaySize(220, 320); 
     
     // 2. MIDDLE LAYER: The Character Art
-    // Because the image key matches the ID ('m_001'), we just pass mojiData.id!
+    // The Y: -20 pushes the art slightly above the center of the card. Change it if your art box is higher/lower!
     const charArt = scene.add.image(0, -60, mojiData.id);
-    // Constrain the art so it perfectly fits the box, regardless of original file size
     charArt.setDisplaySize(160, 140); 
     
-    // 3. TOP LAYER: Dynamic Text (Unchanged!)
+    // 3. TOP LAYER: Dynamic Text
     let textColor = mojiData.rarity === 'Glitch' ? '#2ecc71' : '#1a1a1a'; 
     
-    let nameTxt = scene.add.text(0, -142, mojiData.name, { 
+    // --- TEXT POSITIONING ---
+    // Nudge the second number (the Y value) up or down to align with your frame!
+    
+    // NAME: Currently at Y: -135 (Near the very top edge)
+    let nameTxt = scene.add.text(0, -135, mojiData.name, { 
         fontSize: '18px', color: textColor, fontStyle: 'bold', align: 'center', wordWrap: { width: 180, useAdvancedWrap: true } 
     }).setOrigin(0.5);
     
-    const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: textColor }).setOrigin(0.5);
-    let valTxt = scene.add.text(0, 130, '$' + mojiData.baseValue.toFixed(2), { fontSize: '18px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
+    // RARITY: Currently at Y: 85 (Right below the character art)
+    const rarityTxt = scene.add.text(0, 85, mojiData.rarity, { 
+        fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
+    }).setOrigin(0.5);
     
+    // VALUE: Currently at Y: 135 (Near the bottom edge, centered)
+    let valTxt = scene.add.text(0, 135, '$' + mojiData.baseValue.toFixed(2), { 
+        fontSize: '20px', color: textColor, fontStyle: 'bold' 
+    }).setOrigin(0.5);
+    
+    // NUMBER (#001): Currently at X: 95, Y: 135 (Bottom right corner)
     let numStr = '#' + mojiData.id.split('_')[1];
-    const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '22px', color: textColor, fontStyle: 'bold' }).setOrigin(1, 0.5);
+    const numTxt = scene.add.text(95, 135, numStr, { 
+        fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
+    }).setOrigin(1, 0.5);
 
     // Return the stacked layers in order (bottom to top)
     return [bgFrame, charArt, nameTxt, rarityTxt, valTxt, numTxt];
 }
 
 function createCardBackGraphic(scene) {
-    const bg = scene.add.rectangle(0, 0, 220, 320, 0x2c3e50).setStrokeStyle(6, 0xffffff);
-    const innerBg = scene.add.rectangle(0, 0, 190, 290, 0x34495e).setStrokeStyle(3, 0xf1c40f);
+    // Load the image key 'card_back' that you added to preload()
+    const backImg = scene.add.image(0, 0, 'card_back');
     
-    const pattern = scene.add.text(0, 0, '?', { fontSize: '100px', color: '#1a252f', fontStyle: 'bold' }).setOrigin(0.5);
-    const logo = scene.add.text(0, 0, 'MyMoji', { fontFamily: 'Impact', fontSize: '42px', color: '#f1c40f', stroke: '#000000', strokeThickness: 4, angle: -15 }).setOrigin(0.5);
+    // Force the image to fit the standard card size
+    backImg.setDisplaySize(220, 320); 
     
-    return [bg, innerBg, pattern, logo];
+    // Return it as an array (so the rest of the game logic still works)
+    return [backImg];
 }
 
 function addShimmerEffect(scene, card, rarity) {
