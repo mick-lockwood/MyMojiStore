@@ -452,7 +452,7 @@ function createCardGraphic(scene, mojiData) {
     // Nudge the second number (the Y value) up or down to align with your frame!
     
     // NAME: Currently at Y: -135 (Near the very top edge)
-    let nameTxt = scene.add.text(0, -135, mojiData.name, { 
+    let nameTxt = scene.add.text(0, -140, mojiData.name, { 
         fontSize: '18px', color: textColor, fontStyle: 'bold', align: 'center', wordWrap: { width: 180, useAdvancedWrap: true } 
     }).setOrigin(0.5);
     
@@ -462,13 +462,13 @@ function createCardGraphic(scene, mojiData) {
     }).setOrigin(0.5);
     
     // VALUE: Currently at Y: 135 (Near the bottom edge, centered)
-    let valTxt = scene.add.text(0, 135, '$' + mojiData.baseValue.toFixed(2), { 
+    let valTxt = scene.add.text(0, 93.75, '$' + mojiData.baseValue.toFixed(2), { 
         fontSize: '20px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(0.5);
     
     // NUMBER (#001): Currently at X: 95, Y: 135 (Bottom right corner)
     let numStr = '#' + mojiData.id.split('_')[1];
-    const numTxt = scene.add.text(95, 135, numStr, { 
+    const numTxt = scene.add.text(95, 146.25, numStr, { 
         fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(1, 0.5);
 
