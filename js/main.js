@@ -444,7 +444,7 @@ function createCardGraphic(scene, mojiData) {
     
     // 2. MIDDLE LAYER: The Character Art
     // Because the image key matches the ID ('m_001'), we just pass mojiData.id!
-    const charArt = scene.add.image(0, -20, mojiData.id);
+    const charArt = scene.add.image(0, -60, mojiData.id);
     // Constrain the art so it perfectly fits the box, regardless of original file size
     charArt.setDisplaySize(160, 140); 
     
