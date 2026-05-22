@@ -435,35 +435,34 @@ function pullCardWithWeights(weights, categoryFilter = "all") {
 }
 
 function createCardGraphic(scene, mojiData) {
-    let bgColor = 0xffffff; 
-    if (mojiData.rarity === 'Rare') bgColor = 0xd0ebff;      
-    if (mojiData.rarity === 'Epic') bgColor = 0xe8d0ff;      
-    if (mojiData.rarity === 'Legendary') bgColor = 0xfff0b3; 
-    if (mojiData.rarity === 'Glitch') bgColor = 0x111111;    
-
-    let isGlitch = mojiData.rarity === 'Glitch';
-    let strokeColor = isGlitch ? 0xff00ff : 0x1a1a1a; 
-    let textColor = isGlitch ? '#2ecc71' : '#1a1a1a'; 
+    // 1. BASE LAYER: The Rarity Frame (e.g., 'frame_Rare')
+    // We use mojiData.rarity to automatically pick the right border!
+    let frameKey = 'frame_' + mojiData.rarity; 
+    const bgFrame = scene.add.image(0, 0, frameKey);
+    // Scale it to fit your standard 220x320 size if your source art is bigger
+    bgFrame.setDisplaySize(220, 320); 
     
-    const bg = scene.add.rectangle(0, 0, 220, 320, bgColor).setStrokeStyle(6, strokeColor);
-    const imgBox = scene.add.rectangle(0, -40, 180, 160, 0xe0e0e0).setStrokeStyle(3, 0xcccccc);
+    // 2. MIDDLE LAYER: The Character Art
+    // Because the image key matches the ID ('m_001'), we just pass mojiData.id!
+    const charArt = scene.add.image(0, -40, mojiData.id);
+    // Constrain the art so it perfectly fits the box, regardless of original file size
+    charArt.setDisplaySize(160, 160); 
+    
+    // 3. TOP LAYER: Dynamic Text (Unchanged!)
+    let textColor = mojiData.rarity === 'Glitch' ? '#2ecc71' : '#1a1a1a'; 
     
     let nameTxt = scene.add.text(0, -142, mojiData.name, { 
-        fontSize: '18px', 
-        color: textColor, 
-        fontStyle: 'bold', 
-        align: 'center',
-        wordWrap: { width: 180, useAdvancedWrap: true } 
+        fontSize: '18px', color: textColor, fontStyle: 'bold', align: 'center', wordWrap: { width: 180, useAdvancedWrap: true } 
     }).setOrigin(0.5);
     
     const rarityTxt = scene.add.text(0, 70, mojiData.rarity, { fontFamily: 'Arial', fontSize: '16px', color: textColor }).setOrigin(0.5);
-    
     let valTxt = scene.add.text(0, 130, '$' + mojiData.baseValue.toFixed(2), { fontSize: '18px', color: textColor, fontStyle: 'bold' }).setOrigin(0.5);
     
     let numStr = '#' + mojiData.id.split('_')[1];
     const numTxt = scene.add.text(95, 140, numStr, { fontFamily: 'Arial', fontSize: '22px', color: textColor, fontStyle: 'bold' }).setOrigin(1, 0.5);
 
-    return [bg, imgBox, nameTxt, rarityTxt, valTxt, numTxt];
+    // Return the stacked layers in order (bottom to top)
+    return [bgFrame, charArt, nameTxt, rarityTxt, valTxt, numTxt];
 }
 
 function createCardBackGraphic(scene) {
