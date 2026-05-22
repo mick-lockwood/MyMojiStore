@@ -446,7 +446,7 @@ function createCardGraphic(scene, mojiData) {
     // Because the image key matches the ID ('m_001'), we just pass mojiData.id!
     const charArt = scene.add.image(0, -40, mojiData.id);
     // Constrain the art so it perfectly fits the box, regardless of original file size
-    charArt.setDisplaySize(160, 160); 
+    charArt.setDisplaySize(160, 140); 
     
     // 3. TOP LAYER: Dynamic Text (Unchanged!)
     let textColor = mojiData.rarity === 'Glitch' ? '#2ecc71' : '#1a1a1a'; 
