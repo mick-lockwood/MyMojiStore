@@ -451,6 +451,20 @@ function createCardGraphic(scene, mojiData) {
     const charArt = scene.add.image(0, -52.5, mojiData.id);
     charArt.setDisplaySize(160, 140); 
     
+    // --- START BUILDING THE LAYER ARRAY ---
+    let layers = [bgFrame, charArt];
+    
+    // 2.5 NEW: EMOJI TEST LAYER
+    // If this card has an 'emoji' property in the database, draw it on top!
+    if (mojiData.emoji) {
+        let emojiTxt = scene.add.text(0, -45, mojiData.emoji, {
+            fontSize: '90px', 
+            // Fallback fonts to ensure emojis render correctly across Mac/Windows/Phones
+            fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
+        }).setOrigin(0.5);
+        layers.push(emojiTxt);
+    }
+    
     // 3. TOP LAYER: Dynamic Text
     let textColor = mojiData.rarity === 'Glitch' ? '#2ecc71' : '#1a1a1a'; 
     
@@ -483,8 +497,11 @@ function createCardGraphic(scene, mojiData) {
         fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(1, 0.5);
 
+    // Push the remaining UI elements to our layers array
+    layers.push(nameTxt, rarityTxt, valTxt, catIcon, numTxt);
+
     // Return the stacked layers in order (bottom to top)
-    return [bgFrame, charArt, nameTxt, rarityTxt, valTxt, catIcon, numTxt];
+    return layers;
 }
 
 function createCardBackGraphic(scene) {
