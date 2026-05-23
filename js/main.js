@@ -55,7 +55,7 @@ function preload() {
     });
     // 3. NEW: Auto-Load Category Icons!
     // This finds every unique category in your database and loads it
-    let uniqueCategories = [...new Set(myMojiDatabase.map(m => m.category.toLowerCase()))];
+    let uniqueCategories = [...new Set(myMojiDatabase.map(m => m.category))];
     uniqueCategories.forEach(cat => {
         this.load.image(`category_${cat}`, `assets/icons/category_${cat}.png`); 
     });
@@ -473,7 +473,7 @@ function createCardGraphic(scene, mojiData) {
     }).setOrigin(0.5);
 
     // CATEGORY ICON: Bottom Left
-    let catKey = 'category_' + mojiData.category.toLowerCase();
+    let catKey = 'category_' + mojiData.category;
     const catIcon = scene.add.image(-75, 135, catKey);
     catIcon.setDisplaySize(38, 38);
     
