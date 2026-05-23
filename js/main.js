@@ -463,6 +463,12 @@ function createCardGraphic(scene, mojiData) {
             fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
         }).setOrigin(0.5);
         layers.push(emojiTxt);
+        
+        } else {
+            const charArt = scene.add.image(0, -45, mojiData.id);
+            charArt.setDisplaySize(130, 130); 
+            layers.push(charArt);
+        }
     }
     
     // 3. TOP LAYER: Dynamic Text
