@@ -59,7 +59,7 @@ const myMojiDatabase = [
     { id: "m_124", name: "Baby Bottle", rarity: "Common", category: "Object", baseValue: 4.00 },
     { id: "m_125", name: "Yellow Pencil", rarity: "Common", category: "Object", baseValue: 1.00 },
     { id: "m_126", name: "Paperclip", rarity: "Common", category: "Object", baseValue: 0.50 },
-    { id: "m_127", name: "Smiling Poop", rarity: "Common", category: "Face", baseValue: 1.50 },
+    { id: "m_127", name: "Smiling Poop", rarity: "Common", category: "Face", baseValue: 1.50, emoji: "💩" },
 
     // --- RARES (36 Cards) ---
     { id: "m_021", name: "Star Eyes", rarity: "Rare", category: "Face", baseValue: 15.00 },
