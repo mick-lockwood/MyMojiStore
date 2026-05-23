@@ -25,7 +25,7 @@ if (typeof packDatabase !== 'undefined') {
 }
 
 // Store Customization State
-let storeName = "MyMoji Store";
+let storeName = "MyMoji Store 💩";
 let hasRenamed = false; 
 
 // NPC Trade & Phone State
