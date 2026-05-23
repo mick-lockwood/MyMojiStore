@@ -39,7 +39,7 @@ function createBinderOverlay(scene) {
     const filterOptions = [
         { label: 'All Cards', val: 'all' }, { label: 'Owned Only', val: 'owned' }, { label: 'Missing Only', val: 'missing' },
         { label: 'Rarity: Common', val: 'rarity_Common' }, { label: 'Rarity: Rare', val: 'rarity_Rare' }, { label: 'Rarity: Epic', val: 'rarity_Epic' }, { label: 'Rarity: Legendary', val: 'rarity_Legendary' }, { label: 'Rarity: Glitch', val: 'rarity_Glitch' },
-        { label: 'Faces', val: 'cat_Faces' }, { label: 'Animals', val: 'cat_Animals' }, { label: 'Food', val: 'cat_Food' }, { label: 'Cosmic', val: 'cat_Cosmic' }, { label: 'Magic', val: 'cat_Magic' }, { label: 'Sports', val: 'cat_Sports' }, { label: 'Music', val: 'cat_Music' }, { label: 'Objects', val: 'cat_Objects' }, { label: 'Spooky', val: 'cat_Spooky' }, { label: 'Memes', val: 'cat_Memes' }
+        { label: 'Face', val: 'cat_Face' }, { label: 'Animal', val: 'cat_Animal' }, { label: 'Food', val: 'cat_Food' }, { label: 'Cosmic', val: 'cat_Cosmic' }, { label: 'Magic', val: 'cat_Magic' }, { label: 'Sport', val: 'cat_Sport' }, { label: 'Music', val: 'cat_Music' }, { label: 'Object', val: 'cat_Object' }, { label: 'Spooky', val: 'cat_Spooky' }, { label: 'Memes', val: 'cat_Memes' }
     ];
 
     createDropdown(scene, overlay.uiContainer, -195, -295, 150, 'FILTER: ', filterOptions, 'all', (newVal) => {
