@@ -5,9 +5,9 @@ const packDatabase = {
     "legendary": { name: "Legendary Pack", cost: 150.00, color: 0xf1c40f, category: "all", weights: { "Common": 0, "Rare": 3000, "Epic": 5000, "Legendary": 1800, "Glitch": 200 } },
     
     // NEW: Category Packs (Slightly more expensive, but guarantees the category)
-    "faces": { name: "Faces Pack", cost: 12.00, color: 0xe67e22, category: "Faces", weights: { "Common": 7500, "Rare": 2000, "Epic": 450, "Legendary": 48, "Glitch": 2 } },
+    "faces": { name: "Faces Pack", cost: 12.00, color: 0xe67e22, category: "Face", weights: { "Common": 7500, "Rare": 2000, "Epic": 450, "Legendary": 48, "Glitch": 2 } },
     "food": { name: "Food Pack", cost: 12.00, color: 0xe74c3c, category: "Food", weights: { "Common": 7500, "Rare": 2000, "Epic": 450, "Legendary": 48, "Glitch": 2 } },
-    "animals": { name: "Animals Pack", cost: 12.00, color: 0x3498db, category: "Animals", weights: { "Common": 7500, "Rare": 2000, "Epic": 450, "Legendary": 48, "Glitch": 2 } }
+    "animals": { name: "Animals Pack", cost: 12.00, color: 0x3498db, category: "Animal", weights: { "Common": 7500, "Rare": 2000, "Epic": 450, "Legendary": 48, "Glitch": 2 } }
 };
 
 // --- DATABASE: UPGRADES ---
