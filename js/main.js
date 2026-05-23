@@ -446,16 +446,11 @@ function createCardGraphic(scene, mojiData) {
     const bgFrame = scene.add.image(0, 0, frameKey);
     bgFrame.setDisplaySize(220, 320); 
     
-    // 2. MIDDLE LAYER: The Character Art
-    // The Y: -20 pushes the art slightly above the center of the card. Change it if your art box is higher/lower!
-    const charArt = scene.add.image(0, -52.5, mojiData.id);
-    charArt.setDisplaySize(160, 140); 
-    
     // --- START BUILDING THE LAYER ARRAY ---
-    let layers = [bgFrame, charArt];
+    let layers = [bgFrame];
     
-    // 2.5 NEW: EMOJI TEST LAYER
-    // If this card has an 'emoji' property in the database, draw it on top!
+    // 2. MIDDLE LAYER: EMOJI OR CHARACTER ART
+    // If this card has an 'emoji' property in the database, draw it!
     if (mojiData.emoji) {
         let emojiTxt = scene.add.text(0, -45, mojiData.emoji, {
             fontSize: '90px', 
@@ -464,30 +459,28 @@ function createCardGraphic(scene, mojiData) {
         }).setOrigin(0.5);
         layers.push(emojiTxt);
         
-        } else {
-            const charArt = scene.add.image(0, -45, mojiData.id);
-            charArt.setDisplaySize(130, 130); 
-            layers.push(charArt);
-        }
-    }
+    } else {
+        // Otherwise, use the standard PNG art
+        const charArt = scene.add.image(0, -52.5, mojiData.id);
+        charArt.setDisplaySize(160, 140); 
+        layers.push(charArt);
+    } // <-- The rogue bracket that was below this has been removed!
     
     // 3. TOP LAYER: Dynamic Text
     let textColor = mojiData.rarity === 'Glitch' ? '#2ecc71' : '#1a1a1a'; 
     
     // --- TEXT POSITIONING ---
-    // Nudge the second number (the Y value) up or down to align with your frame!
-    
-    // NAME: Currently at Y: -135 (Near the very top edge)
+    // NAME: Currently at Y: -140 (Near the very top edge)
     let nameTxt = scene.add.text(0, -140, mojiData.name, { 
         fontSize: '18px', color: textColor, fontStyle: 'bold', align: 'center', wordWrap: { width: 180, useAdvancedWrap: true } 
     }).setOrigin(0.5);
     
-    // RARITY: Currently at Y: 85 (Right below the character art)
+    // RARITY: Currently at Y: 35 (Right below the character art)
     const rarityTxt = scene.add.text(0, 35, mojiData.rarity, { 
         fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(0.5);
     
-    // VALUE: Currently at Y: 135 (Near the bottom edge, centered)
+    // VALUE: Currently at Y: 93.75 (Near the bottom edge, centered)
     let valTxt = scene.add.text(0, 93.75, '$' + mojiData.baseValue.toFixed(2), { 
         fontSize: '20px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(0.5);
@@ -497,7 +490,7 @@ function createCardGraphic(scene, mojiData) {
     const catIcon = scene.add.image(-85, 135, catKey);
     catIcon.setDisplaySize(38, 38);
     
-    // NUMBER (#001): Currently at X: 95, Y: 135 (Bottom right corner)
+    // NUMBER (#001): Currently at X: 82.5, Y: 143.75 (Bottom right corner)
     let numStr = '#' + mojiData.id.split('_')[1];
     const numTxt = scene.add.text(82.5, 143.75, numStr, { 
         fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
