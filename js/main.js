@@ -484,7 +484,7 @@ function createCardGraphic(scene, mojiData) {
     }).setOrigin(1, 0.5);
 
     // Return the stacked layers in order (bottom to top)
-    return [bgFrame, charArt, nameTxt, rarityTxt, valTxt, numTxt];
+    return [bgFrame, charArt, nameTxt, rarityTxt, valTxt, catIcon, numTxt];
 }
 
 function createCardBackGraphic(scene) {
