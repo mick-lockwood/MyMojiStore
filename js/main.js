@@ -53,6 +53,12 @@ function preload() {
         // This dynamically loads 'assets/art/m_001.png' and assigns it the key 'm_001'
         this.load.image(moji.id, `assets/art/${moji.id}.png`); 
     });
+    // 3. NEW: Auto-Load Category Icons!
+    // This finds every unique category in your database and loads it
+    let uniqueCategories = [...new Set(myMojiDatabase.map(m => m.category.toLowerCase()))];
+    uniqueCategories.forEach(cat => {
+        this.load.image(`category_${cat}`, `assets/icons/category_${cat}.png`); 
+    });
 }
 
 function create() {
@@ -465,6 +471,11 @@ function createCardGraphic(scene, mojiData) {
     let valTxt = scene.add.text(0, 93.75, '$' + mojiData.baseValue.toFixed(2), { 
         fontSize: '20px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(0.5);
+
+    // CATEGORY ICON: Bottom Left
+    let catKey = 'category_' + mojiData.category.toLowerCase();
+    const catIcon = scene.add.image(-75, 135, catKey);
+    catIcon.setDisplaySize(38, 38);
     
     // NUMBER (#001): Currently at X: 95, Y: 135 (Bottom right corner)
     let numStr = '#' + mojiData.id.split('_')[1];
