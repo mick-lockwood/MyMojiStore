@@ -479,7 +479,7 @@ function createCardGraphic(scene, mojiData) {
     
     // NUMBER (#001): Currently at X: 95, Y: 135 (Bottom right corner)
     let numStr = '#' + mojiData.id.split('_')[1];
-    const numTxt = scene.add.text(90, 135, numStr, { 
+    const numTxt = scene.add.text(90, 140, numStr, { 
         fontFamily: 'Arial', fontSize: '16px', color: textColor, fontStyle: 'bold' 
     }).setOrigin(1, 0.5);
 
