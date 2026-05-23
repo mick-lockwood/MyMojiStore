@@ -474,7 +474,7 @@ function createCardGraphic(scene, mojiData) {
 
     // CATEGORY ICON: Bottom Left
     let catKey = 'category_' + mojiData.category;
-    const catIcon = scene.add.image(-75, 135, catKey);
+    const catIcon = scene.add.image(-85, 135, catKey);
     catIcon.setDisplaySize(38, 38);
     
     // NUMBER (#001): Currently at X: 95, Y: 135 (Bottom right corner)
