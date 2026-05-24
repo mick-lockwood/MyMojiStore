@@ -169,7 +169,7 @@ function renderBinderGrid(scene, overlay) {
             let isGlitch = moji.rarity === 'Glitch';
             let qColor = isGlitch ? '#2ecc71' : '#1a1a1a'; // Neon green for glitch, dark gray for normal
 
-            let qMark = scene.add.text(0, -40, '?', { fontSize: '80px', color: qColor, fontStyle: 'bold' }).setOrigin(0.5);
+            let qMark = scene.add.text(0, -40, '', { fontSize: '80px', color: qColor, fontStyle: 'bold' }).setOrigin(0.5);
             qMark.setAlpha(isGlitch ? 0.8 : 0.6); // Make the glitch '?' slightly brighter so it pops
             
             miniCard.add(qMark);
