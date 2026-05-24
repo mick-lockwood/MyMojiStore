@@ -56,7 +56,7 @@ const myMojiDatabase = [
     { id: "m_104", name: "Acoustic Guitar", rarity: "Common", category: "Music", baseValue: 1.25, emoji: "🎸" },
     { id: "m_114", name: "Saxaphone", rarity: "Common", category: "Music", baseValue: 2.80, emoji: "🎷" },
     { id: "m_117", name: "Lolly Pop", rarity: "Common", category: "Food", baseValue: 5.00, emoji: "🍭" },
-    { id: "m_124", name: "Baby Bottle", rarity: "Common", category: "Object", baseValue: 4.00, emoji: "🍼" },
+    { id: "m_124", name: "Baby Bottle", rarity: "Common", category: "Food", baseValue: 4.00, emoji: "🍼" },
     { id: "m_125", name: "Yellow Pencil", rarity: "Common", category: "Object", baseValue: 1.00, emoji: "✏️" },
     { id: "m_126", name: "Paperclip", rarity: "Common", category: "Object", baseValue: 0.50, emoji: "📎" },
     { id: "m_127", name: "Smiling Poop", rarity: "Common", category: "Face", baseValue: 1.50, emoji: "💩" },
