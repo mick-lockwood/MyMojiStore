@@ -62,40 +62,45 @@ function createStartupScreen(scene) {
     const credTxt = scene.add.text(1004, 730, "© MyMoji Foundation", { fontFamily: 'Arial', fontSize: '16px', color: '#bdc3c7', fontStyle: 'bold' }).setOrigin(1, 0);
     startupCont.add([verTxt, credTxt]);
 
-    // THE START BUTTON
-    const startBtn = createButton(scene, 512, 520, 260, 80, 0x2ecc71, 0xffffff, "OPEN SHOP", { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }, () => {
-        
-        // 1. Kick off the music and game loop!
+    // --- SAVE FILE DETECTION & BUTTONS ---
+    let hasSave = localStorage.getItem('myMojiSave') !== null;
+    let btnY = 500;
+
+    const startGame = () => {
         scene.playNextSong();
         if (scene.globalGameTimer) scene.globalGameTimer.paused = false;
-        
-        // 2. Start the trade phone timer
         if (!currentTrade) scene.time.delayedCall(15000, () => generateTrade(scene));
-
-        // 3. Play a satisfying entrance sound
         scene.sound.play('epic_reveal', { volume: 0.6 });
 
-        // 4. Fade out the startup screen smoothly
         scene.tweens.add({
-            targets: startupCont,
-            alpha: 0,
-            scale: 1.05,
-            duration: 600,
-            ease: 'Power2',
+            targets: startupCont, alpha: 0, scale: 1.05, duration: 600, ease: 'Power2',
             onComplete: () => startupCont.destroy()
         });
-    });
+    };
 
-    // Pulse the start button softly
-    scene.tweens.add({
-        targets: startBtn,
-        scaleX: 1.05,
-        scaleY: 1.05,
-        duration: 1000,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-    });
+    if (hasSave) {
+        // Continue Button
+        let contLabel = `CONTINUE: ${storeName.toUpperCase()}`;
+        const contBtn = createButton(scene, 512, btnY, 320, 60, 0x2ecc71, 0xffffff, contLabel, { fontFamily: 'Impact', fontSize: '24px', color: '#ffffff' }, startGame);
+        
+        // New Game Button
+        const newBtn = createButton(scene, 512, btnY + 80, 320, 50, 0xe74c3c, 0xffffff, "START NEW GAME", { fontFamily: 'Impact', fontSize: '20px', color: '#ffffff' }, () => {
+            if (confirm("WARNING: This will permanently delete your current store, cards, and money! Are you sure?")) {
+                localStorage.removeItem('myMojiSave');
+                location.reload(); // Reloads the page to generate a fresh state
+            }
+        });
+
+        // Pulse the continue button
+        scene.tweens.add({ targets: contBtn, scaleX: 1.05, scaleY: 1.05, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        startupCont.add([contBtn, newBtn]);
+
+    } else {
+        // First time playing button
+        const startBtn = createButton(scene, 512, 520, 260, 80, 0x2ecc71, 0xffffff, "OPEN SHOP", { fontFamily: 'Impact', fontSize: '32px', color: '#ffffff' }, startGame);
+        scene.tweens.add({ targets: startBtn, scaleX: 1.05, scaleY: 1.05, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        startupCont.add(startBtn);
+    }
 
     startupCont.add(startBtn);
 }
