@@ -8,6 +8,8 @@ let gameStats = { packsOpened: 0, npcTrades: 0, bailouts: 0 };
 let audioSettings = { bgm: 0.3, sfx: 0.8, muted: false };
 let playerLevel = 1;
 let playerXP = 0;
+let lastLoginDate = null;
+let loginStreak = 0;
 
 // The formula for leveling up: Starts at 100xp, and gets 50xp harder every level!
 function getXPForNextLevel() {
