@@ -81,6 +81,8 @@ function loadGame() {
         if (parsedData.achievements) playerAchievements = parsedData.achievements;
         if (parsedData.stats) gameStats = { ...gameStats, ...parsedData.stats };
         if (parsedData.audio) audioSettings = parsedData.audio;
+        if (parsedData.lastLogin !== undefined) lastLoginDate = parsedData.lastLogin;
+        if (parsedData.streak !== undefined) loginStreak = parsedData.streak;
 
         if (parsedData.debt !== undefined) playerDebt = parsedData.debt;
     }
@@ -93,7 +95,8 @@ function saveGame() {
         achievements: playerAchievements, stats: gameStats,
         audio: audioSettings,
         level: playerLevel, xp: playerXP,
-        debt: playerDebt
+        debt: playerDebt,
+        lastLogin: lastLoginDate, streak: loginStreak
     }));
 }
 
