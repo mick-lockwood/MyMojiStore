@@ -38,7 +38,7 @@ function preload() {
     this.load.audio('bg_music_16', 'assets/bg_music_16.mp3');
     this.load.audio('bg_music_17', 'assets/bg_music_17.mp3');
 
-// 1. Load the Base Frames
+    // 1. Load the Base Frames
     this.load.image('frame_Common', 'assets/frames/frame_common.png');
     this.load.image('frame_Rare', 'assets/frames/frame_rare.png');
     this.load.image('frame_Epic', 'assets/frames/frame_epic.png');
@@ -50,11 +50,9 @@ function preload() {
 
     // 2. Auto-Load all Character Art using the Database!
     myMojiDatabase.forEach(moji => {
-        // This dynamically loads 'assets/art/m_001.png' and assigns it the key 'm_001'
         this.load.image(moji.id, `assets/art/${moji.id}.png`); 
     });
-    // 3. NEW: Auto-Load Category Icons!
-    // This finds every unique category in your database and loads it
+    // 3. Auto-Load Category Icons!
     let uniqueCategories = [...new Set(myMojiDatabase.map(m => m.category))];
     uniqueCategories.forEach(cat => {
         this.load.image(`category_${cat}`, `assets/icons/category_${cat}.png`); 
@@ -113,7 +111,7 @@ function create() {
         scene.bgmTrack.play();
     };
 
-    scene.playNextSong();
+    // NOTE: Removed scene.playNextSong() from here! The startup screen button triggers it now.
 
     // ----------------------------------
 
@@ -143,7 +141,6 @@ function create() {
     scene.headerBg = scene.add.rectangle(512, 40, 1024, 80, themeColors.active.banner); 
     let bannerContrast = getContrastColor(themeColors.active.banner);
 
-    // FIXED: Moved money and packs to X: 80 to make room for bank button
     scene.moneyText = scene.add.text(80, 10, '$' + playerMoney.toFixed(2), { fontFamily: 'Impact, sans-serif', fontSize: '36px', color: bannerContrast });
     let totalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
     scene.packsText = scene.add.text(80, 50, 'PACKS: ' + totalPacks, { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: bannerContrast });
@@ -229,7 +226,6 @@ function create() {
     phoneBtn.on('pointerover', () => scene.tweens.add({ targets: phoneBtn, scale: 1.2, duration: 100 }));
     phoneBtn.on('pointerout', () => scene.tweens.add({ targets: phoneBtn, scale: 1, duration: 100 }));
 
-    // NEW: Bank Button
     const bankBtn = scene.add.text(35, 40, '🏦', { fontSize: '40px', padding: { top: 10, bottom: 10 } }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     bankBtn.on('pointerover', () => scene.tweens.add({ targets: bankBtn, scale: 1.2, duration: 100 }));
     bankBtn.on('pointerout', () => scene.tweens.add({ targets: bankBtn, scale: 1, duration: 100 }));
@@ -251,7 +247,7 @@ function create() {
     const settingsOverlay = createSettingsOverlay(scene, binderOverlay, inventoryOverlay);
     scene.phoneOverlay = createPhoneOverlay(scene); 
     
-    const bankOverlay = createBankOverlay(scene); // NEW: Bank Overlay created
+    const bankOverlay = createBankOverlay(scene);
     scene.bankOverlay = bankOverlay;
 
     scene.closeAllOverlays = () => {
@@ -261,7 +257,7 @@ function create() {
         tradingOverlay.setVisible(false);
         settingsOverlay.setVisible(false);
         scene.phoneOverlay.setVisible(false);
-        scene.bankOverlay.setVisible(false); // NEW: Closes the bank
+        scene.bankOverlay.setVisible(false); 
         
         if (scene.achievementsOverlay) scene.achievementsOverlay.setVisible(false); 
         scene.events.emit('close_all_dropdowns');
@@ -282,7 +278,7 @@ function create() {
         scene.bankOverlay.setVisible(true); 
     });
 
-    if (!currentTrade) scene.time.delayedCall(15000, () => generateTrade(scene));
+    // NOTE: Removed the generateTrade timeout from here! The startup screen button triggers it now.
 
     // --- MAIN HUD BUTTONS & DROP ZONES ---
     addShadow(160, 138, 240, 70, 12);
@@ -321,20 +317,21 @@ function create() {
     });
 
     // --- GLOBAL GAME LOOP TIMER ---
-    let tickCounter = 0; // NEW: The bank interest counter properly defined here!
+    let tickCounter = 0;
 
-    scene.time.addEvent({
+    // FIXED: Assigned the timer to scene.globalGameTimer and started it as 'paused: true'
+    scene.globalGameTimer = scene.time.addEvent({
         delay: 1000,
+        paused: true, 
         callback: () => {
             checkBailout(scene);
             checkAchievements(scene);
 
-            // --- BANK INTEREST TICK ---
             tickCounter++;
             if (tickCounter >= 60) {
                 tickCounter = 0;
                 if (playerDebt > 0) {
-                    playerDebt *= 1.01; // 1% compound interest
+                    playerDebt *= 1.01; 
                     saveGame(); 
                     
                     if (scene.bankOverlay && scene.bankOverlay.visible) {
@@ -368,6 +365,9 @@ function create() {
         },
         loop: true
     });
+
+    // --- DRAW THE STARTUP SCREEN ---
+    createStartupScreen(scene);
 }
 
 function showPackCloseup(scene, packKey) {
@@ -464,7 +464,7 @@ function createCardGraphic(scene, mojiData) {
         const charArt = scene.add.image(0, -52.5, mojiData.id);
         charArt.setDisplaySize(160, 140); 
         layers.push(charArt);
-    } // <-- The rogue bracket that was below this has been removed!
+    } 
     
     // 3. TOP LAYER: Dynamic Text
     let textColor = mojiData.rarity === 'Glitch' ? '#2ecc71' : '#1a1a1a'; 
