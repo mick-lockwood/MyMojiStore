@@ -368,30 +368,34 @@ function create() {
 
     // --- PAUSE SCREEN LOGIC (ESC KEY) ---
     const pauseOverlay = scene.add.container(0, 0).setDepth(8000).setVisible(false);
-    const pauseBg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.75).setOrigin(0, 0).setInteractive(); // Blocks clicks
-    const pauseTxt = scene.add.text(512, 350, 'PAUSED', { fontFamily: 'Impact', fontSize: '80px', color: '#ffffff', letterSpacing: 10 }).setOrigin(0.5);
-    const resumeTxt = scene.add.text(512, 430, 'Press ESC to Resume', { fontFamily: 'Arial', fontSize: '24px', color: '#bdc3c7' }).setOrigin(0.5);
-    pauseOverlay.add([pauseBg, pauseTxt, resumeTxt]);
+    const pauseBg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.85).setOrigin(0, 0).setInteractive(); 
+    const pauseTxt = scene.add.text(512, 280, 'PAUSED', { fontFamily: 'Impact', fontSize: '80px', color: '#ffffff', letterSpacing: 10 }).setOrigin(0.5);
+    const resumeTxt = scene.add.text(512, 360, 'Press ESC to Resume', { fontFamily: 'Arial', fontSize: '24px', color: '#bdc3c7' }).setOrigin(0.5);
+    
+    // The new Return to Menu Button
+    const menuBtn = createButton(scene, 512, 480, 300, 60, 0xe74c3c, 0xffffff, "QUIT TO MAIN MENU", { fontFamily: 'Impact', fontSize: '24px', color: '#ffffff' }, () => {
+        saveGame();
+        location.reload(); // Cleanly reloads the page to boot back to the Start Screen
+    });
+
+    pauseOverlay.add([pauseBg, pauseTxt, resumeTxt, menuBtn]);
 
     let isPaused = false;
-
-    // Listen for the ESC key
     scene.input.keyboard.on('keydown-ESC', () => {
-        // Don't let them pause if they are on the startup screen!
+        // Block pausing if startup screen is active
         if (scene.globalGameTimer && scene.globalGameTimer.paused && !isPaused) return;
 
         isPaused = !isPaused;
         pauseOverlay.setVisible(isPaused);
         
         if (isPaused) {
-            // STOP the timers and close menus
             scene.closeAllOverlays();
             scene.globalGameTimer.paused = true;
             if (scene.bgmTrack) scene.bgmTrack.pause();
         } else {
-            // RESUME the timers
             scene.globalGameTimer.paused = false;
-            if (scene.bgmTrack && !audioSettings.muted) scene.bgmTrack.resume();
+            // Only resume music if they haven't explicitly muted it!
+            if (scene.bgmTrack && !audioSettings.musicMuted && !audioSettings.muted) scene.bgmTrack.resume();
         }
     });
 
