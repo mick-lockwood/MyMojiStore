@@ -42,48 +42,32 @@ function createStartupScreen(scene) {
     startupCont.add(overlayBg);
 
     // --- QUICK SETTINGS: SEPARATE MUSIC & SFX TOGGLES ---
-    if (typeof audioSettings.musicMuted === 'undefined') audioSettings.musicMuted = false;
-    if (typeof audioSettings.sfxMuted === 'undefined') audioSettings.sfxMuted = false;
-
-    // Check if the Master Mute is overriding everything
-    let initialMusicIcon = (audioSettings.muted || audioSettings.musicMuted) ? '🔇' : '🎵';
-    const musicToggle = scene.add.text(940, 40, initialMusicIcon, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    // Music Toggle
+    let musicIcon = audioSettings.musicMuted ? '🔇' : '🎵';
+    const musicToggle = scene.add.text(940, 40, musicIcon, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     
-    let initialSfxIcon = (audioSettings.muted || audioSettings.sfxMuted) ? '🔇' : '🔊';
-    const sfxToggle = scene.add.text(990, 40, initialSfxIcon, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-
     musicToggle.on('pointerdown', () => {
         audioSettings.musicMuted = !audioSettings.musicMuted;
+        musicToggle.setText(audioSettings.musicMuted ? '🔇' : '🎵');
         
-        // If unmuting, lift the Master Mute so audio actually plays!
-        if (!audioSettings.musicMuted) audioSettings.muted = false; 
-        
-        musicToggle.setText((audioSettings.muted || audioSettings.musicMuted) ? '🔇' : '🎵');
-        sfxToggle.setText((audioSettings.muted || audioSettings.sfxMuted) ? '🔇' : '🔊');
-
-        if (scene.bgmTrack) scene.bgmTrack.setVolume(audioSettings.musicMuted || audioSettings.muted ? 0 : audioSettings.bgm);
+        // Update the actual track if it exists
+        if (scene.bgmTrack) {
+            scene.bgmTrack.setVolume(audioSettings.musicMuted ? 0 : audioSettings.bgm);
+        }
         saveGame();
-        scene.events.emit('sync_audio_ui');
+        scene.events.emit('sync_audio_ui'); 
     });
     
-    musicToggle.on('pointerover', () => scene.tweens.add({ targets: musicToggle, scale: 1.2, duration: 100 }));
-    musicToggle.on('pointerout', () => scene.tweens.add({ targets: musicToggle, scale: 1, duration: 100 }));
-
+    // SFX Toggle
+    let sfxIcon = audioSettings.sfxMuted ? '🔇' : '🔊';
+    const sfxToggle = scene.add.text(990, 40, sfxIcon, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    
     sfxToggle.on('pointerdown', () => {
         audioSettings.sfxMuted = !audioSettings.sfxMuted;
-        
-        // If unmuting, lift the Master Mute so audio actually plays!
-        if (!audioSettings.sfxMuted) audioSettings.muted = false; 
-        
-        musicToggle.setText((audioSettings.muted || audioSettings.musicMuted) ? '🔇' : '🎵');
-        sfxToggle.setText((audioSettings.muted || audioSettings.sfxMuted) ? '🔇' : '🔊');
-
+        sfxToggle.setText(audioSettings.sfxMuted ? '🔇' : '🔊');
         saveGame();
         scene.events.emit('sync_audio_ui');
     });
-    
-    sfxToggle.on('pointerover', () => scene.tweens.add({ targets: sfxToggle, scale: 1.2, duration: 100 }));
-    sfxToggle.on('pointerout', () => scene.tweens.add({ targets: sfxToggle, scale: 1, duration: 100 }));
 
     startupCont.add([musicToggle, sfxToggle]);
 
