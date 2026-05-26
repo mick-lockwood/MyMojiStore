@@ -2,7 +2,6 @@
 // STARTUP SCREEN UI & DAILY REWARDS
 // ==========================================
 
-// Define the 7-Day Weekly Reward Loop (null = no reward that day)
 const streakRewards = [
     { day: 1, type: null },
     { day: 2, type: 'basic' },
@@ -16,11 +15,9 @@ const streakRewards = [
 function createStartupScreen(scene) {
     const startupCont = scene.add.container(0, 0).setDepth(9999);
     
-    // Deep dark background
     const bg = scene.add.rectangle(0, 0, 1024, 768, 0x1a252f).setOrigin(0, 0).setInteractive();
     startupCont.add(bg);
 
-    // Decorative floating card backs
     for(let i=0; i<6; i++) {
         let cx = 100 + (i * 160);
         let cy = Phaser.Math.Between(100, 600);
@@ -36,38 +33,52 @@ function createStartupScreen(scene) {
         startupCont.add(cardCont);
 
         scene.tweens.add({
-            targets: cardCont,
-            y: cy - Phaser.Math.Between(40, 80),
-            angle: cardCont.angle + Phaser.Math.Between(-10, 10),
-            duration: Phaser.Math.Between(3000, 5000),
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
+            targets: cardCont, y: cy - Phaser.Math.Between(40, 80), angle: cardCont.angle + Phaser.Math.Between(-10, 10),
+            duration: Phaser.Math.Between(3000, 5000), yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
         });
     }
 
     const overlayBg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.3).setOrigin(0, 0);
     startupCont.add(overlayBg);
 
-    // --- QUICK SETTINGS: MUTE TOGGLE ---
-    let muteTxt = audioSettings.muted ? '🔇' : '🔊';
-    const muteToggle = scene.add.text(980, 40, muteTxt, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    // --- QUICK SETTINGS: SEPARATE MUSIC & SFX TOGGLES ---
+    if (typeof audioSettings.musicMuted === 'undefined') audioSettings.musicMuted = false;
+    if (typeof audioSettings.sfxMuted === 'undefined') audioSettings.sfxMuted = false;
+
+    // Music Toggle
+    let initialMusicIcon = audioSettings.musicMuted ? '🔇' : '🎵';
+    const musicToggle = scene.add.text(940, 40, initialMusicIcon, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     
-    muteToggle.on('pointerdown', () => {
-        audioSettings.muted = !audioSettings.muted;
-        muteToggle.setText(audioSettings.muted ? '🔇' : '🔊');
-        if (scene.bgmTrack) {
-            scene.bgmTrack.setVolume(audioSettings.muted ? 0 : audioSettings.bgm);
-        }
+    musicToggle.on('pointerdown', () => {
+        audioSettings.musicMuted = !audioSettings.musicMuted;
+        musicToggle.setText(audioSettings.musicMuted ? '🔇' : '🎵');
+        if (scene.bgmTrack) scene.bgmTrack.setVolume(audioSettings.musicMuted || audioSettings.muted ? 0 : audioSettings.bgm);
         saveGame();
+        scene.events.emit('sync_audio_ui'); // Tells Settings menu to update!
     });
     
-    muteToggle.on('pointerover', () => scene.tweens.add({ targets: muteToggle, scale: 1.2, duration: 100 }));
-    muteToggle.on('pointerout', () => scene.tweens.add({ targets: muteToggle, scale: 1, duration: 100 }));
-    startupCont.add(muteToggle);
+    musicToggle.on('pointerover', () => scene.tweens.add({ targets: musicToggle, scale: 1.2, duration: 100 }));
+    musicToggle.on('pointerout', () => scene.tweens.add({ targets: musicToggle, scale: 1, duration: 100 }));
 
-    // --- DYNAMIC TITLE LOGIC ---
-    let words = storeName.toUpperCase().split(" ");
+    // SFX Toggle
+    let initialSfxIcon = audioSettings.sfxMuted ? '🔇' : '🔊';
+    const sfxToggle = scene.add.text(990, 40, initialSfxIcon, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    
+    sfxToggle.on('pointerdown', () => {
+        audioSettings.sfxMuted = !audioSettings.sfxMuted;
+        sfxToggle.setText(audioSettings.sfxMuted ? '🔇' : '🔊');
+        saveGame();
+        scene.events.emit('sync_audio_ui'); // Tells Settings menu to update!
+    });
+    
+    sfxToggle.on('pointerover', () => scene.tweens.add({ targets: sfxToggle, scale: 1.2, duration: 100 }));
+    sfxToggle.on('pointerout', () => scene.tweens.add({ targets: sfxToggle, scale: 1, duration: 100 }));
+
+    startupCont.add([musicToggle, sfxToggle]);
+
+    // --- STATIC TITLE LOGIC ---
+    // FIXED: Now safely hardcoded to always display "MYMOJI STORE" here
+    let words = "MYMOJI STORE".split(" ");
     let word1 = words[0];
     let word2 = words.slice(1).join(" ");
     
@@ -78,14 +89,11 @@ function createStartupScreen(scene) {
     }).setOrigin(0.5);
     startupCont.add(title1);
 
-    if (word2 !== "") {
-        const title2 = scene.add.text(512, titleY + 100, word2, { 
-            fontFamily: 'Impact', fontSize: '60px', color: '#ffffff', letterSpacing: 8, stroke: '#1a1a1a', strokeThickness: 8 
-        }).setOrigin(0.5);
-        startupCont.add(title2);
-    }
+    const title2 = scene.add.text(512, titleY + 100, word2, { 
+        fontFamily: 'Impact', fontSize: '60px', color: '#ffffff', letterSpacing: 8, stroke: '#1a1a1a', strokeThickness: 8 
+    }).setOrigin(0.5);
+    startupCont.add(title2);
 
-    // Version and Credits
     const verTxt = scene.add.text(20, 730, "v1.0.0", { fontFamily: 'Arial', fontSize: '16px', color: '#bdc3c7', fontStyle: 'bold' });
     const credTxt = scene.add.text(1004, 730, "© MyMoji Foundation", { fontFamily: 'Arial', fontSize: '16px', color: '#bdc3c7', fontStyle: 'bold' }).setOrigin(1, 0);
     startupCont.add([verTxt, credTxt]);
@@ -102,25 +110,21 @@ function createStartupScreen(scene) {
     YESTERDAY.setDate(YESTERDAY.getDate() - 1);
     const YESTERDAY_STR = YESTERDAY.toDateString();
 
-    // Check if it's a new day
     if (lastLoginDate !== TODAY_STR) {
         isNewDay = true;
         if (lastLoginDate === YESTERDAY_STR) {
             loginStreak++;
         } else {
-            loginStreak = 1; // Streak broken, reset to Day 1
+            loginStreak = 1; 
         }
         lastLoginDate = TODAY_STR;
 
-        // Figure out where we are in the 7-day loop (0 through 6)
         let cycleIndex = (loginStreak - 1) % 7;
         earnedRewardToday = streakRewards[cycleIndex].type;
 
-        // Safely grant the pack in the background so it's not lost if they close the browser
         if (earnedRewardToday) {
             playerPacks[earnedRewardToday] = (playerPacks[earnedRewardToday] || 0) + 1;
         }
-        
         saveGame(); 
     }
 
@@ -132,15 +136,13 @@ function createStartupScreen(scene) {
         scene.playNextSong();
         if (scene.globalGameTimer) scene.globalGameTimer.paused = false;
         if (!currentTrade) scene.time.delayedCall(15000, () => generateTrade(scene));
-        
-        scene.tweens.add({
-            targets: startupCont, alpha: 0, scale: 1.05, duration: 600, ease: 'Power2',
-            onComplete: () => startupCont.destroy()
-        });
+        scene.sound.play('epic_reveal', { volume: 0.6 });
+
+        scene.tweens.add({ targets: startupCont, alpha: 0, scale: 1.05, duration: 600, ease: 'Power2', onComplete: () => startupCont.destroy() });
     };
 
     if (hasSave) {
-        let contLabel = `CONTINUE: ${storeName.toUpperCase()}`;
+        let contLabel = `CONTINUE: ${storeName.toUpperCase()}`; // Still respects your custom store name!
         const contBtn = createButton(scene, 512, btnY, 320, 60, 0x2ecc71, 0xffffff, contLabel, { fontFamily: 'Impact', fontSize: '24px', color: '#ffffff' }, startGame);
         
         const newBtn = createButton(scene, 512, btnY + 75, 320, 45, 0xe74c3c, 0xffffff, "START NEW GAME", { fontFamily: 'Impact', fontSize: '20px', color: '#ffffff' }, () => {
@@ -159,22 +161,19 @@ function createStartupScreen(scene) {
         startupCont.add(startBtn);
     }
 
-    // --- DRAW UI TRACKER ---
     drawStreakTracker(scene, startupCont, loginStreak, earnedRewardToday, isNewDay);
 }
 
-// --- VISUAL STREAK TRACKER ---
 function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, isNewDay) {
     const trackerCont = scene.add.container(512, 630);
     
     const title = scene.add.text(0, -55, "WEEKLY LOGIN STREAK", { fontFamily: 'Impact', fontSize: '22px', color: '#f1c40f', letterSpacing: 2 }).setOrigin(0.5);
     trackerCont.add(title);
 
-    // Determine current position in the 7-day cycle
     let cycleIndex = currentStreak > 0 ? (currentStreak - 1) % 7 : 0;
     
     let spacing = 80;
-    let startX = -(spacing * 3); // Centers the 7 boxes
+    let startX = -(spacing * 3); 
     let hasClickedRewardThisSession = false;
 
     for (let i = 0; i < 7; i++) {
@@ -184,7 +183,6 @@ function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, 
         let isToday = (i === cycleIndex);
         let isPast = (i < cycleIndex);
         
-        // Background color logic
         let bgColor = isPast ? 0x27ae60 : (isToday ? 0xd35400 : 0x34495e);
         let box = scene.add.rectangle(boxX, 0, 70, 75, bgColor).setStrokeStyle(3, isToday ? 0xf1c40f : 0x1a1a1a);
         trackerCont.add(box);
@@ -192,9 +190,7 @@ function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, 
         if (isToday) {
             scene.tweens.add({ targets: box, scale: 1.08, duration: 800, yoyo: true, repeat: -1 });
             
-            // --- NEW: MAKE IT CLICKABLE! ---
             if (earnedRewardToday && isNewDay) {
-                // Add a "Click Me" indicator
                 let clickTxt = scene.add.text(boxX, -60, 'CLICK!', { fontFamily: 'Impact', fontSize: '16px', color: '#2ecc71' }).setOrigin(0.5);
                 scene.tweens.add({ targets: clickTxt, y: -50, duration: 400, yoyo: true, repeat: -1 });
                 trackerCont.add(clickTxt);
@@ -203,7 +199,7 @@ function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, 
                 clickZone.on('pointerdown', () => {
                     if (!hasClickedRewardThisSession) {
                         hasClickedRewardThisSession = true;
-                        clickTxt.destroy(); // Remove the "Click Me" text
+                        clickTxt.destroy(); 
                         showDailyRewardPopup(scene, parentCont, currentStreak, earnedRewardToday);
                     }
                 });
@@ -214,7 +210,6 @@ function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, 
         let dayTxt = scene.add.text(boxX, -22, `DAY ${i+1}`, { fontFamily: 'Arial', fontSize: '13px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
         trackerCont.add(dayTxt);
 
-        // Draw Mini-Pack or Dash
         if (rewardData.type) {
             let packDef = packDatabase[rewardData.type];
             let packColor = packDef ? packDef.color : 0x9b59b6;
@@ -227,7 +222,6 @@ function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, 
             trackerCont.add(dash);
         }
         
-        // Draw Checkmark over past days (or today, if they didn't earn a pack)
         if (isPast || (isToday && !earnedRewardToday)) {
             let overlay = scene.add.rectangle(boxX, 0, 70, 75, 0x000000, 0.4);
             let check = scene.add.text(boxX, 10, '✔', { fontSize: '28px', color: '#2ecc71', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
@@ -238,13 +232,10 @@ function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, 
     parentCont.add(trackerCont);
 }
 
-// --- POPUP NOTIFICATION ---
 function showDailyRewardPopup(scene, parentCont, streak, packType) {
     const popupCont = scene.add.container(0, 0).setDepth(10000); 
     
-    // Dim the main menu behind the popup
     const dimBg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.8).setOrigin(0, 0).setInteractive();
-
     const box = scene.add.rectangle(512, 384, 500, 420, 0x2c3e50).setStrokeStyle(4, 0xf1c40f);
     
     const title = scene.add.text(512, 210, "DAILY LOGIN REWARD!", { fontFamily: 'Impact', fontSize: '36px', color: '#f1c40f' }).setOrigin(0.5);
@@ -262,21 +253,16 @@ function showDailyRewardPopup(scene, parentCont, streak, packType) {
     const claimBtn = createButton(scene, 512, 540, 200, 50, 0x2ecc71, 0xffffff, "CLAIM", { fontFamily: 'Impact', fontSize: '24px', color: '#ffffff' }, () => {
         scene.sound.play('coin', { volume: 0.6 });
         
-        // Updates the top HUD instantly so the player sees their pack count go up
         if (scene.packsText) {
             let totalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
             scene.packsText.setText('PACKS: ' + totalPacks);
         }
 
-        scene.tweens.add({
-            targets: popupCont, alpha: 0, duration: 300,
-            onComplete: () => popupCont.destroy()
-        });
+        scene.tweens.add({ targets: popupCont, alpha: 0, duration: 300, onComplete: () => popupCont.destroy() });
     });
 
     popupCont.add([dimBg, box, title, streakTxt, descTxt, packGraphic, claimBtn]);
 
-    // Spring-loaded pop-in animation
     popupCont.setScale(0.8);
     popupCont.setAlpha(0);
     scene.tweens.add({ targets: popupCont, scale: 1, alpha: 1, duration: 400, ease: 'Back.easeOut' });
