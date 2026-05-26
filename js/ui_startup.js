@@ -2,7 +2,7 @@
 // STARTUP SCREEN UI & DAILY REWARDS
 // ==========================================
 
-// Define the 7-Day Weekly Reward Loop
+// Define the 7-Day Weekly Reward Loop (null = no reward that day)
 const streakRewards = [
     { day: 1, type: null },
     { day: 2, type: 'basic' },
@@ -49,6 +49,23 @@ function createStartupScreen(scene) {
     const overlayBg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.3).setOrigin(0, 0);
     startupCont.add(overlayBg);
 
+    // --- QUICK SETTINGS: MUTE TOGGLE ---
+    let muteTxt = audioSettings.muted ? '🔇' : '🔊';
+    const muteToggle = scene.add.text(980, 40, muteTxt, { fontSize: '32px' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    
+    muteToggle.on('pointerdown', () => {
+        audioSettings.muted = !audioSettings.muted;
+        muteToggle.setText(audioSettings.muted ? '🔇' : '🔊');
+        if (scene.bgmTrack) {
+            scene.bgmTrack.setVolume(audioSettings.muted ? 0 : audioSettings.bgm);
+        }
+        saveGame();
+    });
+    
+    muteToggle.on('pointerover', () => scene.tweens.add({ targets: muteToggle, scale: 1.2, duration: 100 }));
+    muteToggle.on('pointerout', () => scene.tweens.add({ targets: muteToggle, scale: 1, duration: 100 }));
+    startupCont.add(muteToggle);
+
     // --- DYNAMIC TITLE LOGIC ---
     let words = storeName.toUpperCase().split(" ");
     let word1 = words[0];
@@ -75,6 +92,7 @@ function createStartupScreen(scene) {
 
     // --- DAILY REWARD PROCESSING ---
     let earnedRewardToday = null;
+    let isNewDay = false;
 
     if (!lastLoginDate) lastLoginDate = "";
     const NOW = new Date();
@@ -86,6 +104,7 @@ function createStartupScreen(scene) {
 
     // Check if it's a new day
     if (lastLoginDate !== TODAY_STR) {
+        isNewDay = true;
         if (lastLoginDate === YESTERDAY_STR) {
             loginStreak++;
         } else {
@@ -97,7 +116,7 @@ function createStartupScreen(scene) {
         let cycleIndex = (loginStreak - 1) % 7;
         earnedRewardToday = streakRewards[cycleIndex].type;
 
-        // Grant the pack if today is a reward day
+        // Safely grant the pack in the background so it's not lost if they close the browser
         if (earnedRewardToday) {
             playerPacks[earnedRewardToday] = (playerPacks[earnedRewardToday] || 0) + 1;
         }
@@ -107,7 +126,7 @@ function createStartupScreen(scene) {
 
     // --- START BUTTONS ---
     let hasSave = localStorage.getItem('myMojiSave') !== null;
-    let btnY = 440; // Shifted up slightly to make room for the tracker
+    let btnY = 440; 
 
     const startGame = () => {
         scene.playNextSong();
@@ -141,16 +160,12 @@ function createStartupScreen(scene) {
         startupCont.add(startBtn);
     }
 
-    // --- DRAW UI TRACKER & SHOW POPUP ---
-    drawStreakTracker(scene, startupCont, loginStreak);
-
-    if (earnedRewardToday) {
-        showDailyRewardPopup(scene, startupCont, loginStreak, earnedRewardToday);
-    }
+    // --- DRAW UI TRACKER ---
+    drawStreakTracker(scene, startupCont, loginStreak, earnedRewardToday, isNewDay);
 }
 
 // --- VISUAL STREAK TRACKER ---
-function drawStreakTracker(scene, parentCont, currentStreak) {
+function drawStreakTracker(scene, parentCont, currentStreak, earnedRewardToday, isNewDay) {
     const trackerCont = scene.add.container(512, 630);
     
     const title = scene.add.text(0, -55, "WEEKLY LOGIN STREAK", { fontFamily: 'Impact', fontSize: '22px', color: '#f1c40f', letterSpacing: 2 }).setOrigin(0.5);
@@ -161,6 +176,7 @@ function drawStreakTracker(scene, parentCont, currentStreak) {
     
     let spacing = 80;
     let startX = -(spacing * 3); // Centers the 7 boxes
+    let hasClickedRewardThisSession = false;
 
     for (let i = 0; i < 7; i++) {
         let rewardData = streakRewards[i];
@@ -176,6 +192,24 @@ function drawStreakTracker(scene, parentCont, currentStreak) {
         
         if (isToday) {
             scene.tweens.add({ targets: box, scale: 1.08, duration: 800, yoyo: true, repeat: -1 });
+            
+            // --- NEW: MAKE IT CLICKABLE! ---
+            if (earnedRewardToday && isNewDay) {
+                // Add a "Click Me" indicator
+                let clickTxt = scene.add.text(boxX, -60, 'CLICK!', { fontFamily: 'Impact', fontSize: '16px', color: '#2ecc71' }).setOrigin(0.5);
+                scene.tweens.add({ targets: clickTxt, y: -50, duration: 400, yoyo: true, repeat: -1 });
+                trackerCont.add(clickTxt);
+
+                let clickZone = scene.add.zone(boxX, 0, 70, 75).setInteractive({ useHandCursor: true });
+                clickZone.on('pointerdown', () => {
+                    if (!hasClickedRewardThisSession) {
+                        hasClickedRewardThisSession = true;
+                        clickTxt.destroy(); // Remove the "Click Me" text
+                        showDailyRewardPopup(scene, parentCont, currentStreak, earnedRewardToday);
+                    }
+                });
+                trackerCont.add(clickZone);
+            }
         }
 
         let dayTxt = scene.add.text(boxX, -22, `DAY ${i+1}`, { fontFamily: 'Arial', fontSize: '13px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
@@ -194,8 +228,8 @@ function drawStreakTracker(scene, parentCont, currentStreak) {
             trackerCont.add(dash);
         }
         
-        // Draw Checkmark over past days
-        if (isPast) {
+        // Draw Checkmark over past days (or today, if they didn't earn a pack)
+        if (isPast || (isToday && !earnedRewardToday)) {
             let overlay = scene.add.rectangle(boxX, 0, 70, 75, 0x000000, 0.4);
             let check = scene.add.text(boxX, 10, '✔', { fontSize: '28px', color: '#2ecc71', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
             trackerCont.add([overlay, check]);
@@ -222,14 +256,14 @@ function showDailyRewardPopup(scene, parentCont, streak, packType) {
     let packName = packDatabase[packType] ? packDatabase[packType].name : "Booster Pack";
     const descTxt = scene.add.text(512, 310, `You received a free ${packName}!`, { fontFamily: 'Arial', fontSize: '20px', color: '#ecf0f1' }).setOrigin(0.5);
 
-    // FIXED: Render the pack graphic dynamically and shrink it down
-    let packGraphic = scene.add.container(512, 400); // Shifted Y up slightly
+    let packGraphic = scene.add.container(512, 400); 
     packGraphic.add(createPackGraphic(scene, packType));
-    packGraphic.setScale(0.8); // Shrunk the graphic so it's not massive
+    packGraphic.setScale(0.8); 
 
     const claimBtn = createButton(scene, 512, 540, 200, 50, 0x2ecc71, 0xffffff, "CLAIM", { fontFamily: 'Impact', fontSize: '24px', color: '#ffffff' }, () => {
         scene.sound.play('coin', { volume: 0.6 });
         
+        // Updates the top HUD instantly so the player sees their pack count go up
         if (scene.packsText) {
             let totalPacks = Object.values(playerPacks).reduce((a, b) => a + b, 0);
             scene.packsText.setText('PACKS: ' + totalPacks);
