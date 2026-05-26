@@ -25,6 +25,12 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         muteBtn.list[1].setText(audioSettings.muted ? '🔇 MUTED' : '🔊 AUDIO ON');
         saveGame();
     });
+    
+    // NEW: Listens to the start screen and updates the Settings menu button automatically!
+    scene.events.on('sync_audio_ui', () => {
+        muteBtn.list[0].setFillStyle(audioSettings.muted ? 0xe74c3c : 0x7f8c8d);
+        muteBtn.list[1].setText(audioSettings.muted ? '🔇 MUTED' : '🔊 AUDIO ON');
+    });
 
     // Background Music Button (Y: 190)
     let bgmBtn = createButton(scene, -110, 190, 180, 40, 0x27ae60, 0x000000, getVolText('MUSIC', audioSettings.bgm), { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
