@@ -136,7 +136,6 @@ function createStartupScreen(scene) {
         scene.playNextSong();
         if (scene.globalGameTimer) scene.globalGameTimer.paused = false;
         if (!currentTrade) scene.time.delayedCall(15000, () => generateTrade(scene));
-        scene.sound.play('epic_reveal', { volume: 0.6 });
 
         scene.tweens.add({ targets: startupCont, alpha: 0, scale: 1.05, duration: 600, ease: 'Power2', onComplete: () => startupCont.destroy() });
     };
