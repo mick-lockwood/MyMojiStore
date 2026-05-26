@@ -13,43 +13,34 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     // --- AUDIO CONTROLS (Moved down below the palettes) ---
     const getVolText = (label, val) => `${label}: ${Math.round(val * 100)}%`;
 
-    // Master Mute Button (Y: 130)
-    let muteColor = audioSettings.muted ? 0xe74c3c : 0x7f8c8d;
-    let muteText = audioSettings.muted ? '🔇 MUTED' : '🔊 AUDIO ON';
+    // Master Mute Button (Now strictly reflects the combined state)
+    let isAnyMuted = audioSettings.musicMuted || audioSettings.sfxMuted;
+    let muteColor = isAnyMuted ? 0xe74c3c : 0x7f8c8d;
+    let muteText = isAnyMuted ? '🔇 MUTED' : '🔊 AUDIO ON';
+    
     let muteBtn = createButton(scene, 0, 130, 200, 40, muteColor, 0x000000, muteText, { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        // Toggle everything
+        let newState = !isAnyMuted;
+        audioSettings.musicMuted = newState;
+        audioSettings.sfxMuted = newState;
         
-        // 1. Toggle master mute
-        audioSettings.muted = !audioSettings.muted;
-        
-        // 2. Sync the sub-toggles so the Start Screen matches if they quit!
-        audioSettings.musicMuted = audioSettings.muted;
-        audioSettings.sfxMuted = audioSettings.muted;
-
-        if (scene.bgmTrack) {
-            scene.bgmTrack.setVolume(audioSettings.muted || audioSettings.musicMuted ? 0 : audioSettings.bgm);
-        }
-
-        // 3. Fix the stuck graphic by clearing and redrawing the background shape
-        let bg = muteBtn.list[0];
-        bg.clear();
-        bg.fillStyle(audioSettings.muted ? 0xe74c3c : 0x7f8c8d, 1);
-        bg.fillRoundedRect(-100, -20, 200, 40, 12);
-        bg.lineStyle(4, 0x000000, 1);
-        bg.strokeRoundedRect(-100, -20, 200, 40, 12);
-        
-        muteBtn.list[1].setText(audioSettings.muted ? '🔇 MUTED' : '🔊 AUDIO ON');
         saveGame();
+        scene.events.emit('sync_audio_ui');
     });
 
-    // NEW: Listens to the start screen and updates itself automatically!
     scene.events.on('sync_audio_ui', () => {
+        let isAnyMuted = audioSettings.musicMuted || audioSettings.sfxMuted;
         let bg = muteBtn.list[0];
         bg.clear();
-        bg.fillStyle(audioSettings.muted ? 0xe74c3c : 0x7f8c8d, 1);
+        bg.fillStyle(isAnyMuted ? 0xe74c3c : 0x7f8c8d, 1);
         bg.fillRoundedRect(-100, -20, 200, 40, 12);
         bg.lineStyle(4, 0x000000, 1);
         bg.strokeRoundedRect(-100, -20, 200, 40, 12);
-        muteBtn.list[1].setText(audioSettings.muted ? '🔇 MUTED' : '🔊 AUDIO ON');
+        muteBtn.list[1].setText(isAnyMuted ? '🔇 MUTED' : '🔊 AUDIO ON');
+        
+        // Also update the volume labels if they are open
+        bgmBtn.list[1].setText(getVolText('MUSIC', audioSettings.bgm));
+        sfxBtn.list[1].setText(getVolText('SFX', audioSettings.sfx));
     });
 
     // Background Music Button (Y: 190)
