@@ -1,6 +1,6 @@
 function playSound(scene, key, config = {}) {
-    // If the whole game is muted, abort immediately!
-    if (audioSettings.muted) return;
+    // If the whole game is muted OR sfx is muted, abort immediately!
+    if (audioSettings.muted || audioSettings.sfxMuted) return;
 
     if (scene.cache.audio.exists(key)) {
         // Multiply the requested volume by the global SFX volume
@@ -12,6 +12,7 @@ function playSound(scene, key, config = {}) {
         console.warn('Sound skipped (not found):', key);
     }
 }
+
 function getContrastColor(hexColor) {
     let r, g, b;
     // Handle both string ('#ffffff') and number (0xffffff) formats
