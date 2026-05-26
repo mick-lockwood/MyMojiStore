@@ -95,8 +95,9 @@ function create() {
             return;
         }
 
+        // FIXED: Now checks if EITHER the master mute OR the music mute is active!
         scene.bgmTrack = scene.sound.add(nextSongKey, { 
-            volume: (typeof audioSettings !== 'undefined' && audioSettings.muted) ? 0 : (typeof audioSettings !== 'undefined' ? audioSettings.bgm : 0.3)
+            volume: (typeof audioSettings !== 'undefined' && (audioSettings.muted || audioSettings.musicMuted)) ? 0 : (typeof audioSettings !== 'undefined' ? audioSettings.bgm : 0.3)
         });
 
         scene.bgmTrack.once('complete', () => {
