@@ -11,57 +11,58 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
     // --- AUDIO CONTROLS (Moved down below the palettes) ---
-    const getVolText = (label, val) => `${label}: ${Math.round(val * 100)}%`;
-
-    // Master Mute Button (Now strictly reflects the combined state)
-    let isAnyMuted = audioSettings.musicMuted || audioSettings.sfxMuted;
-    let muteColor = isAnyMuted ? 0xe74c3c : 0x7f8c8d;
-    let muteText = isAnyMuted ? '🔇 MUTED' : '🔊 AUDIO ON';
     
-    let muteBtn = createButton(scene, 0, 130, 200, 40, muteColor, 0x000000, muteText, { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-        // Toggle everything
-        let newState = !isAnyMuted;
-        audioSettings.musicMuted = newState;
-        audioSettings.sfxMuted = newState;
-        
+    // Create buttons with placeholder text (they get updated instantly when the menu opens)
+    let muteBtn = createButton(scene, 0, 130, 200, 40, 0x7f8c8d, 0x000000, '...', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        audioSettings.muted = !audioSettings.muted;
+        audioSettings.musicMuted = audioSettings.muted;
+        audioSettings.sfxMuted = audioSettings.muted;
         saveGame();
+        overlay.refreshAudioUI();
+        
+        // Tell the start screen icons to update if they are visible
         scene.events.emit('sync_audio_ui');
     });
 
-    scene.events.on('sync_audio_ui', () => {
-        let isAnyMuted = audioSettings.musicMuted || audioSettings.sfxMuted;
+    let bgmBtn = createButton(scene, -110, 190, 180, 40, 0x27ae60, 0x000000, '...', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        audioSettings.bgm += 0.3;
+        if (audioSettings.bgm > 1.0) audioSettings.bgm = 0; 
+        if (scene.bgmTrack && !audioSettings.musicMuted && !audioSettings.muted) {
+            scene.bgmTrack.setVolume(audioSettings.bgm);
+        }
+        saveGame();
+        overlay.refreshAudioUI();
+    });
+
+    let sfxBtn = createButton(scene, 110, 190, 180, 40, 0x2980b9, 0x000000, '...', { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
+        audioSettings.sfx += 0.5;
+        if (audioSettings.sfx > 1.0) audioSettings.sfx = 0; 
+        saveGame();
+        overlay.refreshAudioUI();
+        playSound(scene, 'coin', { volume: 1.0 }); 
+    });
+
+    // This function runs every time the menu is opened or a button is clicked
+    overlay.refreshAudioUI = () => {
+        let isAnyMuted = audioSettings.muted || audioSettings.musicMuted || audioSettings.sfxMuted;
+        
         let bg = muteBtn.list[0];
         bg.clear();
         bg.fillStyle(isAnyMuted ? 0xe74c3c : 0x7f8c8d, 1);
         bg.fillRoundedRect(-100, -20, 200, 40, 12);
         bg.lineStyle(4, 0x000000, 1);
         bg.strokeRoundedRect(-100, -20, 200, 40, 12);
-        muteBtn.list[1].setText(isAnyMuted ? '🔇 MUTED' : '🔊 AUDIO ON');
         
-        // Also update the volume labels if they are open
-        bgmBtn.list[1].setText(getVolText('MUSIC', audioSettings.bgm));
-        sfxBtn.list[1].setText(getVolText('SFX', audioSettings.sfx));
-    });
+        muteBtn.list[1].setText(isAnyMuted ? '🔇 MUTED' : '🔊 AUDIO ON');
+        bgmBtn.list[1].setText(`MUSIC: ${Math.round(audioSettings.bgm * 100)}%`);
+        sfxBtn.list[1].setText(`SFX: ${Math.round(audioSettings.sfx * 100)}%`);
+    };
 
-    // Background Music Button (Y: 190)
-    let bgmBtn = createButton(scene, -110, 190, 180, 40, 0x27ae60, 0x000000, getVolText('MUSIC', audioSettings.bgm), { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-        audioSettings.bgm += 0.3;
-        if (audioSettings.bgm > 1.0) audioSettings.bgm = 0; 
-        if (scene.bgmTrack && !audioSettings.muted) {
-            scene.bgmTrack.setVolume(audioSettings.bgm);
-        }
-        bgmBtn.list[1].setText(getVolText('MUSIC', audioSettings.bgm));
-        saveGame();
-    });
-
-    // Sound Effects Button (Y: 190)
-    let sfxBtn = createButton(scene, 110, 190, 180, 40, 0x2980b9, 0x000000, getVolText('SFX', audioSettings.sfx), { fontFamily: 'Arial', fontSize: '16px', color: '#fff', fontStyle: 'bold' }, () => {
-        audioSettings.sfx += 0.5;
-        if (audioSettings.sfx > 1.0) audioSettings.sfx = 0; 
-        playSound(scene, 'coin', { volume: 1.0 }); 
-        sfxBtn.list[1].setText(getVolText('SFX', audioSettings.sfx));
-        saveGame();
-    });
+    // Override the setVisible function so it always refreshes the audio visuals when opened
+    overlay.setVisible = (val) => {
+        if (val) overlay.refreshAudioUI();
+        Phaser.GameObjects.Container.prototype.setVisible.call(overlay, val);
+    };
 
     // --- UTILITY BUTTONS ---
     // How To Play (Y: 250)
@@ -97,18 +98,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
 
     
     const stdColors = [
-        
-    // --- Modern Candy ---
-    //    0x2b2d42, // Deep Navy (replaces harsh black)
-    //    0xf8f9fa, // Clean Snow (replaces blinding white)
-    //    0xff9ff3, // Pastel Pink
-    //    0xfeca57, // Warm Sun Yellow
-    //    0x48dbfb, // Sky Blue
-    //    0x1dd1a1, // Jungle Mint
-    //    0x5f27cd, // Vibrant Purple
-    //    0xc8d6e5  // Soft Blue-Gray
-        
-    // --- Cozy Lo-Fi Cafe ---
         0x4a3b32, // Coffee Bean
         0xfff3e3, // Warm Cream
         0xf6bd60, // Warm Sun
@@ -117,60 +106,30 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
         0xb5838d, // Dusty Mauve
         0xdda15e, // Caramel
         0x6d6875  // Slate Slate
-
-    // --- Midnight Synth ---
-    //    0x0f0f1b, // Void Black
-    //    0x2d3436, // Gunmetal Gray
-    //    0x00d2d3, // Neon Cyan
-    //    0xff9f43, // Neon Orange
-    //    0x54a0ff, // Digital Blue
-    //    0x10ac84, // Matrix Green
-    //    0x5f27cd, // Deep Synth Purple
-    //    0xb2bec3  // Cool Silver
-        
     ];
 
     
     const vipColors = [
-        
-    // --- Modern Candy ---
-    //    0xff6b6b, // Coral Red
-    //    0x0abde3, // Neon Cyan
-    //    0xf368e0, // Hot Magenta
-    //    0xff9f43  // Vibrant Orange
-        
-    // --- Cozy Lo-Fi Cafe ---
         0x283618, // Deep Forest
         0xbc6c25, // Rich Wood
         0x9e2a2b, // Deep Crimson
         0xe0b1cb  // Sweet Pink
-        
-    // --- Midnight Synth ---   
-    //    0xff3f34, // Laser Red
-    //    0x01a3a4, // Toxic Green
-    //    0xf368e0, // Hot Pink
-    //    0xffdd59  // Electric Yellow
-        
     ];
     
-    // --- ORIGINAL COLOR BACKUP ---
-    //const stdColors = [0x1a1a1a, 0xfce883, 0xf4f4f4, 0x7f8c8d, 0xc0392b, 0x2980b9, 0x27ae60, 0x8e44ad];
-    //const vipColors = [0xd35400, 0xf1c40f, 0xbdc3c7, 0xff00ff];
-    // -----------------------------
     const allColors = [...stdColors, ...vipColors];
 
     overlay.renderPalettes = () => {
         overlay.paletteContainer.removeAll(true);
         
         if (!playerUnlocks.colorThemes) {
-            // FIXED: Shifted the locked text up to Y -90 to center it in the new palette zone
             let lockBg = scene.add.rectangle(0, -90, 400, 80, 0xf4f4f4).setStrokeStyle(2, 0x000);
             let lockTxt = scene.add.text(0, -90, "🎨 COLOR THEMES LOCKED\nPurchase in the Store's UNLOCKS tab!", { fontSize: '18px', color: '#7f8c8d', align: 'center', fontStyle: 'bold' }).setOrigin(0.5);
             overlay.paletteContainer.add([lockBg, lockTxt]);
             return; 
         }
 
-        let allStdUnlocked = stdColors.every(c => playerUnlocks.colors.includes(c));
+        // FIXED: Now correctly accounts for the first 4 colors being free!
+        let allStdUnlocked = stdColors.every((c, index) => index < 4 || playerUnlocks.colors.includes(c));
 
         const drawRow = (y, label, type) => {
             let labelTxt = scene.add.text(-270, y, label, { fontFamily: 'Arial', fontSize: '18px', color: '#000', fontStyle: 'bold' }).setOrigin(0, 0.5);
@@ -289,7 +248,6 @@ function createSettingsOverlay(scene, binderOverlay, inventoryOverlay) {
             });
         };
 
-        // 3. SHIFTED ROWS UP: Shifted all Y coordinates up by 80 pixels
         drawRow(-240, "Table", 'table');
         drawRow(-180, "Banner", 'banner');
         drawRow(-120, "Binder", 'binder');
