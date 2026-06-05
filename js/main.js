@@ -187,17 +187,24 @@ function create() {
         if (proceed) {
             if (playerMoney >= cost) {
                 let promptMsg = hasRenamed 
-                    ? "Enter your new store name:" 
-                    : "Enter your new store name:\n\n(NOTE: Your first rebrand is FREE! Future name changes will cost $50.00)";
+                    ? "Enter your new store name (Max 15 characters):" 
+                    : "Enter your new store name (Max 15 characters):\n\n(NOTE: Your first rebrand is FREE! Future name changes will cost $50.00)";
                 
                 let newName = prompt(promptMsg, storeName);
                 
                 if (newName && newName.trim() !== "") {
+                    // --- NEW CHARACTER LIMIT LOGIC ---
+                    let cleanName = newName.trim();
+                    if (cleanName.length > 15) {
+                        alert("Store name is too long! Please keep it to 15 characters or less.");
+                        return; // Aborts the rename process
+                    }
+
                     if (cost > 0) {
                         playerMoney -= cost;
                         scene.moneyText.setText('$' + playerMoney.toFixed(2));
                     }
-                    storeName = newName.trim();
+                    storeName = cleanName;
                     hasRenamed = true;
                     scene.titleText.setText(storeName);
                     updatePencilPos(); 
