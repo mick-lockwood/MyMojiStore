@@ -10,6 +10,9 @@ let playerLevel = 1;
 let playerXP = 0;
 let lastLoginDate = null;
 let loginStreak = 0;
+let activeListings = []; 
+// Market trends track if a category is booming or crashing (e.g. { category: 'Food', multi: 1.2 })
+let marketTrend = { category: 'None', multi: 1.0 };
 
 // The formula for leveling up: Starts at 100xp, and gets 50xp harder every level!
 function getXPForNextLevel() {
@@ -83,8 +86,9 @@ function loadGame() {
         if (parsedData.audio) audioSettings = parsedData.audio;
         if (parsedData.lastLogin !== undefined) lastLoginDate = parsedData.lastLogin;
         if (parsedData.streak !== undefined) loginStreak = parsedData.streak;
-
         if (parsedData.debt !== undefined) playerDebt = parsedData.debt;
+        if (parsedData.listings) activeListings = parsedData.listings;
+        if (parsedData.trend) marketTrend = parsedData.trend;
     }
 }
 
@@ -96,7 +100,8 @@ function saveGame() {
         audio: audioSettings,
         level: playerLevel, xp: playerXP,
         debt: playerDebt,
-        lastLogin: lastLoginDate, streak: loginStreak
+        lastLogin: lastLoginDate, streak: loginStreak,
+        listings: activeListings, trend: marketTrend
     }));
 }
 
