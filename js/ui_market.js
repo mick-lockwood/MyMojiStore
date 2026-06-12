@@ -11,23 +11,38 @@ function createMarketOverlay(scene) {
 
     closeTxt.on('pointerdown', () => overlay.setVisible(false));
 
-    overlay.trendBanner = scene.add.text(0, -210, '', { fontFamily: 'Arial', fontSize: '18px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0.5);
+    overlay.trendContainer = scene.add.container(0, 0);
     overlay.listContainer = scene.add.container(0, 0);
 
-    overlay.add([bg, title, closeTxt, overlay.trendBanner, overlay.listContainer]);
+    overlay.add([bg, title, closeTxt, overlay.trendContainer, overlay.listContainer]);
     return overlay;
 }
 
 function renderMarketView(scene, overlay) {
+    overlay.trendContainer.removeAll(true);
     overlay.listContainer.removeAll(true);
 
-    // Render Market Trend Banner
-    if (marketTrend.multi > 1.0) {
-        overlay.trendBanner.setText(`🔥 TRENDING: ${marketTrend.category} cards are selling for +${Math.round((marketTrend.multi-1)*100)}% 🔥`).setColor('#2ecc71');
-    } else if (marketTrend.multi < 1.0) {
-        overlay.trendBanner.setText(`📉 CRASH: ${marketTrend.category} cards dropped by ${Math.round((1-marketTrend.multi)*100)}% 📉`).setColor('#e74c3c');
+    // --- Render Multiple Market Trends ---
+    if (marketTrends.length === 0) {
+        overlay.trendContainer.add(scene.add.text(0, -210, "⚖️ Market is currently stable ⚖️", { fontFamily: 'Arial', fontSize: '18px', color: '#bdc3c7' }).setOrigin(0.5));
     } else {
-        overlay.trendBanner.setText("⚖️ Market is currently stable ⚖️").setColor('#bdc3c7');
+        marketTrends.forEach((trend, idx) => {
+            let txt = '';
+            let color = '';
+            let percent = Math.round(Math.abs(1 - trend.multi) * 100);
+            
+            if (trend.multi > 1.0) {
+                txt = `🔥 ${trend.category} prices UP +${percent}%! 🔥`;
+                color = '#2ecc71';
+            } else {
+                txt = `📉 ${trend.category} prices DOWN -${percent}%! 📉`;
+                color = '#e74c3c';
+            }
+            
+            // Stack them vertically
+            let trendTxt = scene.add.text(0, -225 + (idx * 22), txt, { fontFamily: 'Arial', fontSize: '16px', color: color, fontStyle: 'bold' }).setOrigin(0.5);
+            overlay.trendContainer.add(trendTxt);
+        });
     }
 
     if (activeListings.length === 0) {
@@ -36,7 +51,7 @@ function renderMarketView(scene, overlay) {
         return;
     }
 
-    let startY = -140;
+    let startY = -120;
     activeListings.forEach((listing, i) => {
         let mojiData = myMojiDatabase.find(m => m.id === listing.mojiId);
         if (!mojiData) return;
@@ -65,7 +80,7 @@ function renderMarketView(scene, overlay) {
             overlay.listContainer.add(collectBtn);
         } else {
             let cancelBtn = createButton(scene, 270, startY + (i * 70), 120, 36, 0xe74c3c, 0x000, "CANCEL", { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => {
-                playerInventory[mojiData.id]++; // Return to inventory
+                playerInventory[mojiData.id]++; 
                 activeListings = activeListings.filter(l => l.id !== listing.id);
                 saveGame();
                 renderMarketView(scene, overlay);
@@ -78,42 +93,72 @@ function renderMarketView(scene, overlay) {
 function showPricingPopup(scene, physicalCardInstanceId, mojiData) {
     const popupCont = scene.add.container(0, 0).setDepth(10000); 
     const dimBg = scene.add.rectangle(0, 0, 1024, 768, 0x000000, 0.85).setOrigin(0, 0).setInteractive();
-    const box = scene.add.rectangle(512, 384, 500, 380, 0x2c3e50).setStrokeStyle(4, 0xff7e8d);
+    const box = scene.add.rectangle(512, 384, 550, 420, 0x2c3e50).setStrokeStyle(4, 0xff7e8d);
     
-    const title = scene.add.text(512, 230, "LIST ON MARKET", { fontFamily: 'Impact', fontSize: '32px', color: '#ff7e8d' }).setOrigin(0.5);
+    const title = scene.add.text(512, 210, "LIST ON MARKET", { fontFamily: 'Impact', fontSize: '32px', color: '#ff7e8d' }).setOrigin(0.5);
     
-    // Calculate actual market value
+    // Detect if this specific card is currently trending!
+    let activeTrend = marketTrends.find(t => t.category === mojiData.category);
     let marketVal = mojiData.baseValue;
-    if (marketTrend.category === mojiData.category) marketVal *= marketTrend.multi;
+    
+    let trendStr = "Market Stable";
+    let trendColor = "#bdc3c7";
 
-    const baseTxt = scene.add.text(512, 280, `${mojiData.name} (Base: $${mojiData.baseValue.toFixed(2)})`, { fontFamily: 'Arial', fontSize: '18px', color: '#bdc3c7' }).setOrigin(0.5);
-    const mktTxt = scene.add.text(512, 310, `Current Market Value: $${marketVal.toFixed(2)}`, { fontFamily: 'Arial', fontSize: '22px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0.5);
+    if (activeTrend) {
+        marketVal *= activeTrend.multi;
+        let percent = Math.round(Math.abs(1 - activeTrend.multi) * 100);
+        if (activeTrend.multi > 1.0) {
+            trendStr = `🔥 High Demand: +${percent}% 🔥`;
+            trendColor = "#2ecc71";
+        } else {
+            trendStr = `📉 Market Slump: -${percent}% 📉`;
+            trendColor = "#e74c3c";
+        }
+    }
+
+    const baseTxt = scene.add.text(512, 260, `${mojiData.name} (Base: $${mojiData.baseValue.toFixed(2)})`, { fontFamily: 'Arial', fontSize: '18px', color: '#ecf0f1' }).setOrigin(0.5);
+    const trendDisplay = scene.add.text(512, 285, trendStr, { fontFamily: 'Arial', fontSize: '16px', color: trendColor, fontStyle: 'bold' }).setOrigin(0.5);
+    const mktTxt = scene.add.text(512, 315, `Current Market Value: $${marketVal.toFixed(2)}`, { fontFamily: 'Arial', fontSize: '22px', color: '#f1c40f', fontStyle: 'bold' }).setOrigin(0.5);
 
     let selectedPrice = marketVal;
-    let priceDisplay = scene.add.text(512, 380, `$${selectedPrice.toFixed(2)}`, { fontFamily: 'Impact', fontSize: '48px', color: '#2ecc71' }).setOrigin(0.5);
+    let priceDisplay = scene.add.text(512, 390, `$${selectedPrice.toFixed(2)}`, { fontFamily: 'Impact', fontSize: '56px', color: '#2ecc71' }).setOrigin(0.5);
 
     const updatePriceDisplay = () => {
+        // Prevent negative prices
+        if (selectedPrice < 0) selectedPrice = 0;
         priceDisplay.setText(`$${selectedPrice.toFixed(2)}`);
     };
 
-    // Quick set buttons
-    let btnMinus20 = createButton(scene, 320, 450, 80, 40, 0x34495e, 0xfff, "-20%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice = marketVal * 0.8; updatePriceDisplay(); });
-    let btnMinus10 = createButton(scene, 410, 450, 80, 40, 0x34495e, 0xfff, "-10%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice = marketVal * 0.9; updatePriceDisplay(); });
-    let btnMkt = createButton(scene, 512, 450, 90, 40, 0xf1c40f, 0x000, "MARKET", { fontSize: '16px', color: '#000', fontStyle: 'bold' }, () => { selectedPrice = marketVal; updatePriceDisplay(); });
-    let btnPlus10 = createButton(scene, 614, 450, 80, 40, 0x34495e, 0xfff, "+10%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice = marketVal * 1.1; updatePriceDisplay(); });
-    let btnPlus20 = createButton(scene, 704, 450, 80, 40, 0x34495e, 0xfff, "+20%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice = marketVal * 1.2; updatePriceDisplay(); });
+    // --- PRICING BUTTONS ---
+    // These now multiply against the *currently selected* price, so you can stack them!
+    let btnMinus20 = createButton(scene, 280, 460, 70, 40, 0x34495e, 0xfff, "-20%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice *= 0.8; updatePriceDisplay(); });
+    let btnMinus10 = createButton(scene, 360, 460, 70, 40, 0x34495e, 0xfff, "-10%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice *= 0.9; updatePriceDisplay(); });
+    let btnMkt = createButton(scene, 445, 460, 80, 40, 0xf1c40f, 0x000, "RESET", { fontSize: '14px', color: '#000', fontStyle: 'bold' }, () => { selectedPrice = marketVal; updatePriceDisplay(); });
+    let btnPlus10 = createButton(scene, 530, 460, 70, 40, 0x34495e, 0xfff, "+10%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice *= 1.1; updatePriceDisplay(); });
+    let btnPlus20 = createButton(scene, 610, 460, 70, 40, 0x34495e, 0xfff, "+20%", { fontSize: '16px', color: '#fff' }, () => { selectedPrice *= 1.2; updatePriceDisplay(); });
+    
+    // CUSTOM PRICE BUTTON
+    let customBtn = createButton(scene, 710, 460, 110, 40, 0x9b59b6, 0xfff, "CUSTOM ✏️", { fontSize: '14px', color: '#fff', fontStyle: 'bold' }, () => { 
+        let input = prompt("Enter a custom sale price:", selectedPrice.toFixed(2));
+        let num = parseFloat(input);
+        if (!isNaN(num) && num > 0) {
+            selectedPrice = num;
+            updatePriceDisplay();
+        } else if (input !== null) {
+            alert("Invalid price!");
+        }
+    });
 
-    const cancelBtn = createButton(scene, 380, 520, 160, 50, 0xe74c3c, 0xffffff, "CANCEL", { fontFamily: 'Impact', fontSize: '20px', color: '#ffffff' }, () => {
+    // --- ACTION BUTTONS ---
+    const cancelBtn = createButton(scene, 400, 540, 160, 50, 0xe74c3c, 0xffffff, "CANCEL", { fontFamily: 'Impact', fontSize: '20px', color: '#ffffff' }, () => {
         popupCont.destroy();
     });
 
-    const listBtn = createButton(scene, 644, 520, 160, 50, 0x2ecc71, 0xffffff, "LIST ITEM", { fontFamily: 'Impact', fontSize: '20px', color: '#ffffff' }, () => {
-        // Destroy the physical card from the table
+    const listBtn = createButton(scene, 624, 540, 160, 50, 0x2ecc71, 0xffffff, "LIST ITEM", { fontFamily: 'Impact', fontSize: '20px', color: '#ffffff' }, () => {
         let physicalCard = scene.children.list.find(c => c.instanceId === physicalCardInstanceId);
         if (physicalCard) physicalCard.destroy();
         cardsOnTable = cardsOnTable.filter(c => c.instanceId !== physicalCardInstanceId);
 
-        // Add to active market listings
         activeListings.push({ id: 'list_' + Date.now(), mojiId: mojiData.id, price: selectedPrice, sold: false });
         saveGame();
         
@@ -121,6 +166,6 @@ function showPricingPopup(scene, physicalCardInstanceId, mojiData) {
         popupCont.destroy();
     });
 
-    popupCont.add([dimBg, box, title, baseTxt, mktTxt, priceDisplay, btnMinus20, btnMinus10, btnMkt, btnPlus10, btnPlus20, cancelBtn, listBtn]);
+    popupCont.add([dimBg, box, title, baseTxt, trendDisplay, mktTxt, priceDisplay, btnMinus20, btnMinus10, btnMkt, btnPlus10, btnPlus20, customBtn, cancelBtn, listBtn]);
     scene.add.existing(popupCont);
 }
