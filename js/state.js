@@ -155,4 +155,32 @@ function generateTrade(scene) {
 
 function processBulkSell(scene, overlay, rarityTarget) {
     let totalEarned = 0;
-    let minOwned = playerUnlocks
+    let minOwned = playerUnlocks.binder ? 1 : 0;
+    
+    myMojiDatabase.forEach(moji => {
+        if (rarityTarget === 'all' || moji.rarity === rarityTarget) {
+            let owned = Number(playerInventory[moji.id]);
+            if (owned > minOwned) {
+                let amountToSell = owned - minOwned;
+                totalEarned += amountToSell * (moji.baseValue * 0.5);
+                playerInventory[moji.id] = minOwned;
+            }
+        }
+    });
+
+    if (totalEarned > 0) {
+        playerMoney += totalEarned;
+        scene.moneyText.setText('$' + playerMoney.toFixed(2));
+        saveGame();
+        alert(`Successfully liquidated cards for $${totalEarned.toFixed(2)}!`);
+        if (typeof renderInventoryView === 'function') renderInventoryView(scene, overlay);
+    } else {
+        alert("You don't have any matching doubles to quick-sell!");
+    }
+}
+
+function calculateCartTotal() {
+    let total = 0;
+    for (let key in shoppingCart) total += (shoppingCart[key] * packDatabase[key].cost);
+    return total;
+}
