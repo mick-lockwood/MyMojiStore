@@ -48,10 +48,14 @@ function preload() {
     // Load the Card Back
     this.load.image('card_back', 'assets/frames/card_back.png');
 
-    // 2. Auto-Load all Character Art using the Database!
+    // 2. Auto-Load Character Art (Fixed for rapid loading!)
     myMojiDatabase.forEach(moji => {
-        this.load.image(moji.id, `assets/art/${moji.id}.png`); 
+        // ONLY try to load the PNG if this card does NOT use an emoji!
+        if (!moji.emoji) {
+            this.load.image(moji.id, `assets/art/${moji.id}.png`); 
+        }
     });
+    
     // 3. Auto-Load Category Icons!
     let uniqueCategories = [...new Set(myMojiDatabase.map(m => m.category))];
     uniqueCategories.forEach(cat => {
