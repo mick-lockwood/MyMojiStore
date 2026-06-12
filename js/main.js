@@ -341,14 +341,23 @@ function create() {
             checkAchievements(scene);
 
             // --- MOJIMARKET PROCESSING ---
-            // 1. Shift Market Trends every 2 minutes (120 ticks)
-            if (tickCounter % 120 === 0) {
+            // 1. Shift Market Trends every 5 minutes (300 ticks)
+            if (tickCounter % 300 === 0 || marketTrends.length === 0) {
                 let categories = [...new Set(myMojiDatabase.map(m => m.category))];
                 let randCat = categories[Math.floor(Math.random() * categories.length)];
-                let multi = (Math.random() * 0.6) + 0.7; // Ranges from 0.7x to 1.3x
-                marketTrend = { category: randCat, multi: Number(multi.toFixed(2)) };
+                let multi = (Math.random() * 0.8) + 0.6; // Ranges from 0.6x to 1.4x
+                
+                // Add new trend to the front. It expires in 15 mins (900,000 ms)
+                marketTrends.unshift({ category: randCat, multi: Number(multi.toFixed(2)), expires: Date.now() + 900000 });
+                if (marketTrends.length > 3) marketTrends.pop(); // Max 3 trends visible at once
                 saveGame();
             }
+
+            // Clean up expired trends silently
+            let now = Date.now();
+            let oldLen = marketTrends.length;
+            marketTrends = marketTrends.filter(t => t.expires > now);
+            if (oldLen !== marketTrends.length) saveGame();
 
             // 2. Check if NPCs buy active listings
             activeListings.forEach(listing => {
@@ -356,19 +365,26 @@ function create() {
 
                 let mojiData = myMojiDatabase.find(m => m.id === listing.mojiId);
                 let marketVal = mojiData.baseValue;
-                if (marketTrend.category === mojiData.category) marketVal *= marketTrend.multi;
+                
+                // Apply trend if active
+                let activeTrend = marketTrends.find(t => t.category === mojiData.category);
+                if (activeTrend) marketVal *= activeTrend.multi;
 
                 let ratio = listing.price / marketVal;
                 
                 // Determine odds of selling this specific second
-                let sellChance = 0.05; // 5% chance per second if priced fairly
-                if (ratio <= 0.8) sellChance = 0.25; // 25% chance per sec if super cheap!
-                if (ratio >= 1.2) sellChance = 0.01; // 1% chance per sec if overpriced
+                let sellChance = 0; 
+                if (ratio <= 0.5) sellChance = 0.50;      // 50% chance per sec (Instant Sell)
+                else if (ratio <= 0.8) sellChance = 0.15; // 15% chance per sec
+                else if (ratio <= 1.05) sellChance = 0.05;// 5% chance (Fair market price)
+                else if (ratio <= 1.25) sellChance = 0.01;// 1% chance (A bit greedy)
+                else if (ratio <= 1.5) sellChance = 0.001;// 0.1% chance (Very overpriced)
+                else if (ratio <= 2.0) sellChance = 0.0001;// 0.01% chance (Ripoff)
+                else sellChance = 0;                      // Will NEVER sell if >200% market value
                 
                 if (Math.random() < sellChance) {
                     listing.sold = true;
                     saveGame();
-                    // Alert the player!
                     if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
                     playSound(scene, 'coin', { volume: 0.8 });
                     
