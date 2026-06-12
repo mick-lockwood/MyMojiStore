@@ -184,26 +184,19 @@ function create() {
         let cost = hasRenamed ? 50 : 0;
         let proceed = true;
         
-        if (hasRenamed) {
-            proceed = confirm("Rebranding your store costs $50.00. Do you want to proceed?");
-        }
+        if (hasRenamed) proceed = confirm("Rebranding your store costs $50.00. Do you want to proceed?");
         
         if (proceed) {
             if (playerMoney >= cost) {
-                let promptMsg = hasRenamed 
-                    ? "Enter your new store name (Max 15 characters):" 
-                    : "Enter your new store name (Max 15 characters):\n\n(NOTE: Your first rebrand is FREE! Future name changes will cost $50.00)";
-                
+                let promptMsg = hasRenamed ? "Enter your new store name (Max 15 characters):" : "Enter your new store name (Max 15 characters):\n\n(NOTE: Your first rebrand is FREE! Future name changes will cost $50.00)";
                 let newName = prompt(promptMsg, storeName);
                 
                 if (newName && newName.trim() !== "") {
-                    // --- NEW CHARACTER LIMIT LOGIC ---
                     let cleanName = newName.trim();
                     if (cleanName.length > 15) {
                         alert("Store name is too long! Please keep it to 15 characters or less.");
-                        return; // Aborts the rename process
+                        return; 
                     }
-
                     if (cost > 0) {
                         playerMoney -= cost;
                         scene.moneyText.setText('$' + playerMoney.toFixed(2));
@@ -262,6 +255,9 @@ function create() {
     const bankOverlay = createBankOverlay(scene);
     scene.bankOverlay = bankOverlay;
 
+    const marketOverlay = createMarketOverlay(scene);
+    scene.marketOverlay = marketOverlay;
+
     scene.closeAllOverlays = () => {
         binderOverlay.setVisible(false);
         storeOverlay.setVisible(false);
@@ -269,7 +265,8 @@ function create() {
         tradingOverlay.setVisible(false);
         settingsOverlay.setVisible(false);
         scene.phoneOverlay.setVisible(false);
-        scene.bankOverlay.setVisible(false); 
+        scene.bankOverlay.setVisible(false);
+        scene.marketOverlay.setVisible(false);
         
         if (scene.achievementsOverlay) scene.achievementsOverlay.setVisible(false); 
         scene.events.emit('close_all_dropdowns');
@@ -302,7 +299,11 @@ function create() {
     });
 
     addShadow(160, 710, 240, 70, 12);
-    scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact, sans-serif', fontSize: '20px', color: '#111111', align: 'center' }, () => {});
+    scene.sellZone = createButton(scene, 160, 710, 240, 70, 0xff7e8d, 0x000000, 'SELL ON\nMOJIMARKET', { fontFamily: 'Impact', fontSize: '20px', color: '#111111', align: 'center' }, () => {
+        scene.closeAllOverlays();
+        renderMarketView(scene, scene.marketOverlay);
+        scene.marketOverlay.setVisible(true);
+    });
 
     addShadow(864, 138, 240, 70, 12);
     let binderColor = playerUnlocks.binder ? 0xffc87c : 0x7f8c8d; 
@@ -338,6 +339,44 @@ function create() {
         callback: () => {
             checkBailout(scene);
             checkAchievements(scene);
+
+            // --- MOJIMARKET PROCESSING ---
+            // 1. Shift Market Trends every 2 minutes (120 ticks)
+            if (tickCounter % 120 === 0) {
+                let categories = [...new Set(myMojiDatabase.map(m => m.category))];
+                let randCat = categories[Math.floor(Math.random() * categories.length)];
+                let multi = (Math.random() * 0.6) + 0.7; // Ranges from 0.7x to 1.3x
+                marketTrend = { category: randCat, multi: Number(multi.toFixed(2)) };
+                saveGame();
+            }
+
+            // 2. Check if NPCs buy active listings
+            activeListings.forEach(listing => {
+                if (listing.sold) return; 
+
+                let mojiData = myMojiDatabase.find(m => m.id === listing.mojiId);
+                let marketVal = mojiData.baseValue;
+                if (marketTrend.category === mojiData.category) marketVal *= marketTrend.multi;
+
+                let ratio = listing.price / marketVal;
+                
+                // Determine odds of selling this specific second
+                let sellChance = 0.05; // 5% chance per second if priced fairly
+                if (ratio <= 0.8) sellChance = 0.25; // 25% chance per sec if super cheap!
+                if (ratio >= 1.2) sellChance = 0.01; // 1% chance per sec if overpriced
+                
+                if (Math.random() < sellChance) {
+                    listing.sold = true;
+                    saveGame();
+                    // Alert the player!
+                    if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
+                    playSound(scene, 'coin', { volume: 0.8 });
+                    
+                    if (scene.marketOverlay && scene.marketOverlay.visible) {
+                        renderMarketView(scene, scene.marketOverlay);
+                    }
+                }
+            });
 
             tickCounter++;
             if (tickCounter >= 60) {
@@ -768,13 +807,12 @@ function createDraggableCard(scene, x, y, mojiData, existingInstanceId = null, i
             dropped = true;
         }
         else if (Phaser.Geom.Intersects.RectangleToRectangle(bounds, scene.sellZone.getBounds())) {
-            playerMoney += Number(mojiData.baseValue); 
-            scene.moneyText.setText('$' + playerMoney.toFixed(2));
-            showFloatingText(scene, this.x, this.y, 'SOLD!', '#e74c3c');
+            // Open the pricing window!
+            showPricingPopup(scene, this.instanceId, mojiData);
             
-            scene.sound.play('coin', { volume: 0.6 });
-            
-            dropped = true;
+            // Bounce the card back to the table visually while the popup is open
+            scene.tweens.add({ targets: this, x: this.startX, y: this.startY, duration: 200, ease: 'Back.easeOut' });
+            isBouncing = true;
         }
 
         if (dropped) {
