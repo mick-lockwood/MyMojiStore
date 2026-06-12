@@ -5,13 +5,15 @@ let playerInventory = {};
 let cardsOnTable = []; 
 let playerAchievements = []; 
 let gameStats = { packsOpened: 0, npcTrades: 0, bailouts: 0 };
-let audioSettings = { bgm: 0.3, sfx: 0.8, muted: false };
+let audioSettings = { bgm: 0.3, sfx: 0.8, muted: false, musicMuted: false, sfxMuted: false };
 let playerLevel = 1;
 let playerXP = 0;
 let lastLoginDate = null;
 let loginStreak = 0;
+
+// --- MARKET STATE ---
 let activeListings = []; 
-let marketTrends = [];
+let marketTrends = []; 
 
 // The formula for leveling up: Starts at 100xp, and gets 50xp harder every level!
 function getXPForNextLevel() {
@@ -62,7 +64,12 @@ function loadGame() {
         }
         
         // Load the store name and rename status
-        if (parsedData.storeName) storeName = parsedData.storeName;
+        if (parsedData.storeName) {
+            storeName = parsedData.storeName;
+            
+            // --- SELF-HEALING FIX FOR THE LONG NAME BUG ---
+            if (storeName.length > 15) storeName = storeName.substring(0, 15);
+        }
         if (parsedData.hasRenamed !== undefined) hasRenamed = parsedData.hasRenamed;
 
         // Level & XP
@@ -72,7 +79,6 @@ function loadGame() {
         if (parsedData.themes) { 
             themeColors = parsedData.themes; 
             if (!themeColors.active) themeColors.active = { table: 0xf4f4f4, binder: 0x1a1a1a, inv: 0x1a1a1a, banner: 0xfce883 }; 
-            // Self-healing check for older save files that don't have the banner color yet
             if (!themeColors.banner) themeColors.banner = 0xfce883;
             if (!themeColors.active.banner) themeColors.active.banner = 0xfce883;
         }
@@ -83,9 +89,12 @@ function loadGame() {
         if (parsedData.achievements) playerAchievements = parsedData.achievements;
         if (parsedData.stats) gameStats = { ...gameStats, ...parsedData.stats };
         if (parsedData.audio) audioSettings = parsedData.audio;
+        
+        if (parsedData.debt !== undefined) playerDebt = parsedData.debt;
         if (parsedData.lastLogin !== undefined) lastLoginDate = parsedData.lastLogin;
         if (parsedData.streak !== undefined) loginStreak = parsedData.streak;
-        if (parsedData.debt !== undefined) playerDebt = parsedData.debt;
+
+        // Load the correct plural variables
         if (parsedData.listings) activeListings = parsedData.listings;
         if (parsedData.trends) marketTrends = parsedData.trends;
     }
@@ -100,7 +109,9 @@ function saveGame() {
         level: playerLevel, xp: playerXP,
         debt: playerDebt,
         lastLogin: lastLoginDate, streak: loginStreak,
-        listings: activeListings, trend: marketTrend
+        
+        // FIXED: Now saves correctly using the plural variables!
+        listings: activeListings, trends: marketTrends 
     }));
 }
 
@@ -117,10 +128,7 @@ function checkBailout(scene) {
         gameStats.bailouts++;
         playerMoney += 20.00;
         
-        // Update the UI if the scene is available
-        if (scene && scene.moneyText) {
-            scene.moneyText.setText('$' + playerMoney.toFixed(2));
-        }
+        if (scene && scene.moneyText) scene.moneyText.setText('$' + playerMoney.toFixed(2));
         
         alert("BAILOUT! The MyMoji Foundation saw you were completely broke and deposited $20.00 into your account!");
         saveGame();
@@ -133,21 +141,13 @@ function generateTrade(scene) {
     let isBuy = Math.random() > 0.5; 
     let randomMoji = myMojiDatabase[Math.floor(Math.random() * myMojiDatabase.length)];
     
-    let priceMultiplier = isBuy 
-        ? (1.2 + Math.random() * 0.8) 
-        : (0.4 + Math.random() * 0.5); 
+    let priceMultiplier = isBuy ? (1.2 + Math.random() * 0.8) : (0.4 + Math.random() * 0.5); 
         
     currentTrade = { type: isBuy ? 'buy' : 'sell', mojiId: randomMoji.id, price: Number((randomMoji.baseValue * priceMultiplier).toFixed(2)) };
-    
-    // Set the expiration for 2 minutes (120,000 milliseconds) from now
     tradeExpirationTime = Date.now() + 300000; 
 
     unreadMessage = true;
-    
-    // FIXED: Moved outside the sound check!
     if (scene.phoneNotification) scene.phoneNotification.setVisible(true);
-    
-    // FIXED: Use our custom playSound helper so it respects the Mute button!
     playSound(scene, 'phone_notification', { volume: 0.7 });
 
     saveGame();
@@ -155,32 +155,4 @@ function generateTrade(scene) {
 
 function processBulkSell(scene, overlay, rarityTarget) {
     let totalEarned = 0;
-    let minOwned = playerUnlocks.binder ? 1 : 0;
-    
-    myMojiDatabase.forEach(moji => {
-        if (rarityTarget === 'all' || moji.rarity === rarityTarget) {
-            let owned = Number(playerInventory[moji.id]);
-            if (owned > minOwned) {
-                let amountToSell = owned - minOwned;
-                totalEarned += amountToSell * (moji.baseValue * 0.5);
-                playerInventory[moji.id] = minOwned;
-            }
-        }
-    });
-
-    if (totalEarned > 0) {
-        playerMoney += totalEarned;
-        scene.moneyText.setText('$' + playerMoney.toFixed(2));
-        saveGame();
-        alert(`Successfully liquidated cards for $${totalEarned.toFixed(2)}!`);
-        if (typeof renderInventoryView === 'function') renderInventoryView(scene, overlay);
-    } else {
-        alert("You don't have any matching doubles to quick-sell!");
-    }
-}
-
-function calculateCartTotal() {
-    let total = 0;
-    for (let key in shoppingCart) total += (shoppingCart[key] * packDatabase[key].cost);
-    return total;
-}
+    let minOwned = playerUnlocks
